@@ -40,11 +40,11 @@ export default class State {
 		stateDisabled: ["verbose", "State of name %s was disabled"],
 		stateIsNotEnabled: ["warning", "State of name %s is not enabled!"],
 		tryingToCheckForStateThatIsntAllowed: ["warning", "State of name %s isnt allowed in this State Machine"],
-		changedSignalsIsEmpty: ["warning", "Changed signals is empty!"],
 	};
 
 	static errorLocalizations: ErrorLocalizations = {
 		stateNotAllowed: "State of name %s isnt allowed on this State Machine!",
+		UUIDNotFound: "UUID not found in any connections!"
 	};
 
 	private states: States = [];
@@ -84,6 +84,16 @@ export default class State {
 			this.statesAllowed.find((allowedState: StateName) => allowedState === stateName) !== undefined;
 
 		return isAllowed;
+	}
+
+	private getSignalWithConnectionsFromUUID(UUID: UUID): SignalWithConnetions {
+		for (const [stateName: string, signalWithConnections: SignalWithConnections) in pairs(this.changedSignals)) {
+			if (signalWithConnections[UUID] !== undefined) {
+				return signalWithConnections
+			}
+		}
+
+		return undefined
 	}
 
 	getStateActive(stateName: StateName): boolean {
@@ -129,5 +139,13 @@ export default class State {
 		return callbackUUID;
 	}
 
-	unbindFromStateChanged(UUID: UUID) {}
+	unbindFromStateChanged(UUID: UUID) {
+		const signalWithConnections = this.getSignalWithConnectionsFromUUID(UUID)
+		if (signalWithConnections === undefined) {
+			throw formatLogMessage(State.errorLocalizations.UUIDNotFound)
+		}
+
+		signalWithConnections.connections[UUID].Disconnect()
+		signalWithConnections.connections[UUID].Destroy()
+	}
 }
