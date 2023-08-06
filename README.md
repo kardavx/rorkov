@@ -1,4 +1,4 @@
-#Instalacja repo
+# Instalacja repo
 
 1. Pobierz NODE z https://nodejs.org/en
 2. po instalacji w cmd wklej: npm install -g npm@9.8.1
