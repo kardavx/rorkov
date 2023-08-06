@@ -9,7 +9,7 @@
 7. Przejdz na github.com i skonfiguruj klucz SSH
 8. Pobierz najnowszą wersje place roblox bez skryptów
 9. Otwórz zainstalowany place
-10. Zainstaluj plugin Rojo z https://rojo.space/docs/v7/getting-started/installation/ > Installing the plugin > 
+10. Zainstaluj plugin Rojo z https://rojo.space/docs/v7/getting-started/installation/ > Installing the plugin > from Roblox.com
 11. Sklonuj repo z użyciem git clone [link z githuba po wybraniu Code > Clone > SSH]
 12. Otwórz sesje terminala w swoim IDE i wklej: npm i
 13. Po zakonczeniu sie instalacji paczek wklej w terminal: rbxtsc -w
