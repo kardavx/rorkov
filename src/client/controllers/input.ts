@@ -1,12 +1,8 @@
 import { Controller } from "@flamework/core";
 import { ContextActionService } from "@rbxts/services";
-import { Signal } from "@rbxts/beacon";
 
-export type returnSignal = Signal<boolean>;
 interface Inputs {
-	[binderId: string]: {
-		[actionName: string]: returnSignal;
-	};
+	[binderId: string]: string[];
 }
 
 @Controller({})
@@ -19,49 +15,45 @@ export class Input {
 	public bindInput(
 		binderId: string,
 		actionName: string,
+		actionUse: (inputState: boolean) => void,
 		...keycodes: [Enum.KeyCode | Enum.UserInputType]
-	): returnSignal {
-		if (this.inputs[binderId] === undefined) {
-			this.inputs[binderId] = {};
-		}
+	) {
+		if (this.inputs[binderId] === undefined) this.inputs[binderId] = [];
 
-		const binderDirectory = this.inputs[binderId];
-		if (binderDirectory[actionName] === undefined) {
-			const signal = new Signal<boolean>();
+		const binder = this.inputs[binderId];
+		const actionExists = binder.find((value: string) => value === actionName) !== undefined;
 
-			ContextActionService.BindAction(
-				this.getFormattedActionName(binderId, actionName),
-				(_, state: Enum.UserInputState) => {
-					signal.Fire(state === Enum.UserInputState.Begin ? true : false);
-				},
-				false,
-				...keycodes,
-			);
+		if (actionExists) throw `Action of name ${actionName} already exists on binder ${binderId}`;
 
-			return signal;
-		} else {
-			return binderDirectory[actionName];
-		}
+		ContextActionService.BindAction(
+			this.getFormattedActionName(binderId, actionName),
+			(_, state: Enum.UserInputState) => {
+				actionUse(state === Enum.UserInputState.Begin);
+			},
+			false,
+			...keycodes,
+		);
+
+		binder.push(actionName);
 	}
 
 	public unbindInput(binderId: string, actionName: string): void {
-		if (this.inputs[binderId] === undefined)
-			throw string.format("binder of id %s doesn't exist on table inputs!", binderId);
+		const binder = this.inputs[binderId];
+		if (binder === undefined) throw `binder of ${binderId} doesn't exist on table input`;
 
-		const signal = this.inputs[binderId][actionName];
-		if (signal === undefined)
-			warn(string.format("binder of id %s doesn't have input name of %s", binderId, actionName)); //zaimplementuj w przyszlosci logger ktory tylko na studiu bedzie rzucal ostrzezenie
+		const actionExists = binder.find((value: string) => value === actionName) !== undefined;
+		if (!actionExists) warn(`binder of id ${binderId} doesn't have input name of ${actionName}`); //zaimplementuj w przyszlosci logger ktory tylko na studiu bedzie rzucal ostrzezenie
 
-		signal.Destroy();
 		ContextActionService.UnbindAction(this.getFormattedActionName(binderId, actionName));
+		binder.remove(binder.indexOf(actionName));
 	}
 
 	public batchUnbindInput(binderId: string) {
-		if (this.inputs[binderId] === undefined)
-			throw string.format("binder of id %s doesn't exist on table inputs!", binderId);
+		const binder = this.inputs[binderId];
+		if (binder === undefined) throw `binder of ${binderId} doesn't exist on table input`;
 
-		for (const [actionName] of pairs(this.inputs[binderId])) {
+		binder.forEach((actionName: string) => {
 			this.unbindInput(binderId, actionName as string);
-		}
+		});
 	}
 }
