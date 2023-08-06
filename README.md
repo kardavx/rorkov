@@ -12,7 +12,7 @@
 10. Zainstaluj plugin Rojo z https://rojo.space/docs/v7/getting-started/installation/ > Installing the plugin > from Roblox.com
 11. Sklonuj repo z użyciem git clone [link z githuba po wybraniu Code > Clone > SSH]
 12. Otwórz sesje terminala w swoim IDE i wklej: npm i
-13. Po zakonczeniu sie instalacji paczek wklej w terminal: rbxtsc -w
+13. Po zakonczeniu sie instalacji paczek wklej w terminal: npm run watch
 14. Otwórz kolejną sesje terminala i wklej: rojo serve
 15. Przejdź na place i połącz plugin z serwerem
 16. Pisz kod
