@@ -2,7 +2,7 @@ import { Controller } from "@flamework/core";
 import { ContextActionService } from "@rbxts/services";
 
 interface Inputs {
-	[binderId: string]: string[];
+	[binderId: string]: Map<string, boolean>;
 }
 
 @Controller({})
@@ -18,42 +18,49 @@ export class Input {
 		actionUse: (inputState: boolean) => void,
 		...keycodes: [Enum.KeyCode | Enum.UserInputType]
 	) {
-		if (this.inputs[binderId] === undefined) this.inputs[binderId] = [];
+		if (this.inputs[binderId] === undefined) this.inputs[binderId] = new Map<string, boolean>();
 
 		const binder = this.inputs[binderId];
-		const actionExists = binder.find((value: string) => value === actionName) !== undefined;
+		const actionExists = binder.has(actionName);
 
 		if (actionExists) throw `Action of name ${actionName} already exists on binder ${binderId}`;
 
 		ContextActionService.BindAction(
 			this.getFormattedActionName(binderId, actionName),
 			(_, state: Enum.UserInputState) => {
-				actionUse(state === Enum.UserInputState.Begin);
+				if (state === Enum.UserInputState.Begin) {
+					if (binder.get(actionName) === true) return;
+					binder.set(actionName, true);
+					actionUse(true);
+				} else if (state === Enum.UserInputState.End) {
+					if (binder.get(actionName) === false) return;
+					binder.set(actionName, false);
+					actionUse(false);
+				}
 			},
 			false,
 			...keycodes,
 		);
 
-		binder.push(actionName);
+		binder.set(actionName, false);
 	}
-
 	public unbindInput(binderId: string, actionName: string): void {
 		const binder = this.inputs[binderId];
 		if (binder === undefined) throw `binder of ${binderId} doesn't exist on table input`;
 
-		const actionExists = binder.find((value: string) => value === actionName) !== undefined;
+		const actionExists = binder.has(actionName);
 		if (!actionExists) warn(`binder of id ${binderId} doesn't have input name of ${actionName}`); //zaimplementuj w przyszlosci logger ktory tylko na studiu bedzie rzucal ostrzezenie
 
 		ContextActionService.UnbindAction(this.getFormattedActionName(binderId, actionName));
-		binder.remove(binder.indexOf(actionName));
+		binder.delete(actionName);
 	}
 
 	public batchUnbindInput(binderId: string) {
 		const binder = this.inputs[binderId];
 		if (binder === undefined) throw `binder of ${binderId} doesn't exist on table input`;
 
-		binder.forEach((actionName: string) => {
+		for (const [actionName] of pairs(binder)) {
 			this.unbindInput(binderId, actionName as string);
-		});
+		}
 	}
 }
