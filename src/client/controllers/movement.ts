@@ -1,20 +1,18 @@
 import { Controller, OnInit, OnStart, OnRender } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
-import { UserInputService } from "@rbxts/services";
 import { Input } from "./input";
 
 interface ControlModule {
 	Enable: (ControlModule: ControlModule, Enabled: boolean) => void;
 }
+export type MovementState = "walk" | "run";
 
 @Controller({})
 export class Movement implements OnInit, OnStart, OnRender {
 	static localPlayer = Players.LocalPlayer;
 	static playerScripts = Movement.localPlayer.WaitForChild("PlayerScripts");
 	static PlayerModule = Movement.playerScripts.WaitForChild("PlayerModule");
-	static controlModule = require(Movement.PlayerModule.WaitForChild(
-		"ControlModule",
-	) as ModuleScript) as ControlModule;
+	static controlModule = require(Movement.PlayerModule.WaitForChild("ControlModule") as ModuleScript) as ControlModule;
 
 	static inputMap = new Map<Enum.KeyCode, Vector3>([
 		[Enum.KeyCode.W, new Vector3(0, 0, -1)],
@@ -23,21 +21,27 @@ export class Movement implements OnInit, OnStart, OnRender {
 		[Enum.KeyCode.D, new Vector3(1, 0, 0)],
 	]);
 
+	static keyBinds = new Map<Enum.KeyCode, string>([
+		[Enum.KeyCode.Space, "jump"],
+		[Enum.KeyCode.LeftShift, "sprint"],
+	]);
+
 	private camera: Camera = Workspace.CurrentCamera as Camera;
 	private moveVector: Vector3 = Vector3.zero;
+	private character: Model | undefined = undefined;
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
 
-	private crouchSpeed = 6;
-	private walkingSpeed = 12;
-	private runningSpeed = 23;
-	private crouchAcceleration = 30;
-	private walkingAcceleration = 40;
+	private movementState = "walk" as MovementState;
 
 	private speedConstant = {
 		crouch: 6,
 		walk: 12,
 		run: 23,
+	};
+
+	private forceConstant = {
+		jump: 0,
 	};
 
 	private accelerationConstant = {
@@ -59,8 +63,8 @@ export class Movement implements OnInit, OnStart, OnRender {
 		if (!this.humanoid || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
 		const input: Vector3 = this.moveVector;
 		const currentVelocity = this.humanoidRootPart.AssemblyLinearVelocity.Magnitude;
-		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * this.accelerationConstant.walk;
-		const limitedVelocity = math.clamp(desiredVelocity, 0, this.speedConstant.walk);
+		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * this.accelerationConstant[this.movementState];
+		const limitedVelocity = math.clamp(desiredVelocity, 0, this.speedConstant[this.movementState]);
 
 		this.humanoid.WalkSpeed = limitedVelocity;
 
@@ -77,16 +81,36 @@ export class Movement implements OnInit, OnStart, OnRender {
 		Movement.localPlayer.CharacterAdded.Connect((character: Model) => this.onCharacterAdded(character));
 	}
 
+	private abilities = {
+		jump: (inputState: boolean) => {
+			if (this.humanoid?.FloorMaterial === Enum.Material.Air) return;
+
+			this.humanoid?.ChangeState(Enum.HumanoidStateType.Jumping);
+			this.humanoidRootPart?.ApplyImpulse(new Vector3(0, this.forceConstant.jump, 0).mul(this.humanoidRootPart.AssemblyMass));
+		},
+		sprint: (inputState: boolean) => {
+			this.movementState = inputState ? "run" : "walk";
+		},
+	};
+
 	onStart(): void {
 		Movement.inputMap.forEach((keyCodeVector: Vector3, keyCode: Enum.KeyCode) => {
 			this.input.bindInput(
 				"movement",
 				keyCode.Name,
 				(inputState: boolean) => {
-					print(keyCode.Name, inputState, this.moveVector);
-					this.moveVector = inputState
-						? this.moveVector.add(keyCodeVector)
-						: this.moveVector.sub(keyCodeVector);
+					this.moveVector = inputState ? this.moveVector.add(keyCodeVector) : this.moveVector.sub(keyCodeVector);
+				},
+				keyCode,
+			);
+		});
+
+		Movement.keyBinds.forEach((ability: string, keyCode: Enum.KeyCode) => {
+			this.input.bindInput(
+				"movement",
+				keyCode.Name,
+				(inputState: boolean) => {
+					this.abilities[ability as keyof typeof this.abilities](inputState);
 				},
 				keyCode,
 			);
