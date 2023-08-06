@@ -28,23 +28,22 @@ export class Movement implements OnInit, OnStart, OnRender {
 
 	private camera: Camera = Workspace.CurrentCamera as Camera;
 	private moveVector: Vector3 = Vector3.zero;
-	private character: Model | undefined = undefined;
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
 
-	private movementState = "walk" as MovementState;
+	private movementState: MovementState = "walk";
 
-	private speedConstant = {
+	static speedConstant = {
 		crouch: 6,
 		walk: 12,
 		run: 23,
 	};
 
-	private forceConstant = {
+	static forceConstant = {
 		jump: 0,
 	};
 
-	private accelerationConstant = {
+	static accelerationConstant = {
 		crouch: 30,
 		walk: 40,
 		run: 50,
@@ -63,8 +62,8 @@ export class Movement implements OnInit, OnStart, OnRender {
 		if (!this.humanoid || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
 		const input: Vector3 = this.moveVector;
 		const currentVelocity = this.humanoidRootPart.AssemblyLinearVelocity.Magnitude;
-		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * this.accelerationConstant[this.movementState];
-		const limitedVelocity = math.clamp(desiredVelocity, 0, this.speedConstant[this.movementState]);
+		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * Movement.accelerationConstant[this.movementState];
+		const limitedVelocity = math.clamp(desiredVelocity, 0, Movement.speedConstant[this.movementState]);
 
 		this.humanoid.WalkSpeed = limitedVelocity;
 
@@ -86,7 +85,7 @@ export class Movement implements OnInit, OnStart, OnRender {
 			if (this.humanoid?.FloorMaterial === Enum.Material.Air) return;
 
 			this.humanoid?.ChangeState(Enum.HumanoidStateType.Jumping);
-			this.humanoidRootPart?.ApplyImpulse(new Vector3(0, this.forceConstant.jump, 0).mul(this.humanoidRootPart.AssemblyMass));
+			this.humanoidRootPart?.ApplyImpulse(new Vector3(0, Movement.forceConstant.jump, 0).mul(this.humanoidRootPart.AssemblyMass));
 		},
 		sprint: (inputState: boolean) => {
 			this.movementState = inputState ? "run" : "walk";
