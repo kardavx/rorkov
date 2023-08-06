@@ -5,9 +5,12 @@ import { Players, SoundService, Debris } from "@rbxts/services";
 export class Footsteeps implements OnInit, OnRender {
 	static localPlayer = Players.LocalPlayer;
 	static footSteepSounds = SoundService.WaitForChild("Footsteeps");
+
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
+
 	private lastStep = 0;
+	private amplitude = 5;
 
 	playSound(): void {
 		const sound = Footsteeps.footSteepSounds.WaitForChild("Step").Clone() as Sound;
@@ -24,7 +27,7 @@ export class Footsteeps implements OnInit, OnRender {
 		if (velocity < 0.1) return;
 
 		const now = os.clock();
-		if (now - this.lastStep < 5 / velocity) return;
+		if (now - this.lastStep < this.amplitude / velocity) return;
 		this.lastStep = now;
 
 		this.playSound();
