@@ -17,6 +17,17 @@ jobs:
       with:
         ref: github-actions-config
 
+    - name: Setup node.js 20.x
+      uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+    - name: Install depedencies
+      run: npm ci
+
+    - name: Build game
+      run: rbxtsc --rojo build.project.json
+
     - name: Setup aftman
       uses: ok-nick/setup-aftman@v0.3.0
 
