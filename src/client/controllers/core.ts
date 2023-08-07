@@ -10,7 +10,6 @@ export class CharacterAdded implements OnInit {
 	static player: Player = Players.LocalPlayer;
 
 	onInit(): void {
-		print("inited");
 		const listeners = new Set<OnCharacterAdded>();
 
 		Modding.onListenerAdded<OnCharacterAdded>((object) => listeners.add(object));
