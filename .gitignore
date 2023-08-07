@@ -4,3 +4,4 @@
 *.tsbuildinfo
 flamework.build
 *.rbxl.lock
+*.rbxl

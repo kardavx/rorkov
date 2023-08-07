@@ -1,0 +1,83 @@
+{
+	"name": "flamework-game",
+	"globIgnorePaths": [
+		"**/package.json",
+		"**/tsconfig.json"
+	],
+	"tree": {
+		"$className": "DataModel",
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"$path": "out/server"
+		},
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"rbxts_include": {
+				"$path": "include",
+				"node_modules": {
+					"$className": "Folder",
+					"@rbxts": {
+						"$path": "node_modules/@rbxts"
+					},
+					"@flamework": {
+						"$path": "node_modules/@flamework"
+					}
+				}
+			},
+			"$path": "out/shared"
+		},
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"$path": "out/client"
+			},
+			"StarterCharacterScripts": {
+				"$className": "StarterCharacterScripts",
+				"$path": "out/character"
+			}
+		},
+		"Workspace": {
+			"$className": "Workspace",
+			"$properties": {
+				"FilteringEnabled": true,
+				"Gravity": 35
+			}
+		},
+		"HttpService": {
+			"$className": "HttpService",
+			"$properties": {
+				"HttpEnabled": true
+			}
+		},
+		"SoundService": {
+			"$className": "SoundService",
+			"$path": "out/sounds",
+			"$properties": {
+				"RespectFilteringEnabled": true
+			}
+		},
+		"Lighting": {
+			"$properties": {
+				"Brightness": 3,
+				"ShadowSoftness": 0.2,
+				"ClockTime": 14.5,
+				"GeographicLatitude": 0,
+				"GlobalShadows": true,
+				"Ambient": [
+					0.27450980392156865,
+					0.27450980392156865,
+					0.27450980392156865
+				],
+				"OutdoorAmbient": [
+					0.27450980392156865,
+					0.27450980392156865,
+					0.27450980392156865
+				],
+				"EnvironmentDiffuseScale": 1,
+				"EnvironmentSpecularScale": 1,
+				"Technology": "ShadowMap"
+			}
+		}
+	}
+}
