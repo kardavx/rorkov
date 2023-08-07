@@ -1,0 +1,19 @@
+name: deploy_staging
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - run: rustup update stable && rustup default stable
+    - run: cargo add rbxcloud
+    - run: cargo build
+    - run: rbxcloud expierience publish -f game.rbxl -p [placeId] -u [universeId] -a [api key]
