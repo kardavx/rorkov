@@ -2,7 +2,17 @@ import { Controller, OnRender, OnStart } from "@flamework/core";
 import { ReplicatedStorage as shared, Workspace } from "@rbxts/services";
 import { Spring } from "shared/math_utility";
 import { Input } from "./input";
-import { InventoryBinds, Viewmodel, Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets } from "client/types/items";
+import {
+	InventoryBinds,
+	Viewmodel,
+	Alphas,
+	Springs,
+	EquippedItem,
+	ViewmodelWithItem,
+	Item,
+	UpdatedSprings,
+	Offsets,
+} from "client/types/items";
 import State from "shared/state";
 import setDescendantBasePartsProperties from "shared/set_descendant_baseparts_properites";
 import welder from "shared/welder";
@@ -14,110 +24,115 @@ export class Items implements OnStart, OnRender {
 		Enum.KeyCode.Two,
 		Enum.KeyCode.Three,
 		Enum.KeyCode.Four,
-		Enum.KeyCode.Five, 
-		Enum.KeyCode.Six, 
-		Enum.KeyCode.Seven, 
-		Enum.KeyCode.Eight, 
-		Enum.KeyCode.Nine
+		Enum.KeyCode.Five,
+		Enum.KeyCode.Six,
+		Enum.KeyCode.Seven,
+		Enum.KeyCode.Eight,
+		Enum.KeyCode.Nine,
 	];
 
 	static data = shared.WaitForChild("data") as Folder;
 	static viewmodel = Items.data.FindFirstChild("viewmodel") as Viewmodel;
 	static items = Items.data.FindFirstChild("items") as Folder;
 	static blockingStates = ["reloading", "magChecking"];
-	static camera = Workspace.CurrentCamera
-	static unresetableSprings = []
+	static camera = Workspace.CurrentCamera;
+	static unresetableSprings = [];
 
 	private Springs: Springs = {
-		Recoil: new Spring(1,1,1,1),
-		Sway: new Spring(1,1,1,1)
-	}
+		Recoil: new Spring(1, 1, 1, 1),
+		Sway: new Spring(1, 1, 1, 1),
+	};
 	private inventory = ["SR-16"];
 	private equippedItem: EquippedItem | undefined;
 	private desiredNextSlot: number | undefined;
 	private state: State = new State();
+	private idle: AnimationTrack | undefined;
+	private equipanim: AnimationTrack | undefined;
 
 	constructor(private input: Input) {}
 
 	private resetSprings() {
 		for (const [springName, springObject] of pairs(this.Springs)) {
-			const isResetable = Items.unresetableSprings.find((unresetableSpringName: string) => unresetableSpringName === springName) === undefined
-			if (isResetable) springObject.reset()
+			const isResetable =
+				Items.unresetableSprings.find(
+					(unresetableSpringName: string) => unresetableSpringName === springName,
+				) === undefined;
+			if (isResetable) springObject.reset();
 		}
 	}
 
 	private getUpdatedSprings(dt: number) {
-		const updatedSprings: UpdatedSprings = {}
+		const updatedSprings: UpdatedSprings = {};
 
 		for (const [springName, springObject] of pairs(this.Springs)) {
-			updatedSprings[springName] = springObject.getOffset(dt)
+			updatedSprings[springName] = springObject.getOffset(dt);
 		}
 
-		return updatedSprings
+		return updatedSprings;
 	}
 
 	private createViewmodel(itemName: string): ViewmodelWithItem {
-		const item = Items.items.FindFirstChild(itemName) as Item
+		const item = Items.items.FindFirstChild(itemName) as Item;
 		if (item === undefined) {
-			throw `couldn't find item ${itemName}`
+			throw `couldn't find item ${itemName}`;
 		}
 
-		const viewmodelClone: Viewmodel = Items.viewmodel.Clone()
-		const itemClone: Item = item.Clone()
+		const viewmodelClone: Viewmodel = Items.viewmodel.Clone();
+		const itemClone: Item = item.Clone();
 
-		viewmodelClone.Name = 'Viewmodel'
-		itemClone.Name = 'Item'
+		viewmodelClone.Name = "viewmodel";
+		itemClone.Name = "item";
 
-		if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.HumanoidRootPart
-		if (!itemClone.PrimaryPart) itemClone.PrimaryPart = itemClone.Grip
+		if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.HumanoidRootPart;
+		if (!itemClone.PrimaryPart) itemClone.PrimaryPart = itemClone.Grip;
 
-		const properties = {Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false}
-		setChildBasePartsProperties(viewmodelClone, properties, ['HumanoidRootPart'])
-		setChildBasePartsProperties(itemClone, properties)
+		const properties = { Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false };
+		setDescendantBasePartsProperties(viewmodelClone, properties, ["HumanoidRootPart"]);
+		setDescendantBasePartsProperties(itemClone, properties);
 
-		welder(itemClone)
-		viewmodelClone.Parent = Items.camera
-		itemClone.Parent = viewmodelClone
+		welder(itemClone);
+		viewmodelClone.Parent = Items.camera;
+		itemClone.Parent = viewmodelClone;
 
-		viewmodelClone.PrimaryPart.Anchored = true
-		const motor = new Instance('Motor6D')
-		motor.Part0 = viewmodelClone.UpperTorso
-		motor.Part1 = itemClone.PrimaryPart
-		motor.Parent = itemClone.PrimaryPart
+		viewmodelClone.PrimaryPart.Anchored = true;
+		const motor = new Instance("Motor6D");
+		motor.Part0 = viewmodelClone.UpperTorso;
+		motor.Part1 = itemClone.PrimaryPart;
+		motor.Parent = itemClone.PrimaryPart;
 
-		return viewmodelClone as ViewmodelWithItem
+		return viewmodelClone as ViewmodelWithItem;
 	}
 
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
-		HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y
-	})
+		HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y,
+	});
 
 	private createAlphas = () => ({
-		testAlpha: 0
-	})
+		testAlpha: 0,
+	});
 
 	private createEquippedItem(itemName: string) {
-		const viewmodel: ViewmodelWithItem = this.createViewmodel(itemName)
-		const item: Item = viewmodel.Item
-		const alphas: Alphas = this.createAlphas()
-		const offsets: Offsets = this.createOffsets(viewmodel)
+		const viewmodel: ViewmodelWithItem = this.createViewmodel(itemName);
+		const item: Item = viewmodel.item;
+		const alphas: Alphas = this.createAlphas();
+		const offsets: Offsets = this.createOffsets(viewmodel);
 
 		return {
 			viewmodel,
 			item,
 			alphas,
-			offsets
-		}
+			offsets,
+		};
 	}
 
 	private destroyEquippedItem() {
-		this.equippedItem!.item.Destroy()
-		this.equippedItem!.viewmodel.Destroy()
-		table.clear(this.equippedItem!.offsets)
-		table.freeze(this.equippedItem!.offsets)
-		table.clear(this.equippedItem!.alphas)
-		table.freeze(this.equippedItem!.alphas)
-		this.equippedItem = undefined
+		this.equippedItem!.item.Destroy();
+		this.equippedItem!.viewmodel.Destroy();
+		table.clear(this.equippedItem!.offsets);
+		table.freeze(this.equippedItem!.offsets);
+		table.clear(this.equippedItem!.alphas);
+		table.freeze(this.equippedItem!.alphas);
+		this.equippedItem = undefined;
 	}
 
 	private equip(slot: number) {
@@ -125,7 +140,20 @@ export class Items implements OnStart, OnRender {
 		if (itemName === undefined) return;
 
 		this.state.activateState("equipping");
-		this.equippedItem = this.createEquippedItem(itemName)
+		this.equippedItem = this.createEquippedItem(itemName);
+		const animator = this.equippedItem.viewmodel.AnimationController.Animator;
+		const idle = new Instance("Animation");
+		idle.AnimationId = `rbxassetid://${14351754927}`;
+		const equip = new Instance("Animation");
+		equip.AnimationId = `rbxassetid://${14351861197}`;
+
+		this.idle = animator.LoadAnimation(idle);
+		this.equipanim = animator.LoadAnimation(equip);
+
+		this.equipanim.Play(0, 10, 1);
+		this.idle.Play(0);
+		this.equipanim.Stopped.Wait();
+
 		this.state.disableState("equipping");
 
 		if (this.desiredNextSlot !== undefined) {
@@ -137,13 +165,17 @@ export class Items implements OnStart, OnRender {
 	private unequip() {
 		this.state.activateState("unequipping");
 		// do unequip logic
-		this.destroyEquippedItem()
-		this.resetSprings()
+		this.idle!.Stop(0);
+		this.equipanim!.Play(0, 10, -1);
+		this.equipanim!.Stopped.Wait();
+		this.destroyEquippedItem();
+		this.resetSprings();
 		this.state.disableState("unequipping");
 
 		if (this.desiredNextSlot !== undefined) {
-			this.equip(this.desiredNextSlot);
+			const nextSlot = this.desiredNextSlot;
 			this.desiredNextSlot = undefined;
+			this.equip(nextSlot);
 		}
 	}
 
@@ -151,7 +183,11 @@ export class Items implements OnStart, OnRender {
 		if (!this.equippedItem) {
 			this.equip(slot);
 		} else {
-			this.desiredNextSlot = slot;
+			if (this.state.isAnyActive(["equipping", "unequipping"])) {
+				this.desiredNextSlot = slot;
+			} else {
+				this.unequip();
+			}
 		}
 	}
 
@@ -171,15 +207,18 @@ export class Items implements OnStart, OnRender {
 
 	onRender(dt: number): void {
 		if (this.equippedItem) {
-			const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt)
-			const baseCFrame = Items.camera!.CFrame.mul(new CFrame(0,this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number * -1,0))
-			let finalCFrame = baseCFrame
+			const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
+			const baseCFrame = Items.camera!.CFrame.mul(
+				new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0),
+			);
+			// const baseCFrame = Items.camera!.CFrame;
+			const finalCFrame = baseCFrame;
 
 			for (const [_, updatedSpringOffset] of pairs(updatedSprings)) {
-				finalCFrame.mul(CFrame.Angles(updatedSpringOffset.X, updatedSpringOffset.Y, updatedSpringOffset.Z))
+				finalCFrame.mul(CFrame.Angles(updatedSpringOffset.X, updatedSpringOffset.Y, updatedSpringOffset.Z));
 			}
 
-			this.equippedItem.viewmodel.PivotTo(finalCFrame)
+			this.equippedItem.viewmodel.PivotTo(finalCFrame);
 		}
 	}
 }

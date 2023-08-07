@@ -6,11 +6,14 @@ export type Sights = Sight[];
 export interface Viewmodel extends Model {
 	UpperTorso: BasePart;
 	HumanoidRootPart: BasePart;
-	CameraBone: BasePart
+	CameraBone: BasePart;
+	AnimationController: AnimationController & {
+		Animator: Animator;
+	};
 }
 
 export interface ViewmodelWithItem extends Viewmodel {
-	Item: Item;
+	item: Item;
 }
 
 export interface SightElements extends Model {
@@ -30,25 +33,25 @@ export interface Item extends Model {
 	Muzzle?: BasePart;
 }
 
-export interface Springs {
-	[springName: string]: Spring
-}
+export type Springs = {
+	[springName in string]: Spring;
+};
 
 export interface UpdatedSprings {
-	[springName: string]: Vector3
+	[springName: string]: Vector3;
 }
 
 export interface Alphas {
-	[alphaName: string]: number
+	[alphaName: string]: number;
 }
 
 export interface Offsets {
-	[offsetName: string]: Vector3 | number
+	[offsetName: string]: Vector3 | number;
 }
 
-export  interface EquippedItem {
+export interface EquippedItem {
 	viewmodel: ViewmodelWithItem;
 	item: Item;
-	alphas: Alphas,
-	offsets: Offsets
+	alphas: Alphas;
+	offsets: Offsets;
 }

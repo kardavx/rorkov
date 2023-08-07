@@ -3,21 +3,20 @@ import { generateUUID, UUID } from "./uuid";
 import { Signal } from "@rbxts/beacon";
 import { validateType } from "./types_utility";
 import object from "./object";
-import { 
-	States, 
-	ChangedSignals, 
-	StateName, 
-	SignalConnections, 
-	SignalWithConnetions, 
-	SignalReturn, 
-	ChangedCallback 
+import {
+	States,
+	ChangedSignals,
+	StateName,
+	SignalConnections,
+	SignalWithConnetions,
+	SignalReturn,
+	ChangedCallback,
 } from "./types/state";
 
-import loggerLocalizations from './localization/log/state'
-import errorLocalizations from './localization/error/state'
+import loggerLocalizations from "./localization/log/state";
+import errorLocalizations from "./localization/error/state";
 
 export default class State {
-
 	private states: States = [];
 	private changedSignals: ChangedSignals = {};
 
@@ -57,7 +56,7 @@ export default class State {
 		return isAllowed;
 	}
 
-	private getSignalWithConnectionsFromUUID(UUID: UUID): [StateName, SignalWithConnetions]| undefined {
+	private getSignalWithConnectionsFromUUID(UUID: UUID): [StateName, SignalWithConnetions] | undefined {
 		for (const [stateName, signalWithConnections] of pairs(this.changedSignals)) {
 			if (signalWithConnections.connections![UUID] !== undefined) {
 				return [stateName, signalWithConnections];
@@ -76,11 +75,11 @@ export default class State {
 	}
 
 	isAnyActive(stateNames: StateName[]): boolean {
-		stateNames.forEach((stateName: StateName) => {
+		for (const stateName of stateNames) {
 			if (this.isStateActive(stateName)) {
 				return true;
 			}
-		});
+		}
 
 		return false;
 	}
@@ -126,17 +125,17 @@ export default class State {
 			throw this.formatLogMessage(errorLocalizations.UUIDNotFound);
 		}
 
-		const [stateName, signalWithConnections] = stateNameAndSignalWithConnections
-		const validatedSignalWithConnections = validateType<SignalWithConnetions>(signalWithConnections)
-		const validatedSignalConnections = validateType<SignalConnections>(validatedSignalWithConnections.connections)
+		const [stateName, signalWithConnections] = stateNameAndSignalWithConnections;
+		const validatedSignalWithConnections = validateType<SignalWithConnetions>(signalWithConnections);
+		const validatedSignalConnections = validateType<SignalConnections>(validatedSignalWithConnections.connections);
 
 		validatedSignalConnections[UUID]!.Disconnect();
 		validatedSignalConnections[UUID]!.Destroy();
-		validatedSignalConnections[UUID] = undefined
+		validatedSignalConnections[UUID] = undefined;
 
 		if (object.length(validatedSignalConnections) === 0) {
-			validatedSignalWithConnections.signal.Destroy()
-			this.changedSignals[stateName] = undefined
+			validatedSignalWithConnections.signal.Destroy();
+			this.changedSignals[stateName] = undefined;
 		}
 	}
 }
