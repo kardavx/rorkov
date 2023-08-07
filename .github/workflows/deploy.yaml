@@ -23,7 +23,7 @@ jobs:
         node-version: 20.x
 
     - name: Install depedencies
-      run: npm ci
+      run: npm install
 
     - name: Build game
       run: rbxtsc --rojo build.project.json
