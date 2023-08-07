@@ -8,7 +8,7 @@ export default (model: Model, root?: BasePart, propertiesToDisable?: string[]) =
     }
 
     const startTick = os.clock()
-    model.GetChildren().forEach((child) => {
+    model.GetDescendants().forEach((child) => {
         if (!child.IsA('BasePart')) return
 
         if (propertiesToDisable) propertiesToDisable.forEach((propertyName: string) => child[propertyName] = false)

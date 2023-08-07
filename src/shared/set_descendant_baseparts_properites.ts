@@ -2,7 +2,7 @@ type Properties = {[propertyName in string]: any}
 type IgnoredBasePartName = string
 
 export default (model: Model, properties: Properties, ignores?: IgnoredBasePartName[]) => {
-    model.GetChildren().forEach((child) => {
+    model.GetDescendants().forEach((child) => {
         if (
             !child.IsA("BasePart") 
             || ignores 

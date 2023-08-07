@@ -4,7 +4,7 @@ import { Spring } from "shared/math_utility";
 import { Input } from "./input";
 import { InventoryBinds, Viewmodel, Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets } from "client/types/items";
 import State from "shared/state";
-import setChildBasePartsProperties from "shared/set_child_baseparts_properites";
+import setDescendantBasePartsProperties from "shared/set_descendant_baseparts_properites";
 import welder from "shared/welder";
 
 @Controller({})
