@@ -1,6 +1,7 @@
 import { log, LogMessage, LogType } from "./log_message";
 import { generateUUID, UUID } from "./uuid";
 import { Signal, Connection } from "@rbxts/beacon";
+import { validateType } from "./types_utility";
 
 type StateName = string;
 type ErrorMessage = string;
@@ -44,7 +45,7 @@ export default class State {
 
 	static errorLocalizations: ErrorLocalizations = {
 		stateNotAllowed: "State of name %s isnt allowed on this State Machine!",
-		UUIDNotFound: "UUID not found in any connections!"
+		UUIDNotFound: "UUID not found in any connections!",
 	};
 
 	private states: States = [];
@@ -86,17 +87,17 @@ export default class State {
 		return isAllowed;
 	}
 
-	private getSignalWithConnectionsFromUUID(UUID: UUID): SignalWithConnetions {
-		for (const [stateName: string, signalWithConnections: SignalWithConnections) in pairs(this.changedSignals)) {
-			if (signalWithConnections[UUID] !== undefined) {
-				return signalWithConnections
+	private getSignalWithConnectionsFromUUID(UUID: UUID): SignalWithConnetions | undefined {
+		for (const [_, signalWithConnections] of pairs(this.changedSignals)) {
+			if (signalWithConnections.connections[UUID] !== undefined) {
+				return signalWithConnections;
 			}
 		}
 
-		return undefined
+		return undefined;
 	}
 
-	getStateActive(stateName: StateName): boolean {
+	isStateActive(stateName: StateName): boolean {
 		if (!this.isStateValid(stateName)) {
 			this.sendToLogger(State.loggerLocalizations.tryingToCheckForStateThatIsntAllowed, stateName);
 		}
@@ -104,12 +105,22 @@ export default class State {
 		return this.states.find((activeState: StateName) => activeState === stateName) !== undefined;
 	}
 
+	isAnyActive(stateNames: StateName[]): boolean {
+		stateNames.forEach((stateName: StateName) => {
+			if (this.isStateActive(stateName)) {
+				return true;
+			}
+		});
+
+		return false;
+	}
+
 	activateState(stateName: StateName) {
 		if (!this.isStateValid(stateName)) {
 			this.throwError(State.errorLocalizations.stateNotAllowed, stateName);
 		}
 
-		if (this.getStateActive(stateName)) {
+		if (this.isStateActive(stateName)) {
 			this.sendToLogger(State.loggerLocalizations.stateAlreadyEnabled, stateName);
 			return;
 		}
@@ -122,7 +133,7 @@ export default class State {
 			this.throwError(State.errorLocalizations.stateNotAllowed, stateName);
 		}
 
-		if (!this.getStateActive(stateName)) {
+		if (!this.isStateActive(stateName)) {
 			this.sendToLogger(State.loggerLocalizations.stateIsNotEnabled, stateName);
 			return;
 		}
@@ -140,12 +151,12 @@ export default class State {
 	}
 
 	unbindFromStateChanged(UUID: UUID) {
-		const signalWithConnections = this.getSignalWithConnectionsFromUUID(UUID)
+		const signalWithConnections = this.getSignalWithConnectionsFromUUID(UUID);
 		if (signalWithConnections === undefined) {
-			throw formatLogMessage(State.errorLocalizations.UUIDNotFound)
+			throw this.formatLogMessage(State.errorLocalizations.UUIDNotFound);
 		}
 
-		signalWithConnections.connections[UUID].Disconnect()
-		signalWithConnections.connections[UUID].Destroy()
+		validateType<SignalWithConnetions>(signalWithConnections).connections[UUID]!.Disconnect();
+		validateType<SignalWithConnetions>(signalWithConnections).connections[UUID]!.Destroy();
 	}
 }
