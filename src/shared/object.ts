@@ -1,4 +1,4 @@
-// A class that allows for more in depth object manipulation
+// A utility that allows for more in depth object manipulation
 
 export default {
     /**
