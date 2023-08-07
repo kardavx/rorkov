@@ -1,52 +1,22 @@
-import { log, LogMessage, LogType } from "./log_message";
+import { log } from "./log_message";
 import { generateUUID, UUID } from "./uuid";
-import { Signal, Connection } from "@rbxts/beacon";
+import { Signal } from "@rbxts/beacon";
 import { validateType } from "./types_utility";
+import object from "./object";
+import { 
+	States, 
+	ChangedSignals, 
+	StateName, 
+	SignalConnections, 
+	SignalWithConnetions, 
+	SignalReturn, 
+	ChangedCallback 
+} from "./types/state";
 
-type StateName = string;
-type ErrorMessage = string;
-type LogName = string;
-type ErrorName = string;
-type SignalReturn = boolean;
-
-type States = StateName[];
-type LoggerLocalization = [logType: LogType, logMessage: LogMessage];
-type ChangedCallback = (state: boolean) => void;
-
-interface LoggerLocalizations {
-	[logName: LogName]: LoggerLocalization;
-}
-
-interface ErrorLocalizations {
-	[errorName: ErrorName]: ErrorMessage;
-}
-
-interface SignalConnections {
-	[UUID: UUID]: Connection<SignalReturn> | undefined;
-}
-
-interface SignalWithConnetions {
-	signal: Signal<SignalReturn>;
-	connections: SignalConnections;
-}
-
-interface ChangedSignals {
-	[stateName: StateName]: SignalWithConnetions;
-}
+import loggerLocalizations from './localization/log/state'
+import errorLocalizations from './localization/error/state'
 
 export default class State {
-	static loggerLocalizations: LoggerLocalizations = {
-		stateEnabled: ["verbose", "State of name %s was enabled"],
-		stateAlreadyEnabled: ["warning", "State of name %s is already enabled!"],
-		stateDisabled: ["verbose", "State of name %s was disabled"],
-		stateIsNotEnabled: ["warning", "State of name %s is not enabled!"],
-		tryingToCheckForStateThatIsntAllowed: ["warning", "State of name %s isnt allowed in this State Machine"],
-	};
-
-	static errorLocalizations: ErrorLocalizations = {
-		stateNotAllowed: "State of name %s isnt allowed on this State Machine!",
-		UUIDNotFound: "UUID not found in any connections!",
-	};
 
 	private states: States = [];
 	private changedSignals: ChangedSignals = {};
@@ -87,10 +57,10 @@ export default class State {
 		return isAllowed;
 	}
 
-	private getSignalWithConnectionsFromUUID(UUID: UUID): SignalWithConnetions | undefined {
-		for (const [_, signalWithConnections] of pairs(this.changedSignals)) {
-			if (signalWithConnections.connections[UUID] !== undefined) {
-				return signalWithConnections;
+	private getSignalWithConnectionsFromUUID(UUID: UUID): [StateName, SignalWithConnetions]| undefined {
+		for (const [stateName, signalWithConnections] of pairs(this.changedSignals)) {
+			if (signalWithConnections.connections![UUID] !== undefined) {
+				return [stateName, signalWithConnections];
 			}
 		}
 
@@ -99,7 +69,7 @@ export default class State {
 
 	isStateActive(stateName: StateName): boolean {
 		if (!this.isStateValid(stateName)) {
-			this.sendToLogger(State.loggerLocalizations.tryingToCheckForStateThatIsntAllowed, stateName);
+			this.sendToLogger(loggerLocalizations.tryingToCheckForStateThatIsntAllowed, stateName);
 		}
 
 		return this.states.find((activeState: StateName) => activeState === stateName) !== undefined;
@@ -117,11 +87,11 @@ export default class State {
 
 	activateState(stateName: StateName) {
 		if (!this.isStateValid(stateName)) {
-			this.throwError(State.errorLocalizations.stateNotAllowed, stateName);
+			this.throwError(errorLocalizations.stateNotAllowed, stateName);
 		}
 
 		if (this.isStateActive(stateName)) {
-			this.sendToLogger(State.loggerLocalizations.stateAlreadyEnabled, stateName);
+			this.sendToLogger(loggerLocalizations.stateAlreadyEnabled, stateName);
 			return;
 		}
 
@@ -130,11 +100,11 @@ export default class State {
 
 	disableState(stateName: StateName) {
 		if (!this.isStateValid(stateName)) {
-			this.throwError(State.errorLocalizations.stateNotAllowed, stateName);
+			this.throwError(errorLocalizations.stateNotAllowed, stateName);
 		}
 
 		if (!this.isStateActive(stateName)) {
-			this.sendToLogger(State.loggerLocalizations.stateIsNotEnabled, stateName);
+			this.sendToLogger(loggerLocalizations.stateIsNotEnabled, stateName);
 			return;
 		}
 
@@ -146,17 +116,27 @@ export default class State {
 		const callbackUUID = generateUUID();
 		const connection = changedSignal.signal.Connect(callback);
 
-		changedSignal.connections[callbackUUID] = connection;
+		changedSignal.connections![callbackUUID] = connection;
 		return callbackUUID;
 	}
 
 	unbindFromStateChanged(UUID: UUID) {
-		const signalWithConnections = this.getSignalWithConnectionsFromUUID(UUID);
-		if (signalWithConnections === undefined) {
-			throw this.formatLogMessage(State.errorLocalizations.UUIDNotFound);
+		const stateNameAndSignalWithConnections = this.getSignalWithConnectionsFromUUID(UUID);
+		if (stateNameAndSignalWithConnections === undefined) {
+			throw this.formatLogMessage(errorLocalizations.UUIDNotFound);
 		}
 
-		validateType<SignalWithConnetions>(signalWithConnections).connections[UUID]!.Disconnect();
-		validateType<SignalWithConnetions>(signalWithConnections).connections[UUID]!.Destroy();
+		const [stateName, signalWithConnections] = stateNameAndSignalWithConnections
+		const validatedSignalWithConnections = validateType<SignalWithConnetions>(signalWithConnections)
+		const validatedSignalConnections = validateType<SignalConnections>(validatedSignalWithConnections.connections)
+
+		validatedSignalConnections[UUID]!.Disconnect();
+		validatedSignalConnections[UUID]!.Destroy();
+		validatedSignalConnections[UUID] = undefined
+
+		if (object.length(validatedSignalConnections) === 0) {
+			validatedSignalWithConnections.signal.Destroy()
+			this.changedSignals[stateName] = undefined
+		}
 	}
 }

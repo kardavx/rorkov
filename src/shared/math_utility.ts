@@ -5,10 +5,10 @@ export function isNaN(x: number) {
 }
 
 export class Spring {
-	static readonly iterations = 8;
-	public target = new Vector3();
-	public position = new Vector3();
-	public velocity = new Vector3();
+	static iterations = 8;
+	public target = Vector3.zero;
+	public position = Vector3.zero;
+	public velocity = Vector3.zero;
 
 	/**
 	 * Spring class for manipulating Vector3 values
@@ -59,6 +59,16 @@ export class Spring {
 			this.position = this.position.add(this.velocity.mul(scaledDt));
 		}
 		return this.position;
+	}
+
+	/**
+	 * Reset the spring to Vector3.zero
+	 *
+	 */
+	public reset() {
+		this.velocity = Vector3.zero
+		this.target = Vector3.zero
+		this.position = Vector3.zero
 	}
 }
 

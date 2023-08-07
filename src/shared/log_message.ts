@@ -1,9 +1,6 @@
 import { RunService } from "@rbxts/services";
 const isStudio = RunService.IsStudio();
 
-export type LogType = "verbose" | "warning";
-export type LogMessage = string;
-
 const formatMessage = (logMessage: LogMessage) => `[SENT FROM LOGGER] ${logMessage}`;
 
 /**

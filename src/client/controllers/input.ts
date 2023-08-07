@@ -1,9 +1,6 @@
 import { Controller } from "@flamework/core";
 import { ContextActionService } from "@rbxts/services";
-
-interface Inputs {
-	[binderId: string]: Map<string, boolean>;
-}
+import { Inputs } from "client/types/input";
 
 @Controller({})
 export class Input {
