@@ -1,4 +1,5 @@
-import { Controller, OnInit, OnTick, OnStart } from "@flamework/core";
+import { Controller, OnTick, OnStart } from "@flamework/core";
+import { OnCharacterAdded } from "./core";
 import { Players, SoundService, Debris } from "@rbxts/services";
 import waitForSound from "shared/wait_for_sound";
 
@@ -8,7 +9,7 @@ interface MaterialSounds {
 }
 
 @Controller({})
-export class Footsteps implements OnInit, OnStart, OnTick {
+export class Footsteps implements OnStart, OnTick, OnCharacterAdded {
 	static localPlayer = Players.LocalPlayer;
 	static soundGroup = SoundService.WaitForChild("Footsteps");
 
@@ -57,11 +58,6 @@ export class Footsteps implements OnInit, OnStart, OnTick {
 	onCharacterAdded(character: Model) {
 		this.humanoid = character.WaitForChild("Humanoid") as Humanoid;
 		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
-	}
-
-	onInit() {
-		if (Footsteps.localPlayer.Character) this.onCharacterAdded(Footsteps.localPlayer.Character);
-		Footsteps.localPlayer.CharacterAdded.Connect((character: Model) => this.onCharacterAdded(character));
 	}
 
 	onStart() {
