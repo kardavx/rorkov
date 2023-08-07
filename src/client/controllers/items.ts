@@ -90,13 +90,13 @@ export class Items implements OnStart, OnRender {
 
 	private createOffsets(viewmodel: ViewmodelWithItem) {
 		return {
-			HumanoidRootPartToCameraBoneDistance = viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y
+			HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y
 		}
 	}
 
 	private createAlphas() {
 		return {
-			testAlpha = 0
+			testAlpha: 0
 		}	
 	}
 
@@ -162,7 +162,7 @@ export class Items implements OnStart, OnRender {
 	onStart() {
 		Items.inventoryBinds.forEach((keyCode: Enum.KeyCode, slot: number) => {
 			this.input.bindInput(
-				"Items",
+				"Hotbar",
 				keyCode.Name,
 				(inputState: boolean) => {
 					if (!inputState || this.state.isAnyActive(Items.blockingStates)) return;
@@ -171,7 +171,7 @@ export class Items implements OnStart, OnRender {
 				keyCode,
 			);
 		});
-	},
+	}
 
 	onRender(dt: number): void {
 		if (this.equippedItem) {
