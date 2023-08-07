@@ -2,7 +2,7 @@ import { OnCharacterAdded, OnPlayerAdded } from "server/services/player";
 import { OnStart, OnInit, Service } from "@flamework/core";
 
 @Service({})
-export class example implements OnStart, OnInit, OnPlayerAdded, OnCharacterAdded {
+export class Core implements OnStart, OnInit, OnPlayerAdded, OnCharacterAdded {
 	onInit() {
 		print("inited");
 	}
