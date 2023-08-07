@@ -1,4 +1,5 @@
-import { Controller, OnInit, OnStart, OnRender } from "@flamework/core";
+import { Controller, OnStart, OnRender } from "@flamework/core";
+import { OnCharacterAdded } from "./core";
 import { Players, Workspace } from "@rbxts/services";
 import { Input } from "./input";
 
@@ -8,11 +9,13 @@ interface ControlModule {
 export type MovementState = "walk" | "run";
 
 @Controller({})
-export class Movement implements OnInit, OnStart, OnRender {
+export class Movement implements OnCharacterAdded, OnStart, OnRender {
 	static localPlayer = Players.LocalPlayer;
 	static playerScripts = Movement.localPlayer.WaitForChild("PlayerScripts");
 	static PlayerModule = Movement.playerScripts.WaitForChild("PlayerModule");
-	static controlModule = require(Movement.PlayerModule.WaitForChild("ControlModule") as ModuleScript) as ControlModule;
+	static controlModule = require(Movement.PlayerModule.WaitForChild(
+		"ControlModule",
+	) as ModuleScript) as ControlModule;
 
 	static inputMap = new Map<Enum.KeyCode, Vector3>([
 		[Enum.KeyCode.W, new Vector3(0, 0, -1)],
@@ -62,7 +65,8 @@ export class Movement implements OnInit, OnStart, OnRender {
 		if (!this.humanoid || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
 		const input: Vector3 = this.moveVector;
 		const currentVelocity = this.humanoidRootPart.AssemblyLinearVelocity.Magnitude;
-		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * Movement.accelerationConstant[this.movementState];
+		const desiredVelocity =
+			currentVelocity + dt * (-1 + input.Magnitude * 2) * Movement.accelerationConstant[this.movementState];
 		const limitedVelocity = math.clamp(desiredVelocity, 0, Movement.speedConstant[this.movementState]);
 
 		this.humanoid.WalkSpeed = limitedVelocity;
@@ -75,17 +79,15 @@ export class Movement implements OnInit, OnStart, OnRender {
 		this.humanoid.Move(orientation.LookVector);
 	}
 
-	onInit(): void {
-		if (Movement.localPlayer.Character) this.onCharacterAdded(Movement.localPlayer.Character);
-		Movement.localPlayer.CharacterAdded.Connect((character: Model) => this.onCharacterAdded(character));
-	}
-
 	private abilities = {
 		jump: (inputState: boolean) => {
+			if (!inputState) return;
 			if (this.humanoid?.FloorMaterial === Enum.Material.Air) return;
 
 			this.humanoid?.ChangeState(Enum.HumanoidStateType.Jumping);
-			this.humanoidRootPart?.ApplyImpulse(new Vector3(0, Movement.forceConstant.jump, 0).mul(this.humanoidRootPart.AssemblyMass));
+			this.humanoidRootPart?.ApplyImpulse(
+				new Vector3(0, Movement.forceConstant.jump, 0).mul(this.humanoidRootPart.AssemblyMass),
+			);
 		},
 		sprint: (inputState: boolean) => {
 			this.movementState = inputState ? "run" : "walk";
@@ -98,7 +100,9 @@ export class Movement implements OnInit, OnStart, OnRender {
 				"movement",
 				keyCode.Name,
 				(inputState: boolean) => {
-					this.moveVector = inputState ? this.moveVector.add(keyCodeVector) : this.moveVector.sub(keyCodeVector);
+					this.moveVector = inputState
+						? this.moveVector.add(keyCodeVector)
+						: this.moveVector.sub(keyCodeVector);
 				},
 				keyCode,
 			);

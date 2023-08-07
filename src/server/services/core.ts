@@ -1,21 +1,54 @@
-import { OnCharacterAdded, OnPlayerAdded } from "server/services/player";
-import { OnStart, OnInit, Service } from "@flamework/core";
+import { Service, OnStart, Modding } from "@flamework/core";
+import { Players } from "@rbxts/services";
+
+export interface OnPlayerAdded {
+	onPlayerAdded(player: Player): void;
+}
+
+export interface OnCharacterAdded {
+	onCharacterAdded(player: Player, character: Model): void;
+}
 
 @Service({})
-export class Core implements OnStart, OnInit, OnPlayerAdded, OnCharacterAdded {
-	onInit() {
-		print("inited");
-	}
-
+export class PlayerAdded implements OnStart {
 	onStart() {
-		print("started");
-	}
+		const listeners = new Set<OnPlayerAdded>();
 
+		Modding.onListenerAdded<OnPlayerAdded>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnPlayerAdded>((object) => listeners.delete(object));
+
+		Players.PlayerAdded.Connect((player) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onPlayerAdded(player));
+			}
+		});
+
+		for (const player of Players.GetPlayers()) {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onPlayerAdded(player));
+			}
+		}
+	}
+}
+
+@Service({})
+export class CharacterAdded implements OnPlayerAdded {
 	onPlayerAdded(player: Player): void {
-		print(`${player.Name} joined`);
-	}
+		const listeners = new Set<OnCharacterAdded>();
 
-	onCharacterAdded(player: Player, character: Model): void {
-		print(`Added character for ${player.Name}: `, character);
+		Modding.onListenerAdded<OnCharacterAdded>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnCharacterAdded>((object) => listeners.delete(object));
+
+		player.CharacterAdded.Connect((character: Model) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onCharacterAdded(player, character));
+			}
+		});
+
+		if (player.Character) {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onCharacterAdded(player, player.Character as Model));
+			}
+		}
 	}
 }
