@@ -88,17 +88,13 @@ export class Items implements OnStart, OnRender {
 		return viewmodelClone as ViewmodelWithItem
 	}
 
-	private createOffsets(viewmodel: ViewmodelWithItem) {
-		return {
-			HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y
-		}
-	}
+	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
+		HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y
+	})
 
-	private createAlphas() {
-		return {
-			testAlpha: 0
-		}	
-	}
+	private createAlphas = () => ({
+		testAlpha: 0
+	})
 
 	private createEquippedItem(itemName: string) {
 		const viewmodel: ViewmodelWithItem = this.createViewmodel(itemName)
@@ -176,7 +172,7 @@ export class Items implements OnStart, OnRender {
 	onRender(dt: number): void {
 		if (this.equippedItem) {
 			const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt)
-			const baseCFrame = Items.camera!.CFrame.mul(new CFrame(0,-this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance,0))
+			const baseCFrame = Items.camera!.CFrame.mul(new CFrame(0,this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number * -1,0))
 			let finalCFrame = baseCFrame
 
 			for (const [_, updatedSpringOffset] of pairs(updatedSprings)) {
