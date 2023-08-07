@@ -1,22 +1,42 @@
-import { Controller, OnInit, OnTick } from "@flamework/core";
+import { Controller, OnInit, OnTick, OnStart } from "@flamework/core";
 import { Players, SoundService, Debris } from "@rbxts/services";
 import waitForSound from "shared/wait_for_sound";
 
+type Sounds = Sound[];
+interface MaterialSounds {
+	[materialName: string]: Sounds;
+}
+
 @Controller({})
-export class Footsteps implements OnInit, OnTick {
+export class Footsteps implements OnInit, OnStart, OnTick {
 	static localPlayer = Players.LocalPlayer;
-	static footSteepSounds = SoundService.WaitForChild("Footsteeps");
+	static soundGroup = SoundService.WaitForChild("Footsteps");
 
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
 
 	private lastStep = 0;
 	private amplitude = 5;
+	private lastSound: Sound | undefined = undefined;
+
+	private materialSounds: MaterialSounds = {};
+
+	getSound(): Sound {
+		const materialSounds = this.materialSounds[this.humanoid!.FloorMaterial.Name];
+		const sound: Sound = materialSounds[math.random(materialSounds.size()) - 1].Clone();
+
+		return sound;
+	}
 
 	playSound() {
-		const sound = Footsteps.footSteepSounds.WaitForChild("Step").Clone() as Sound;
+		let sound: Sound = this.getSound();
+		while (this.lastSound && sound.Name === this.lastSound.Name) {
+			sound = this.getSound();
+		}
+		this.lastSound = sound;
+
 		sound.Parent = SoundService;
-		waitForSound(sound)
+		waitForSound(sound);
 
 		sound.Play();
 		Debris.AddItem(sound, sound.TimeLength);
@@ -27,9 +47,9 @@ export class Footsteps implements OnInit, OnTick {
 		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 		if (velocity < 0.1) return;
 
-		const tick = os.clock();
-		if (tick - this.lastStep < this.amplitude / velocity) return;
-		this.lastStep = tick;
+		const currentTick = os.clock();
+		if (currentTick - this.lastStep < this.amplitude / velocity) return;
+		this.lastStep = currentTick;
 
 		this.playSound();
 	}
@@ -42,5 +62,19 @@ export class Footsteps implements OnInit, OnTick {
 	onInit() {
 		if (Footsteps.localPlayer.Character) this.onCharacterAdded(Footsteps.localPlayer.Character);
 		Footsteps.localPlayer.CharacterAdded.Connect((character: Model) => this.onCharacterAdded(character));
+	}
+
+	onStart() {
+		const soundGroups = Footsteps.soundGroup.GetChildren() as SoundGroup[];
+
+		soundGroups.forEach((soundGroup: SoundGroup) => {
+			this.materialSounds[soundGroup.Name] = [];
+
+			const sounds = soundGroup.GetChildren() as Sound[];
+
+			sounds.forEach((sound: Sound) => {
+				this.materialSounds[soundGroup.Name].push(sound);
+			});
+		});
 	}
 }
