@@ -1,8 +1,9 @@
-import { Controller, OnInit, OnRender } from "@flamework/core";
+import { Controller, OnInit, OnTick } from "@flamework/core";
 import { Players, SoundService, Debris } from "@rbxts/services";
+import waitForSound from "shared/wait_for_sound";
 
 @Controller({})
-export class Footsteeps implements OnInit, OnRender {
+export class Footsteps implements OnInit, OnTick {
 	static localPlayer = Players.LocalPlayer;
 	static footSteepSounds = SoundService.WaitForChild("Footsteeps");
 
@@ -12,23 +13,23 @@ export class Footsteeps implements OnInit, OnRender {
 	private lastStep = 0;
 	private amplitude = 5;
 
-	playSound(): void {
-		const sound = Footsteeps.footSteepSounds.WaitForChild("Step").Clone() as Sound;
+	playSound() {
+		const sound = Footsteps.footSteepSounds.WaitForChild("Step").Clone() as Sound;
 		sound.Parent = SoundService;
-		while (sound.TimeLength === 0) task.wait(); // pewnie nie wiesz po chuj to ale trzeba poczekac az sie sound zaladuje
+		waitForSound(sound)
 
 		sound.Play();
 		Debris.AddItem(sound, sound.TimeLength);
 	}
 
-	onRender(dt: number): void {
+	onTick() {
 		if (!this.humanoid || this.humanoid.Health === 0 || this.humanoid.FloorMaterial === Enum.Material.Air) return;
 		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 		if (velocity < 0.1) return;
 
-		const now = os.clock();
-		if (now - this.lastStep < this.amplitude / velocity) return;
-		this.lastStep = now;
+		const tick = os.clock();
+		if (tick - this.lastStep < this.amplitude / velocity) return;
+		this.lastStep = tick;
 
 		this.playSound();
 	}
@@ -38,8 +39,8 @@ export class Footsteeps implements OnInit, OnRender {
 		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 	}
 
-	onInit(): void {
-		if (Footsteeps.localPlayer.Character) this.onCharacterAdded(Footsteeps.localPlayer.Character);
-		Footsteeps.localPlayer.CharacterAdded.Connect((character: Model) => this.onCharacterAdded(character));
+	onInit() {
+		if (Footsteps.localPlayer.Character) this.onCharacterAdded(Footsteps.localPlayer.Character);
+		Footsteps.localPlayer.CharacterAdded.Connect((character: Model) => this.onCharacterAdded(character));
 	}
 }
