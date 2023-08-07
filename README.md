@@ -16,3 +16,10 @@
 14. Otwórz kolejną sesje terminala i wklej: rojo serve
 15. Przejdź na place i połącz plugin z serwerem
 16. Pisz kod
+
+# Pisanie kodu
+
+1. Typy definiuj z użyciem PascalCase
+2. Klasy definiuj z użyciem PascalCase
+3. Funkcje, zmienne etc. definiuj z użyciem camelCase
+4. Pliki nazywaj z użyciem snake_case
