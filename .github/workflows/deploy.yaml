@@ -22,7 +22,7 @@ jobs:
       with:
         node-version: 20.x
 
-    - name: Install roblox-ts
+    - name: Install roblox-ts@2.1.0
       run: npm install -g roblox-ts
 
     - name: Install depedencies
