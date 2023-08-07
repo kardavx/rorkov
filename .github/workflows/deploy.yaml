@@ -1,0 +1,28 @@
+name: Deploy master branch
+
+on:
+  push:
+    branches:
+    - master
+    - github-actions-config
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup aftman
+      uses: ok-nick/setup-aftman@v0.3.0
+
+    - name: Install rojo
+      run: aftman install
+
+    - name: Upload game to roblox
+      run: rojo upload --api_key 0VvLwUwoLUO7IoyFx9o3u9091Z44ThZN2Pbt7UD0t8xerWyc --asset_id 14353822519 --universe_id 4961904283 build.project.json
+
+    
+
