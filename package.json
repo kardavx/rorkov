@@ -4,9 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rbxtsc",
-    "postbuild": "rojo serve",
-    "watch": "rbxtsc -w"
+    "build": "rbxtsc --rojo serve.project.json",
+    "postbuild": "rojo serve serve.project.json",
+    "watch": "rbxtsc -w --rojo serve.project.json",
+    "predevbuild": "rbxtsc --rojo build.project.json",
+    "devbuild": "rojo build -o devbuild.rbxl build.project.json",
+    "postdevbuild": "start devbuild.rbxl"
   },
   "keywords": [],
   "author": "",
