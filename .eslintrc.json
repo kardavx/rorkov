@@ -7,21 +7,9 @@
 		"sourceType": "module",
 		"project": "./tsconfig.json"
 	},
-	"ignorePatterns": [
-		"/out",
-		"/.github"
-	],
-	"plugins": [
-		"@typescript-eslint",
-		"roblox-ts",
-		"prettier"
-	],
-	"extends": [
-		"eslint:recommended",
-		"plugin:@typescript-eslint/recommended",
-		"plugin:roblox-ts/recommended",
-		"plugin:prettier/recommended"
-	],
+	"ignorePatterns": ["/out", "/.github"],
+	"plugins": ["@typescript-eslint", "roblox-ts", "prettier"],
+	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:roblox-ts/recommended", "plugin:prettier/recommended"],
 	"rules": {
 		"prettier/prettier": "warn",
 		"camelcase": [
@@ -34,30 +22,19 @@
 			"error",
 			{
 				"selector": "class",
-				"format": [
-					"PascalCase"
-				]
+				"format": ["PascalCase"]
 			},
 			{
 				"selector": "typeLike",
-				"format": [
-					"PascalCase"
-				]
+				"format": ["PascalCase"]
 			},
 			{
 				"selector": "variable",
-				"format": [
-					"camelCase"
-				]
+				"format": ["camelCase"]
 			},
 			{
-				"selector": [
-					"classProperty",
-					"classMethod"
-				],
-				"format": [
-					"camelCase"
-				]
+				"selector": ["classProperty", "classMethod"],
+				"format": ["camelCase"]
 			}
 		]
 	}
