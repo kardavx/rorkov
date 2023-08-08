@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
     - master
-  push:
-    branches:
-    - github-actions-config
 
 permissions:
   checks: write
@@ -32,6 +29,7 @@ jobs:
     - name: Run linters
       uses: wearerequired/lint-action@v2
       with:
+        auto_fix: true
         eslint: true
         eslint_extensions: ts
         prettier: true
