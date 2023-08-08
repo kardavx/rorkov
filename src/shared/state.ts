@@ -3,15 +3,6 @@ import { generateUUID, UUID } from "./uuid";
 import { Signal } from "@rbxts/beacon";
 import { validateType } from "./types_utility";
 import object from "./object";
-import {
-	States,
-	ChangedSignals,
-	StateName,
-	SignalConnections,
-	SignalWithConnetions,
-	SignalReturn,
-	ChangedCallback,
-} from "./types/state";
 
 import loggerLocalizations from "./localization/log/state";
 import errorLocalizations from "./localization/error/state";
@@ -43,15 +34,14 @@ export default class State {
 		return this.changedSignals[stateName] as SignalWithConnetions;
 	}
 
-	private throwError(errorMessage: ErrorMessage, stateName?: StateName) {
+	private throwError(errorMessage: string, stateName?: StateName) {
 		throw this.formatLogMessage(errorMessage, stateName);
 	}
 
 	private isStateValid(stateName: StateName): boolean {
 		if (!this.statesAllowed) return true;
 
-		const isAllowed =
-			this.statesAllowed.find((allowedState: StateName) => allowedState === stateName) !== undefined;
+		const isAllowed = this.statesAllowed.find((allowedState: StateName) => allowedState === stateName) !== undefined;
 
 		return isAllowed;
 	}

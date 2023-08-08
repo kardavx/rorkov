@@ -1,3 +1,3 @@
-export interface Inputs {
+interface Inputs {
 	[binderId: string]: Map<string, boolean>;
 }
