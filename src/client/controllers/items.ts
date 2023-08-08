@@ -2,17 +2,7 @@ import { Controller, OnRender, OnStart } from "@flamework/core";
 import { ReplicatedStorage as shared, Workspace } from "@rbxts/services";
 import { Spring } from "shared/math_utility";
 import { Input } from "./input";
-import {
-	InventoryBinds,
-	Viewmodel,
-	Alphas,
-	Springs,
-	EquippedItem,
-	ViewmodelWithItem,
-	Item,
-	UpdatedSprings,
-	Offsets,
-} from "client/types/items";
+import { InventoryBinds, Viewmodel, Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets } from "client/types/items";
 import State from "shared/state";
 import setDescendantBasePartsProperties from "shared/set_descendant_baseparts_properites";
 import welder from "shared/welder";
@@ -53,10 +43,7 @@ export class Items implements OnStart, OnRender {
 
 	private resetSprings() {
 		for (const [springName, springObject] of pairs(this.Springs)) {
-			const isResetable =
-				Items.unresetableSprings.find(
-					(unresetableSpringName: string) => unresetableSpringName === springName,
-				) === undefined;
+			const isResetable = Items.unresetableSprings.find((unresetableSpringName: string) => unresetableSpringName === springName) === undefined;
 			if (isResetable) springObject.reset();
 		}
 	}
@@ -208,9 +195,7 @@ export class Items implements OnStart, OnRender {
 	onRender(dt: number): void {
 		if (this.equippedItem) {
 			const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
-			const baseCFrame = Items.camera!.CFrame.mul(
-				new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0),
-			);
+			const baseCFrame = Items.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
 			// const baseCFrame = Items.camera!.CFrame;
 			const finalCFrame = baseCFrame;
 
