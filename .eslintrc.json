@@ -30,6 +30,7 @@
 				"properties": "always"
 			}
 		],
+		"roblox-ts/no-array-pairs": "allow",
 		"@typescript-eslint/naming-convention": [
 			"error",
 			{
@@ -43,6 +44,14 @@
 				"format": [
 					"PascalCase"
 				]
+			},
+			{
+				"selector": "variable",
+				"modifiers": [
+					"exported",
+					"const"
+				],
+				"format": null
 			},
 			{
 				"selector": "variable",
