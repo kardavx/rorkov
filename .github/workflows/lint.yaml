@@ -23,7 +23,7 @@ jobs:
         node-version: 20.x
 
     - name: Install dev depedencies
-      run: npm install only=dev
+      run: npm install --only=dev
 
     - name: Install dependencies
       run: npm install
