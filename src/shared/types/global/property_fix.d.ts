@@ -1,3 +1,3 @@
 interface BasePart extends Instance {
-	[propertyName: string]: any;
+	[propertyName: string]: unknown;
 }

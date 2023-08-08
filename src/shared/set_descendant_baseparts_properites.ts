@@ -1,4 +1,4 @@
-type Properties = { [propertyName in string]: any };
+type Properties = { [propertyName in string]: unknown };
 type IgnoredBasePartName = string;
 
 export default (model: Model, properties: Properties, ignores?: IgnoredBasePartName[]) => {
