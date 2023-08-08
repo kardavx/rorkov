@@ -28,7 +28,7 @@ export class Items implements OnStart, OnRender {
 	static camera = Workspace.CurrentCamera;
 	static unresetableSprings = [];
 
-	private Springs: Springs = {
+	private springs: Springs = {
 		Recoil: new Spring(1, 1, 1, 1),
 		Sway: new Spring(1, 1, 1, 1),
 	};
@@ -42,7 +42,7 @@ export class Items implements OnStart, OnRender {
 	constructor(private input: Input) {}
 
 	private resetSprings() {
-		for (const [springName, springObject] of pairs(this.Springs)) {
+		for (const [springName, springObject] of pairs(this.springs)) {
 			const isResetable = Items.unresetableSprings.find((unresetableSpringName: string) => unresetableSpringName === springName) === undefined;
 			if (isResetable) springObject.reset();
 		}
@@ -51,7 +51,7 @@ export class Items implements OnStart, OnRender {
 	private getUpdatedSprings(dt: number) {
 		const updatedSprings: UpdatedSprings = {};
 
-		for (const [springName, springObject] of pairs(this.Springs)) {
+		for (const [springName, springObject] of pairs(this.springs)) {
 			updatedSprings[springName] = springObject.getOffset(dt);
 		}
 

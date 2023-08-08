@@ -55,9 +55,17 @@
 			},
 			{
 				"selector": "variable",
+				"modifiers": [
+					"destructured"
+				],
+				"format": null
+			},
+			{
+				"selector": "variable",
 				"format": [
 					"camelCase"
-				]
+				],
+				"leadingUnderscore": "allow"
 			},
 			{
 				"selector": [
