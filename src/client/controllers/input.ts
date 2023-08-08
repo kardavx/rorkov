@@ -9,12 +9,7 @@ export class Input {
 		return string.format("%s-%s", binderId, actionName);
 	}
 
-	public bindInput(
-		binderId: string,
-		actionName: string,
-		actionUse: (inputState: boolean) => void,
-		...keycodes: [Enum.KeyCode | Enum.UserInputType]
-	) {
+	public bindInput(binderId: string, actionName: string, actionUse: (inputState: boolean) => void, ...keycodes: [Enum.KeyCode | Enum.UserInputType]) {
 		if (this.inputs[binderId] === undefined) this.inputs[binderId] = new Map<string, boolean>();
 
 		const binder = this.inputs[binderId];

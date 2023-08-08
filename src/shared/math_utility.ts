@@ -66,9 +66,9 @@ export class Spring {
 	 *
 	 */
 	public reset() {
-		this.velocity = Vector3.zero
-		this.target = Vector3.zero
-		this.position = Vector3.zero
+		this.velocity = Vector3.zero;
+		this.target = Vector3.zero;
+		this.position = Vector3.zero;
 	}
 }
 
@@ -76,12 +76,7 @@ export class Spring {
  * Simple class for sinusoidal motion
  */
 export class SineWave {
-	public constructor(
-		public readonly amplitude = 1,
-		public readonly frequency = 1,
-		public readonly phaseShift = 0,
-		public readonly verticalShift = 0,
-	) {}
+	public constructor(public readonly amplitude = 1, public readonly frequency = 1, public readonly phaseShift = 0, public readonly verticalShift = 0) {}
 
 	/**
 	 * Update wave
