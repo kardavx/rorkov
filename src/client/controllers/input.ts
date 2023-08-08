@@ -15,7 +15,7 @@ export class Input {
 		const binder = this.inputs[binderId];
 		const actionExists = binder.has(actionName);
 
-		if (actionExists) throw `Action of name ${actionName} already exists on binder ${binderId}!`;
+		if (actionExists) throw `Action '${actionName}' already exists on binder ${binderId}!`;
 
 		ContextActionService.BindAction(
 			this.getFormattedActionName(binderId, actionName),
