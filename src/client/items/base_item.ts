@@ -14,24 +14,26 @@ export class BaseItem {
 	static items = BaseItem.data.FindFirstChild("items") as Folder;
 	static camera = Workspace.CurrentCamera;
 
-	static states = ["equip", "unequip"];
-	public blockingStates = ["equip", "unequip"];
-
-	protected states = BaseItem.states;
-	private Springs: Springs = {
+	static states: string[] = ["equip", "unequip"];
+	static blockingStates: string[] = ["equip", "unequip"];
+	static springs: Springs = {
 		Recoil: new Spring(1, 1, 1, 1),
 		Sway: new Spring(1, 1, 1, 1),
 	};
 
+	private states: string[];
+	private blockingStates: string[];
+	private springs: Springs;
+
 	private equippedItem: EquippedItem;
-	private state: State = new State(BaseItem.states);
+	private state: State;
 	private idle: AnimationTrack | undefined;
 	private equipanim: AnimationTrack | undefined;
 
 	private getUpdatedSprings(dt: number) {
 		const updatedSprings: UpdatedSprings = {};
 
-		for (const [springName, springObject] of pairs(this.Springs)) {
+		for (const [springName, springObject] of pairs(this.springs)) {
 			updatedSprings[springName] = springObject.getOffset(dt);
 		}
 
@@ -93,18 +95,18 @@ export class BaseItem {
 	private destroyEquippedItem = () => {
 		this.equippedItem!.item.Destroy();
 		this.equippedItem!.viewmodel.Destroy();
-		table.clear(this.equippedItem!.offsets);
-		table.freeze(this.equippedItem!.offsets);
-		table.clear(this.equippedItem!.alphas);
-		table.freeze(this.equippedItem!.alphas);
 	};
 
 	public isAnyBlockingStateActive = (): boolean => {
 		return this.state.isAnyActive(this.blockingStates);
 	};
 
-	constructor(private input: Input, private itemName: string) {
-		print(this.state);
+	constructor(private input: Input, private itemName: string, states: string[] = [], blockingStates: string[] = [], springs: Springs = {}) {
+		this.states = [...BaseItem.states, ...states];
+		this.blockingStates = [...BaseItem.blockingStates, ...blockingStates];
+		this.springs = { ...BaseItem.springs, ...springs };
+		this.state = new State(this.states);
+
 		this.state.activateState("equip");
 
 		this.equippedItem = this.createEquippedItem(this.itemName);
@@ -121,7 +123,7 @@ export class BaseItem {
 
 		this.equipanim.Play(0, 10, 1);
 		this.idle.Play(0);
-		//this.equipanim.Stopped.Wait();
+		this.equipanim.Stopped.Wait();
 
 		this.state.disableState("equip");
 	}
@@ -132,8 +134,6 @@ export class BaseItem {
 		this.idle!.Stop(0);
 		this.equipanim!.Play(0, 10, -1);
 		this.destroyEquippedItem();
-		table.clear(this);
-		table.freeze(this);
 
 		this.state.disableState("unequip");
 	};
@@ -150,5 +150,3 @@ export class BaseItem {
 		this.equippedItem.viewmodel.PivotTo(finalCFrame);
 	};
 }
-
-//fireowanie z poziomu baseitem signale equip i unequip i lapanie go w items

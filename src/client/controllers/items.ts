@@ -35,6 +35,7 @@ export class Items implements OnStart, OnRender {
 
 	private unequip() {
 		this.currentItemObject!.destroy();
+		this.currentItemObject = undefined;
 	}
 
 	private selectSlot(slot: number) {
