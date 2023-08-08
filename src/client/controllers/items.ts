@@ -45,13 +45,13 @@ export class Items implements OnStart, OnRender {
 	private inventory = ["SR-16"];
 	private equippedItem: EquippedItem | undefined;
 	private desiredNextSlot: number | undefined;
-	private state: State = new State();
+	private state: State = new State(["equip", "unequip"]);
 	private idle: AnimationTrack | undefined;
 	private equipanim: AnimationTrack | undefined;
 
 	constructor(private input: Input) {}
 
-	private resetSprings() {
+	public resetSprings() {
 		for (const [springName, springObject] of pairs(this.Springs)) {
 			const isResetable =
 				Items.unresetableSprings.find(
@@ -61,7 +61,7 @@ export class Items implements OnStart, OnRender {
 		}
 	}
 
-	private getUpdatedSprings(dt: number) {
+	public getUpdatedSprings(dt: number) {
 		const updatedSprings: UpdatedSprings = {};
 
 		for (const [springName, springObject] of pairs(this.Springs)) {
@@ -103,11 +103,11 @@ export class Items implements OnStart, OnRender {
 		return viewmodelClone as ViewmodelWithItem;
 	}
 
-	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
+	public createOffsets = (viewmodel: ViewmodelWithItem) => ({
 		HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y,
 	});
 
-	private createAlphas = () => ({
+	public createAlphas = () => ({
 		testAlpha: 0,
 	});
 
@@ -135,15 +135,17 @@ export class Items implements OnStart, OnRender {
 		this.equippedItem = undefined;
 	}
 
-	private equip(slot: number) {
+	public equip(slot: number) {
 		const itemName = this.inventory[slot];
 		if (itemName === undefined) return;
 
-		this.state.activateState("equipping");
+		this.state.activateState("equip");
 		this.equippedItem = this.createEquippedItem(itemName);
-		const animator = this.equippedItem.viewmodel.AnimationController.Animator;
+		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
+
 		const idle = new Instance("Animation");
 		idle.AnimationId = `rbxassetid://${14351754927}`;
+
 		const equip = new Instance("Animation");
 		equip.AnimationId = `rbxassetid://${14351861197}`;
 
@@ -154,7 +156,7 @@ export class Items implements OnStart, OnRender {
 		this.idle.Play(0);
 		this.equipanim.Stopped.Wait();
 
-		this.state.disableState("equipping");
+		this.state.disableState("equip");
 
 		if (this.desiredNextSlot !== undefined) {
 			this.unequip();
@@ -162,15 +164,15 @@ export class Items implements OnStart, OnRender {
 		}
 	}
 
-	private unequip() {
-		this.state.activateState("unequipping");
+	public unequip() {
+		this.state.activateState("unequip");
 		// do unequip logic
 		this.idle!.Stop(0);
 		this.equipanim!.Play(0, 10, -1);
 		this.equipanim!.Stopped.Wait();
 		this.destroyEquippedItem();
 		this.resetSprings();
-		this.state.disableState("unequipping");
+		this.state.disableState("unequip");
 
 		if (this.desiredNextSlot !== undefined) {
 			const nextSlot = this.desiredNextSlot;
@@ -183,7 +185,7 @@ export class Items implements OnStart, OnRender {
 		if (!this.equippedItem) {
 			this.equip(slot);
 		} else {
-			if (this.state.isAnyActive(["equipping", "unequipping"])) {
+			if (this.state.isAnyActive(["equip", "unequip"])) {
 				this.desiredNextSlot = slot;
 			} else {
 				this.unequip();
