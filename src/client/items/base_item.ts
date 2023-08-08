@@ -15,8 +15,9 @@ export class BaseItem {
 	static camera = Workspace.CurrentCamera;
 
 	static states = ["equip", "unequip"];
-	static blockingStates = ["equip", "unequip"];
+	public blockingStates = ["equip", "unequip"];
 
+	protected states = BaseItem.states;
 	private Springs: Springs = {
 		Recoil: new Spring(1, 1, 1, 1),
 		Sway: new Spring(1, 1, 1, 1),
@@ -99,10 +100,11 @@ export class BaseItem {
 	};
 
 	public isAnyBlockingStateActive = (): boolean => {
-		return this.state.isAnyActive(BaseItem.blockingStates);
+		return this.state.isAnyActive(this.blockingStates);
 	};
 
 	constructor(private input: Input, private itemName: string) {
+		print(this.state);
 		this.state.activateState("equip");
 
 		this.equippedItem = this.createEquippedItem(this.itemName);
@@ -119,7 +121,7 @@ export class BaseItem {
 
 		this.equipanim.Play(0, 10, 1);
 		this.idle.Play(0);
-		this.equipanim.Stopped.Wait();
+		//this.equipanim.Stopped.Wait();
 
 		this.state.disableState("equip");
 	}
