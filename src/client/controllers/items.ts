@@ -1,7 +1,7 @@
+import { ItemTypes } from "./core";
 import { Controller, OnRender, OnStart } from "@flamework/core";
 import { BaseItem } from "client/items/base_item";
 import { Input } from "./input";
-import { Weapon } from "client/items/weapon";
 
 @Controller({})
 export class Items implements OnStart, OnRender {
@@ -17,8 +17,11 @@ export class Items implements OnStart, OnRender {
 		Enum.KeyCode.Nine,
 	];
 
-	static itemNameToType: { [itemName: string]: typeof BaseItem } = {
-		"SR-16": Weapon,
+	static itemNameToType: { [itemName: string]: typeof ItemTypes.Weapon | typeof ItemTypes.Grenade | typeof ItemTypes.Useable } = {
+		"SR-16": ItemTypes.Weapon,
+		"RGD-5": ItemTypes.Grenade,
+		Salewa: ItemTypes.Useable,
+		Mayonnaise: ItemTypes.Useable,
 	};
 
 	private inventory = ["SR-16"];

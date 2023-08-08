@@ -1,34 +1,34 @@
-import { ReplicatedStorage as shared, Workspace } from "@rbxts/services";
-import setDescendantBasePartsProperties from "shared/set_descendant_baseparts_properites";
+import { Workspace } from "@rbxts/services";
 
 import { Spring } from "shared/math_utility";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
-import welder from "shared/welder";
+import createViewmodel from "client/functions/items/create_viewmodel";
 
-import { Viewmodel, Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets } from "client/types/items";
+import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets, Actions } from "client/types/items";
 
 export class BaseItem {
-	static data = shared.WaitForChild("data") as Folder;
-	static viewmodel = BaseItem.data.FindFirstChild("viewmodel") as Viewmodel;
-	static items = BaseItem.data.FindFirstChild("items") as Folder;
 	static camera = Workspace.CurrentCamera;
 
-	static states: string[] = ["equip", "unequip"];
-	static blockingStates: string[] = ["equip", "unequip"];
-	static springs: Springs = {
+	private states: string[] = ["equip", "unequip"];
+	private blockingStates: string[] = ["equip", "unequip"];
+	private springs: Springs = {
 		Recoil: new Spring(1, 1, 1, 1),
 		Sway: new Spring(1, 1, 1, 1),
 	};
 
-	private states: string[];
-	private blockingStates: string[];
-	private springs: Springs;
-
-	private equippedItem: EquippedItem;
-	private state: State;
 	private idle: AnimationTrack | undefined;
 	private equipanim: AnimationTrack | undefined;
+
+	protected state: State;
+	protected equippedItem: EquippedItem;
+
+	//Inputs
+	private testAction = (inputState: boolean) => {
+		print("testAction fired!");
+	};
+
+	private actions: Actions = new Map<Enum.KeyCode, (inputState: boolean) => void>([[Enum.KeyCode.F, this.testAction]]);
 
 	private getUpdatedSprings(dt: number) {
 		const updatedSprings: UpdatedSprings = {};
@@ -40,36 +40,6 @@ export class BaseItem {
 		return updatedSprings;
 	}
 
-	private createViewmodel(itemName: string): ViewmodelWithItem {
-		const item = BaseItem.items.FindFirstChild(itemName) as Item;
-		if (item === undefined) throw `couldn't find item ${itemName}`;
-
-		const viewmodelClone: Viewmodel = BaseItem.viewmodel.Clone();
-		const itemClone: Item = item.Clone();
-
-		viewmodelClone.Name = "viewmodel";
-		itemClone.Name = "item";
-
-		if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.HumanoidRootPart;
-		if (!itemClone.PrimaryPart) itemClone.PrimaryPart = itemClone.Grip;
-
-		const properties = { Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false };
-		setDescendantBasePartsProperties(viewmodelClone, properties, ["HumanoidRootPart"]);
-		setDescendantBasePartsProperties(itemClone, properties);
-
-		welder(itemClone);
-		viewmodelClone.Parent = BaseItem.camera;
-		itemClone.Parent = viewmodelClone;
-
-		viewmodelClone.PrimaryPart.Anchored = true;
-		const motor = new Instance("Motor6D");
-		motor.Part0 = viewmodelClone.UpperTorso;
-		motor.Part1 = itemClone.PrimaryPart;
-		motor.Parent = itemClone.PrimaryPart;
-
-		return viewmodelClone as ViewmodelWithItem;
-	}
-
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
 		HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y,
 	});
@@ -79,7 +49,7 @@ export class BaseItem {
 	});
 
 	private createEquippedItem = (itemName: string) => {
-		const viewmodel: ViewmodelWithItem = this.createViewmodel(itemName);
+		const viewmodel: ViewmodelWithItem = createViewmodel(itemName);
 		const item: Item = viewmodel.item;
 		const alphas: Alphas = this.createAlphas();
 		const offsets: Offsets = this.createOffsets(viewmodel);
@@ -97,15 +67,24 @@ export class BaseItem {
 		this.equippedItem!.viewmodel.Destroy();
 	};
 
+	private bindActions = () => {
+		this.actions.forEach((keycodeAction: (inputState: boolean) => void, keyCode: Enum.KeyCode) => {
+			this.input.bindInput("Actions", keyCode.Name, keycodeAction, keyCode);
+		});
+	};
+
 	public isAnyBlockingStateActive = (): boolean => {
 		return this.state.isAnyActive(this.blockingStates);
 	};
 
-	constructor(private input: Input, private itemName: string, states: string[] = [], blockingStates: string[] = [], springs: Springs = {}) {
-		this.states = [...BaseItem.states, ...states];
-		this.blockingStates = [...BaseItem.blockingStates, ...blockingStates];
-		this.springs = { ...BaseItem.springs, ...springs };
+	constructor(private input: Input, private itemName: string, states: string[] = [], blockingStates: string[] = [], springs: Springs = {}, actions: Actions) {
+		this.states = [...this.states, ...states];
+		this.blockingStates = [...this.blockingStates, ...blockingStates];
+		this.springs = { ...this.springs, ...springs };
 		this.state = new State(this.states);
+		this.actions = new Map([...this.actions, ...actions]);
+
+		this.bindActions();
 
 		this.state.activateState("equip");
 
