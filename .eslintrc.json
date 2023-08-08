@@ -8,7 +8,8 @@
 		"project": "./tsconfig.json"
 	},
 	"ignorePatterns": [
-		"/out"
+		"/out",
+		"/.github"
 	],
 	"plugins": [
 		"@typescript-eslint",
@@ -27,6 +28,36 @@
 			"error",
 			{
 				"properties": "always"
+			}
+		],
+		"@typescript-eslint/naming-convention": [
+			"error",
+			{
+				"selector": "class",
+				"format": [
+					"PascalCase"
+				]
+			},
+			{
+				"selector": "typeLike",
+				"format": [
+					"PascalCase"
+				]
+			},
+			{
+				"selector": "variable",
+				"format": [
+					"camelCase"
+				]
+			},
+			{
+				"selector": [
+					"classProperty",
+					"classMethod"
+				],
+				"format": [
+					"camelCase"
+				]
 			}
 		]
 	}
