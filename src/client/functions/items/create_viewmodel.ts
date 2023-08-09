@@ -19,7 +19,7 @@ export default (itemName: string) => {
 	viewmodelClone.Name = "viewmodel";
 	itemClone.Name = "item";
 
-	if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.HumanoidRootPart;
+	if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.Torso;
 	if (!itemClone.PrimaryPart) itemClone.PrimaryPart = itemClone.Grip;
 
 	viewmodelClone.PivotTo(new CFrame(0, 0, 0));
@@ -35,9 +35,10 @@ export default (itemName: string) => {
 
 	viewmodelClone.PrimaryPart.Anchored = true;
 	const motor = new Instance("Motor6D");
-	motor.Part0 = itemClone.PrimaryPart;
-	motor.Part1 = viewmodelClone.UpperTorso;
-	motor.Parent = itemClone.PrimaryPart;
+	motor.Name = "GunJoint";
+	motor.Part0 = viewmodelClone.Torso;
+	motor.Part1 = itemClone.PrimaryPart;
+	motor.Parent = viewmodelClone.Torso;
 
 	return viewmodelClone as ViewmodelWithItem;
 };

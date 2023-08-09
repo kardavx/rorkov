@@ -3,8 +3,7 @@ import { Spring } from "shared/math_utility";
 export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
 export interface Viewmodel extends Model {
-	UpperTorso: BasePart;
-	HumanoidRootPart: BasePart;
+	Torso: BasePart;
 	CameraBone: BasePart;
 	AnimationController: AnimationController & {
 		Animator: Animator;

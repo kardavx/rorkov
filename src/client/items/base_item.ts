@@ -1,4 +1,4 @@
-import { Workspace } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
 
 import { Spring } from "shared/math_utility";
 import { Input } from "client/controllers/input";
@@ -41,7 +41,7 @@ export class BaseItem {
 	}
 
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
-		HumanoidRootPartToCameraBoneDistance: viewmodel.HumanoidRootPart.Position.Y - viewmodel.CameraBone.Position.Y,
+		HumanoidRootPartToCameraBoneDistance: viewmodel.Torso.Position.Y - viewmodel.CameraBone.Position.Y,
 	});
 
 	private createAlphas = () => ({
@@ -63,7 +63,6 @@ export class BaseItem {
 	};
 
 	private destroyEquippedItem = () => {
-		this.equippedItem!.item.Destroy();
 		this.equippedItem!.viewmodel.Destroy();
 	};
 
@@ -92,17 +91,19 @@ export class BaseItem {
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 		const idle = new Instance("Animation");
-		idle.AnimationId = `rbxassetid://${14351754927}`;
+		idle.AnimationId = `rbxassetid://${14375693467}`;
 
-		const equip = new Instance("Animation");
-		equip.AnimationId = `rbxassetid://${14351861197}`;
+		const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
+		const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
 
 		this.idle = animator.LoadAnimation(idle);
-		this.equipanim = animator.LoadAnimation(equip);
+		const idle2 = animatorhum.LoadAnimation(idle);
+		// this.equipanim = animator.LoadAnimation(equip);
 
-		this.equipanim.Play(0, 10, 1);
+		// this.equipanim.Play(0, 10, 1);
 		this.idle.Play(0);
-		this.equipanim.Stopped.Wait();
+		idle2.Play(0);
+		// this.equipanim.Stopped.Wait();
 
 		this.state.disableState("equip");
 	}
