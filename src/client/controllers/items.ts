@@ -17,7 +17,7 @@ export class Items implements OnStart, OnRender {
 		Enum.KeyCode.Nine,
 	];
 
-	static itemNameToType: { [itemName: string]: typeof ItemTypes.Weapon | typeof ItemTypes.Grenade | typeof ItemTypes.Useable } = {
+	static itemNameToType: { [itemName: string]: typeof ItemTypes[keyof typeof ItemTypes] } = {
 		"SR-16": ItemTypes.Weapon,
 		"RGD-5": ItemTypes.Grenade,
 		Salewa: ItemTypes.Useable,
