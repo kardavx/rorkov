@@ -12,8 +12,8 @@ export type MovementState = "walk" | "run";
 export class Movement implements OnCharacterAdded, OnStart, OnRender {
 	static localPlayer = Players.LocalPlayer;
 	static playerScripts = Movement.localPlayer.WaitForChild("PlayerScripts");
-	static PlayerModule = Movement.playerScripts.WaitForChild("PlayerModule");
-	static controlModule = require(Movement.PlayerModule.WaitForChild("ControlModule") as ModuleScript) as ControlModule;
+	static playerModule = Movement.playerScripts.WaitForChild("PlayerModule");
+	static controlModule = require(Movement.playerModule.WaitForChild("ControlModule") as ModuleScript) as ControlModule;
 
 	static inputMap = new Map<Enum.KeyCode, Vector3>([
 		[Enum.KeyCode.W, new Vector3(0, 0, -1)],
