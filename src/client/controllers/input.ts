@@ -1,19 +1,11 @@
-import { Controller, OnTick } from "@flamework/core";
-
-type InputType = "Hold" | "Click" | "Double Click" | "Default";
-type Inputs = {
-	[keyCode in string]: {
-		[actionName: string]: {
-			inputType: InputType;
-			inputState: boolean;
-			inputClickTick: number | undefined;
-		};
-	};
-};
+import { Controller, OnTick, OnInit } from "@flamework/core";
+import { ContextActionService, UserInputService } from "@rbxts/services";
 
 @Controller({})
-export class Input implements OnTick {
-	private inputs: Inputs = {};
+export class Input implements OnTick, OnInit {
+	onInit(): void {
+		ContextActionService.UnbindAllActions();
+	}
 
 	onTick(dt: number): void {}
 }
