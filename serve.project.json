@@ -1,18 +1,11 @@
 {
 	"name": "flamework-game",
-	"globIgnorePaths": [
-		"**/package.json",
-		"**/tsconfig.json"
-	],
+	"globIgnorePaths": ["**/package.json", "**/tsconfig.json"],
 	"tree": {
 		"$className": "DataModel",
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
 			"$path": "out/server"
-		},
-		"ServerStorage": {
-			"$className": "ServerStorage",
-			"$path": "out/storage"
 		},
 		"ReplicatedStorage": {
 			"$className": "ReplicatedStorage",
@@ -59,6 +52,20 @@
 			"$path": "out/sounds",
 			"$properties": {
 				"RespectFilteringEnabled": true
+			}
+		},
+		"Lighting": {
+			"$properties": {
+				"Brightness": 3,
+				"ShadowSoftness": 0.2,
+				"ClockTime": 14.5,
+				"GeographicLatitude": 0,
+				"GlobalShadows": true,
+				"Ambient": [0.27450980392156865, 0.27450980392156865, 0.27450980392156865],
+				"OutdoorAmbient": [0.27450980392156865, 0.27450980392156865, 0.27450980392156865],
+				"EnvironmentDiffuseScale": 1,
+				"EnvironmentSpecularScale": 1,
+				"Technology": "ShadowMap"
 			}
 		}
 	}
