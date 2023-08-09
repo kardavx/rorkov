@@ -70,6 +70,15 @@ export class Spring {
 		this.target = Vector3.zero;
 		this.position = Vector3.zero;
 	}
+
+	/**
+	 * Destroy the spring object
+	 *
+	 */
+	public destroy() {
+		table.clear(this);
+		table.freeze(this);
+	}
 }
 
 /**
