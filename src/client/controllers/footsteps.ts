@@ -1,3 +1,5 @@
+/*
+
 import { Controller, OnTick, OnStart } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
 import { Players, SoundService, Debris } from "@rbxts/services";
@@ -74,3 +76,5 @@ export class Footsteps implements OnStart, OnTick, OnCharacterAdded {
 		});
 	}
 }
+
+*/
