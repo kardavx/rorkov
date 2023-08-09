@@ -1,11 +1,15 @@
-import { Modding, Controller, OnInit } from "@flamework/core";
+import { Modding, OnInit } from "@flamework/core";
 import { Players } from "@rbxts/services";
+import { RunService } from "@rbxts/services";
 
 export interface OnCharacterAdded {
 	onCharacterAdded(character: Model): void;
 }
 
-@Controller({})
+export interface OnPostCameraRender {
+	onPostCameraRender(deltaTime: number): void;
+}
+
 export class CharacterAdded implements OnInit {
 	static player: Player = Players.LocalPlayer;
 
@@ -26,5 +30,20 @@ export class CharacterAdded implements OnInit {
 				task.spawn(() => listener.onCharacterAdded(CharacterAdded.player.Character as Model));
 			}
 		}
+	}
+}
+
+export class PostCameraRender implements OnInit {
+	onInit(): void {
+		const listeners = new Set<OnPostCameraRender>();
+
+		Modding.onListenerAdded<OnPostCameraRender>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnPostCameraRender>((object) => listeners.delete(object));
+
+		RunService.BindToRenderStep("onPostCameraRender", Enum.RenderPriority.Camera.Value + 1, (deltaTime: number) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onPostCameraRender(deltaTime));
+			}
+		});
 	}
 }
