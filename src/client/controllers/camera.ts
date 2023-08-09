@@ -1,15 +1,28 @@
-import { Controller, OnStart, OnInit } from "@flamework/core";
+import { Controller } from "@flamework/core";
+import { OnPostCameraRender, OnCharacterAdded } from "./core";
+import { Workspace } from "@rbxts/services";
 
-interface Modifiers {
-	[modifierName: string]: Modifier | undefined;
-}
+type Modifiers = { [modifierName in string]: Modifier | undefined };
 
 export class Modifier {
 	static modifiers: Modifiers = {};
 	static dampenAmount = 5;
 
-	private targetOffset: CFrame = new CFrame();
-	private currentOffset: CFrame = this.targetOffset;
+	static getSummedOffsets = (): CFrame => {
+		let finalOffset = new CFrame();
+		for (const [_, modifierObject] of pairs(Modifier.modifiers)) {
+			finalOffset = finalOffset.mul(modifierObject.getOffset());
+		}
+		return finalOffset;
+	};
+
+	static updateOffsets = (deltaTime: number): void => {
+		for (const [_, modifierObject] of pairs(Modifier.modifiers)) {
+			modifierObject.update(deltaTime);
+		}
+	};
+
+	private offset: CFrame = new CFrame();
 	private destroyed = false;
 
 	private constructor(private name: string, private isAutomaticallyDampened: boolean) {}
@@ -17,35 +30,62 @@ export class Modifier {
 	public getOffset = (): CFrame => {
 		if (this.destroyed) throw `Attempt to get offset of modifier after it was destroyed`;
 
-		return this.currentOffset;
+		return this.offset;
 	};
 
 	public setOffset = (newOffset: CFrame) => {
 		if (this.destroyed) throw `Attempt to set offset of modifier after it was destroyed`;
 
-		this.currentOffset = newOffset;
-		this.targetOffset = newOffset;
+		this.offset = newOffset;
 	};
 
 	public update = (deltaTime: number) => {
 		if (this.destroyed) throw `Attempt to update modifier after it was destroyed`;
 
 		if (this.isAutomaticallyDampened) {
-			this.currentOffset.Lerp(new CFrame(), Modifier.dampenAmount * deltaTime);
+			this.offset.Lerp(new CFrame(), Modifier.dampenAmount * deltaTime);
 		}
-
-		this.currentOffset.Lerp(this.targetOffset, Modifier.dampenAmount * deltaTime);
 	};
 
 	public destroy = (): void => {
-		this.destroyed = true;
 		Modifier.modifiers[this.name] = undefined;
+		this.destroyed = true;
 	};
 }
 
 @Controller({})
-export class Camera implements OnStart, OnInit {
-	onInit() {}
+export class Camera implements OnPostCameraRender, OnCharacterAdded {
+	static camera = Workspace.CurrentCamera;
+	static baseOffset = new Vector3(0, 0, -1.5);
+	private head: BasePart | undefined;
+	private rootPart: BasePart | undefined;
+	private humanoid: Humanoid | undefined;
 
-	onStart() {}
+	private applyPosition(summedOffset: CFrame) {
+		const headCFrame = this.head!.CFrame;
+
+		const cameraOffset = Camera.baseOffset.add(summedOffset.Position);
+		const offsetInObjectSpace = this.rootPart!.CFrame.PointToObjectSpace(headCFrame.Position.add(cameraOffset));
+		this.humanoid!.CameraOffset = offsetInObjectSpace;
+	}
+	private applyRotation(summedOffset: CFrame) {
+		const [X, Y, Z] = summedOffset.ToOrientation();
+		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(X, Y, Z));
+	}
+
+	onCharacterAdded(character: Model): void {
+		this.head = character.WaitForChild("Head", 5) as BasePart;
+		this.rootPart = character.WaitForChild("HumanoidRootPart", 5) as BasePart;
+		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
+	}
+
+	onPostCameraRender(deltaTime: number): void {
+		if (!Camera.camera) return;
+
+		Modifier.updateOffsets(deltaTime);
+
+		const summedOffset = Modifier.getSummedOffsets();
+		this.applyRotation(summedOffset);
+		if (this.humanoid) this.applyPosition(summedOffset);
+	}
 }
