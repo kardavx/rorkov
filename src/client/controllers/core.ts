@@ -13,6 +13,10 @@ export interface OnPostCameraRender {
 	onPostCameraRender(deltaTime: number): void;
 }
 
+export interface OnPreCameraRender {
+	onPreCameraRender(deltaTime: number): void;
+}
+
 @Controller({})
 export class CharacterAdded implements OnInit {
 	static player: Player = Players.LocalPlayer;
@@ -48,6 +52,22 @@ export class PostCameraRender implements OnInit {
 		RunService.BindToRenderStep("onPostCameraRender", Enum.RenderPriority.Camera.Value + 1, (deltaTime: number) => {
 			for (const listener of listeners) {
 				task.spawn(() => listener.onPostCameraRender(deltaTime));
+			}
+		});
+	}
+}
+
+@Controller({})
+export class PreCameraRender implements OnInit {
+	onInit(): void {
+		const listeners = new Set<OnPreCameraRender>();
+
+		Modding.onListenerAdded<OnPreCameraRender>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnPreCameraRender>((object) => listeners.delete(object));
+
+		RunService.BindToRenderStep("onPreCameraRender", Enum.RenderPriority.Camera.Value - 1, (deltaTime: number) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onPreCameraRender(deltaTime));
 			}
 		});
 	}

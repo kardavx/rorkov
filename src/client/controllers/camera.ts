@@ -1,6 +1,7 @@
-import { Controller, OnRender, OnInit } from "@flamework/core";
+import { Controller } from "@flamework/core";
+import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
-import { Workspace, RunService } from "@rbxts/services";
+import { Workspace } from "@rbxts/services";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
 
@@ -47,10 +48,11 @@ export class Modifier {
 	};
 
 	public update = (deltaTime: number) => {
-		if (!this.destroyed)
-			if (this.isAutomaticallyDampened) {
-				this.setOffset(this.getOffset().Lerp(new CFrame(), 20 * deltaTime));
-			}
+		if (this.destroyed) throw `Attempt to update modifier after it was destroyed`;
+
+		if (this.isAutomaticallyDampened) {
+			this.setOffset(this.getOffset().Lerp(new CFrame(), 20 * deltaTime));
+		}
 	};
 
 	public destroy = (): void => {
@@ -61,39 +63,26 @@ export class Modifier {
 }
 
 @Controller({})
-export class Camera implements OnRender, OnCharacterAdded, OnInit {
+export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
-	static baseOffset = new Vector3(0, 0, -1.5);
+	static baseOffset = new Vector3(0, -1, 0);
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;
 
 	private lastOffsets: CFrame = new CFrame();
 
-	/* 
-	XXXXXXXXXXXXXXXXXX 	XXXXXXXXXXXXXXXXXX       XXXXXX       XXXXXXXXXXXX      	XXXX	  XXXXXXXXXXXXXXXXXX
-	XXXXXXXXXXXXXXXXXX  XXXXXXXXXXXXXXXXXX    XXXXX  XXXXX    XXXXXXXXXXXXX      XXXXXXXXXX   XXXXXXXXXXXXXXXXXX
-		 XXXXXXXX       XXXX				 XXXXX    XXXXX   XXXXX     XXXXXX  XXXX    XXXX       XXXXXXXX
-		 XXXXXXXX 		XXXXXXXXXXXXXXXXXX 	 XXXXXXXXXXXXXX   XXXXX     XXXXXX  XXXX    XXXX       XXXXXXXX
-		 XXXXXXXX 		XXXXXXXXXXXXXXXXXX  XXXXXXXXXXXXXXXX  XXXXXXXXXXXXX     XXXX    XXXX       XXXXXXXX
-		 XXXXXXXX       XXXX			    XXXXX      XXXXX  XXXXXXXX          XXXX    XXXX       XXXXXXXX
-		 XXXXXXXX       XXXXXXXXXXXXXXXXXX  XXXXX      XXXXX  XXXXX              XXXXXXXXXX        XXXXXXXX
-		 XXXXXXXX       XXXXXXXXXXXXXXXXXX  XXXXX      XXXXX  XXXXX             	XXXX           XXXXXXXX
-	*/
-
 	private applyPosition(summedOffset: CFrame) {
 		const headCF = this.head!.CFrame;
 		const hrpCF = this.rootPart!.CFrame;
-		const offset = hrpCF.PointToObjectSpace(headCF.Position.add(new Vector3(0, -1, 0)));
+		const offset = hrpCF.PointToObjectSpace(headCF.Position.add(Camera.baseOffset).add(summedOffset.Position));
 
 		this.humanoid!.CameraOffset = Camera.baseOffset.add(offset);
 	}
 
 	private applyRotation(summedOffset: CFrame) {
-		print(summedOffset);
-		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(summedOffset);
-		// const [x, y, z] = summedOffset.ToOrientation();
-		// Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
+		const [x, y, z] = summedOffset.ToOrientation();
+		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
 	}
 
 	onCharacterAdded(character: Model): void {
@@ -102,30 +91,18 @@ export class Camera implements OnRender, OnCharacterAdded, OnInit {
 		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
 	}
 
-	onInit(): void | Promise<void> {
-		RunService.BindToRenderStep("preCameraOffset", Enum.RenderPriority.Camera.Value - 1, () => {
-			if (!Camera.camera) return;
-			Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
-		});
-
-		RunService.BindToRenderStep("postCameraOffset", Enum.RenderPriority.Camera.Value + 1, (deltaTime) => {
-			Modifier.updateOffsets(deltaTime);
-			const summedOffset = Modifier.getSummedOffsets();
-			Camera.camera!.CFrame = Camera.camera!.CFrame.mul(summedOffset);
-			this.lastOffsets = summedOffset;
-		});
+	onPreCameraRender(): void {
+		if (!Camera.camera) return;
+		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
 	}
 
-	onRender(deltaTime: number): void {
+	onPostCameraRender(deltaTime: number): void {
 		if (!Camera.camera) return;
 
-		// Modifier.updateOffsets(deltaTime);
-		// const summedOffset = Modifier.getSummedOffsets();
-
-		// Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse()).mul(summedOffset);
-		// // this.applyRotation(summedOffset);
-
-		// this.lastOffsets = summedOffset;
-		// // if (this.humanoid) this.applyPosition(summedOffset);
+		Modifier.updateOffsets(deltaTime);
+		const summedOffset = Modifier.getSummedOffsets();
+		this.applyRotation(summedOffset);
+		this.applyPosition(summedOffset);
+		this.lastOffsets = summedOffset;
 	}
 }
