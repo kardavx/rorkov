@@ -65,7 +65,7 @@ export class Modifier {
 @Controller({})
 export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
-	static baseOffset = new Vector3(0, -0.5, -0.5);
+	static baseOffset = new Vector3(0, 0, -0.5);
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;
@@ -75,9 +75,9 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	private applyPosition(summedOffset: CFrame) {
 		const headCF = this.head!.CFrame;
 		const hrpCF = this.rootPart!.CFrame;
-		const offset = hrpCF.PointToObjectSpace(headCF.Position.add(Camera.baseOffset).add(summedOffset.Position));
+		const offset = hrpCF.PointToObjectSpace(headCF.Position.add(new Vector3(0, -1.5, 0)));
 
-		this.humanoid!.CameraOffset = Camera.baseOffset.add(offset);
+		this.humanoid!.CameraOffset = offset.add(Camera.baseOffset.add(summedOffset.Position));
 	}
 
 	private applyRotation(summedOffset: CFrame) {
