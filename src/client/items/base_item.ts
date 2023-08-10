@@ -136,8 +136,8 @@ export class BaseItem {
 		const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt);
+		// this.renderPipeline.preUpdate(dt);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame));
+		// this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame));
 	};
 }
