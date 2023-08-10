@@ -1,6 +1,6 @@
-import { Controller, OnStart, OnTick } from "@flamework/core";
+import { Controller, OnTick } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
-import { ReplicatedStorage, SoundService, Debris, Workspace } from "@rbxts/services";
+import { SoundService, Workspace, UserInputService } from "@rbxts/services";
 import waitForSound from "shared/wait_for_sound";
 
 type MaterialSounds = {
@@ -10,7 +10,7 @@ type MaterialSounds = {
 };
 
 @Controller({})
-export class MovementSounds implements OnStart, OnTick, OnCharacterAdded {
+export class MovementSounds implements OnTick, OnCharacterAdded {
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
 	private lastSoundId = 0;
@@ -18,12 +18,15 @@ export class MovementSounds implements OnStart, OnTick, OnCharacterAdded {
 	private amplitude = 6;
 	private oldCamLV = Vector3.zero;
 	private camera = Workspace.CurrentCamera;
-
+	private turnSound: Sound | undefined = undefined;
+	private turnSoundCooldown = false;
+	private VectorXZ = new Vector3(1, 1, 1);
 	private materialSounds: MaterialSounds = {
 		Plastic: {
 			Step: [5682504255, 988593556],
-			Jump: [8025268823],
-			Land: [268933900],
+			Jump: [14380892475],
+			Land: [14380890500],
+			Turn: [14380891843],
 		},
 	};
 
@@ -31,21 +34,19 @@ export class MovementSounds implements OnStart, OnTick, OnCharacterAdded {
 		return a + (b - a) * c;
 	}
 
-	createSound(soundId: number, volume: number, parent: Instance, looped?: boolean) {
+	createSound(soundId: number, volume: number): Sound {
 		const sound = new Instance("Sound");
 		sound.Volume = volume !== undefined ? volume : 1;
-		sound.Looped = looped !== undefined ? looped : false;
 		sound.SoundId = `rbxassetid://${soundId}`;
-		sound.Parent = parent || SoundService;
+		sound.Parent = SoundService;
 		waitForSound(sound);
 
 		return sound;
 	}
 
-	private rattleSound: Sound = this.createSound(7405488042, 1, SoundService, true);
-
-	playSound(name: string, materialName: string, volume?: number) {
-		volume = volume !== undefined ? volume : 1;
+	playSound(name: string, materialName?: string, volume?: number): Sound {
+		volume = volume !== undefined ? volume : 10;
+		materialName = materialName !== undefined ? materialName : "PLastic";
 		const sounds = this.materialSounds[materialName] !== undefined ? this.materialSounds[materialName][name] : this.materialSounds.Plastic[name];
 		const soundsArraySize = sounds.size();
 		let soundId = sounds[math.random(soundsArraySize) - 1];
@@ -56,9 +57,14 @@ export class MovementSounds implements OnStart, OnTick, OnCharacterAdded {
 		}
 		this.lastSoundId = soundId;
 
-		const sound = this.createSound(soundId, volume, SoundService);
+		const sound = this.createSound(soundId, volume);
 		sound.Play();
-		Debris.AddItem(sound, sound.TimeLength);
+		task.delay(sound.TimeLength, () => {
+			if (name === "Turn") this.turnSoundCooldown = false;
+			if (sound && sound.Parent) sound.Destroy();
+		});
+
+		return sound;
 	}
 
 	onCharacterAdded(character: Model): void {
@@ -81,15 +87,19 @@ export class MovementSounds implements OnStart, OnTick, OnCharacterAdded {
 
 	onTick(dt: number): void {
 		if (!this.humanoid || this.humanoid.Health === 0) return;
-		const camLV = this.camera!.CFrame.LookVector;
-
-		let angle = math.deg(math.acos(camLV.Dot(this.oldCamLV)));
-		if (angle !== angle) angle = 0;
-		this.rattleSound.Volume = this.lerp(this.rattleSound.Volume, math.clamp(angle, 0.1, 10), 10 * dt);
-		this.oldCamLV = camLV;
-
 		const floorMaterial = this.humanoid.FloorMaterial;
 		if (floorMaterial === Enum.Material.Air) return;
+
+		const deltaX = math.abs(UserInputService.GetMouseDelta().X);
+
+		const camLV = this.camera!.CFrame.LookVector.mul(this.VectorXZ);
+
+		if (deltaX >= 5 && !this.turnSoundCooldown) {
+			this.turnSoundCooldown = true;
+			this.turnSound = this.playSound("Turn");
+		}
+		if (this.turnSound) this.turnSound.Volume = this.lerp(this.turnSound.Volume, math.clamp(deltaX * 5, 0, 10), 10 * dt);
+		this.oldCamLV = camLV;
 
 		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 		if (velocity < 0.1) return;
@@ -99,9 +109,5 @@ export class MovementSounds implements OnStart, OnTick, OnCharacterAdded {
 		this.lastStep = currentTick;
 
 		this.playSound("Step", floorMaterial.Name);
-	}
-
-	onStart(): void {
-		this.rattleSound.Play();
 	}
 }
