@@ -53,15 +53,9 @@ export class Items implements OnStart, OnRender {
 
 	onStart() {
 		Items.inventoryBinds.forEach((keyCode: Enum.KeyCode, slot: number) => {
-			this.input.bindInput(
-				"Hotbar",
-				keyCode.Name,
-				(inputState: boolean) => {
-					if (!inputState) return;
-					this.selectSlot(slot);
-				},
-				keyCode,
-			);
+			this.input.bindAction(`Hotbar${keyCode.Name}`, keyCode, 1, "Click", () => {
+				this.selectSlot(slot);
+			});
 		});
 	}
 
