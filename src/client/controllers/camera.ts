@@ -1,5 +1,5 @@
-import { Controller } from "@flamework/core";
-import { OnPostCameraRender, OnCharacterAdded } from "./core";
+import { Controller, OnRender } from "@flamework/core";
+import { OnCharacterAdded } from "./core";
 import { Workspace } from "@rbxts/services";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
@@ -15,9 +15,11 @@ export class Modifier {
 
 	static getSummedOffsets = (): CFrame => {
 		let finalOffset = new CFrame();
+
 		for (const [_, modifierObject] of pairs(Modifier.modifiers)) {
 			finalOffset = finalOffset.mul(modifierObject.getOffset());
 		}
+
 		return finalOffset;
 	};
 
@@ -45,11 +47,10 @@ export class Modifier {
 	};
 
 	public update = (deltaTime: number) => {
-		if (this.destroyed) throw `Attempt to update modifier after it was destroyed`;
-
-		if (this.isAutomaticallyDampened) {
-			this.offset.Lerp(new CFrame(), Modifier.dampenAmount * deltaTime);
-		}
+		if (this.destroyed)
+			if (this.isAutomaticallyDampened) {
+				this.setOffset(this.getOffset().Lerp(new CFrame(), 0.5));
+			}
 	};
 
 	public destroy = (): void => {
@@ -60,23 +61,38 @@ export class Modifier {
 }
 
 @Controller({})
-export class Camera implements OnPostCameraRender, OnCharacterAdded {
+export class Camera implements OnRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
 	static baseOffset = new Vector3(0, 0, -1.5);
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;
 
-	private applyPosition(summedOffset: CFrame) {
-		const headCFrame = this.head!.CFrame;
+	private lastOffsets: CFrame = new CFrame();
 
-		const cameraOffset = Camera.baseOffset.add(summedOffset.Position);
-		const offsetInObjectSpace = this.rootPart!.CFrame.PointToObjectSpace(headCFrame.Position.add(cameraOffset));
-		this.humanoid!.CameraOffset = offsetInObjectSpace;
+	/* 
+	XXXXXXXXXXXXXXXXXX 	XXXXXXXXXXXXXXXXXX       XXXXXX       XXXXXXXXXXXX      	XXXX	  XXXXXXXXXXXXXXXXXX
+	XXXXXXXXXXXXXXXXXX  XXXXXXXXXXXXXXXXXX    XXXXX  XXXXX    XXXXXXXXXXXXX      XXXXXXXXXX   XXXXXXXXXXXXXXXXXX
+		 XXXXXXXX       XXXX				 XXXXX    XXXXX   XXXXX     XXXXXX  XXXX    XXXX       XXXXXXXX
+		 XXXXXXXX 		XXXXXXXXXXXXXXXXXX 	 XXXXXXXXXXXXXX   XXXXX     XXXXXX  XXXX    XXXX       XXXXXXXX
+		 XXXXXXXX 		XXXXXXXXXXXXXXXXXX  XXXXXXXXXXXXXXXX  XXXXXXXXXXXXX     XXXX    XXXX       XXXXXXXX
+		 XXXXXXXX       XXXX			    XXXXX      XXXXX  XXXXXXXX          XXXX    XXXX       XXXXXXXX
+		 XXXXXXXX       XXXXXXXXXXXXXXXXXX  XXXXX      XXXXX  XXXXX              XXXXXXXXXX        XXXXXXXX
+		 XXXXXXXX       XXXXXXXXXXXXXXXXXX  XXXXX      XXXXX  XXXXX             	XXXX           XXXXXXXX
+	*/
+
+	private applyPosition(summedOffset: CFrame) {
+		const headCF = this.head!.CFrame;
+		const hrpCF = this.rootPart!.CFrame;
+		const offset = hrpCF.PointToObjectSpace(headCF.Position.add(new Vector3(0, -1, 0)));
+
+		this.humanoid!.CameraOffset = Camera.baseOffset.add(offset);
 	}
+
 	private applyRotation(summedOffset: CFrame) {
-		const [x, y, z] = summedOffset.ToOrientation();
-		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
+		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(summedOffset);
+		// const [x, y, z] = summedOffset.ToOrientation();
+		// Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
 	}
 
 	onCharacterAdded(character: Model): void {
@@ -85,13 +101,15 @@ export class Camera implements OnPostCameraRender, OnCharacterAdded {
 		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
 	}
 
-	onPostCameraRender(deltaTime: number): void {
+	onRender(deltaTime: number): void {
 		if (!Camera.camera) return;
 
-		Modifier.updateOffsets(deltaTime);
-
 		const summedOffset = Modifier.getSummedOffsets();
-		this.applyRotation(summedOffset);
-		if (this.humanoid) this.applyPosition(summedOffset);
+		print(this.lastOffsets.Inverse().mul(summedOffset));
+		this.applyRotation(this.lastOffsets.Inverse().mul(summedOffset));
+
+		this.lastOffsets = summedOffset;
+		Modifier.updateOffsets(deltaTime);
+		// if (this.humanoid) this.applyPosition(summedOffset);
 	}
 }

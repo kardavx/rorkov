@@ -1,4 +1,4 @@
-import { Modding, OnInit } from "@flamework/core";
+import { Controller, Modding, OnInit } from "@flamework/core";
 import { Players } from "@rbxts/services";
 import { RunService } from "@rbxts/services";
 import { Weapon } from "client/items/weapon";
@@ -13,6 +13,7 @@ export interface OnPostCameraRender {
 	onPostCameraRender(deltaTime: number): void;
 }
 
+@Controller({})
 export class CharacterAdded implements OnInit {
 	static player: Player = Players.LocalPlayer;
 
@@ -36,6 +37,7 @@ export class CharacterAdded implements OnInit {
 	}
 }
 
+@Controller({})
 export class PostCameraRender implements OnInit {
 	onInit(): void {
 		const listeners = new Set<OnPostCameraRender>();

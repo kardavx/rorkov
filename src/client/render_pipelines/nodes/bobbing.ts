@@ -8,7 +8,6 @@ export class Bobbing implements Node {
 
 	preUpdate(deltaTime: number, playerVelocity: number): void {}
 	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number): CFrame {
-		print(deltaTime);
 		return currentCFrame.mul(CFrame.Angles(this.xSine.update(), this.ySine.update(), this.zSine.update()));
 	}
 }
