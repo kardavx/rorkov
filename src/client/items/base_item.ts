@@ -31,7 +31,6 @@ export class BaseItem {
 	private testAction = (inputState: boolean) => {
 		if (!inputState) return;
 
-		this.cameraModifier.setOffset(new CFrame(0, 1, 1));
 		print("testAction fired!");
 	};
 
