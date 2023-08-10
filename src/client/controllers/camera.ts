@@ -1,6 +1,6 @@
-import { Controller, OnRender } from "@flamework/core";
+import { Controller, OnRender, OnInit } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
-import { Workspace } from "@rbxts/services";
+import { Workspace, RunService } from "@rbxts/services";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
 
@@ -47,9 +47,9 @@ export class Modifier {
 	};
 
 	public update = (deltaTime: number) => {
-		if (this.destroyed)
+		if (!this.destroyed)
 			if (this.isAutomaticallyDampened) {
-				this.setOffset(this.getOffset().Lerp(new CFrame(), 0.5));
+				this.setOffset(this.getOffset().Lerp(new CFrame(), 20 * deltaTime));
 			}
 	};
 
@@ -61,7 +61,7 @@ export class Modifier {
 }
 
 @Controller({})
-export class Camera implements OnRender, OnCharacterAdded {
+export class Camera implements OnRender, OnCharacterAdded, OnInit {
 	static camera = Workspace.CurrentCamera;
 	static baseOffset = new Vector3(0, 0, -1.5);
 	private head: BasePart | undefined;
@@ -90,6 +90,7 @@ export class Camera implements OnRender, OnCharacterAdded {
 	}
 
 	private applyRotation(summedOffset: CFrame) {
+		print(summedOffset);
 		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(summedOffset);
 		// const [x, y, z] = summedOffset.ToOrientation();
 		// Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
@@ -101,15 +102,30 @@ export class Camera implements OnRender, OnCharacterAdded {
 		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
 	}
 
+	onInit(): void | Promise<void> {
+		RunService.BindToRenderStep("preCameraOffset", Enum.RenderPriority.Camera.Value - 1, () => {
+			if (!Camera.camera) return;
+			Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
+		});
+
+		RunService.BindToRenderStep("postCameraOffset", Enum.RenderPriority.Camera.Value + 1, (deltaTime) => {
+			Modifier.updateOffsets(deltaTime);
+			const summedOffset = Modifier.getSummedOffsets();
+			Camera.camera!.CFrame = Camera.camera!.CFrame.mul(summedOffset);
+			this.lastOffsets = summedOffset;
+		});
+	}
+
 	onRender(deltaTime: number): void {
 		if (!Camera.camera) return;
 
-		const summedOffset = Modifier.getSummedOffsets();
-		print(this.lastOffsets.Inverse().mul(summedOffset));
-		this.applyRotation(this.lastOffsets.Inverse().mul(summedOffset));
+		// Modifier.updateOffsets(deltaTime);
+		// const summedOffset = Modifier.getSummedOffsets();
 
-		this.lastOffsets = summedOffset;
-		Modifier.updateOffsets(deltaTime);
-		// if (this.humanoid) this.applyPosition(summedOffset);
+		// Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse()).mul(summedOffset);
+		// // this.applyRotation(summedOffset);
+
+		// this.lastOffsets = summedOffset;
+		// // if (this.humanoid) this.applyPosition(summedOffset);
 	}
 }
