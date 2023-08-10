@@ -81,19 +81,44 @@ export class Spring {
 	}
 }
 
-/**
- * Simple class for sinusoidal motion
- */
-export class SineWave {
-	public constructor(public readonly amplitude = 1, public readonly frequency = 1, public readonly phaseShift = 0, public readonly verticalShift = 0) {}
+export class Sine {
+	/**
+	 * Simple class for sinusoidal motion
+	 */
+	public constructor(private amplitude: number, private frequency: number, private phase: number, private multiplier: number = 0.1) {}
+
+	/**
+	 * Change frequency of the sine wave, phase gets adjusted
+	 *
+	 * @param frequency New frequency to set to
+	 */
+	public setFrequency = (frequency: number): void => {
+		if (frequency === this.frequency) return;
+
+		const currentTick = os.clock();
+		const oldArgument = this.frequency * currentTick + this.phase;
+		this.frequency = frequency;
+		this.phase = oldArgument - this.frequency * currentTick;
+	};
+
+	public setAmplitude = (amplitude: number): void => {
+		this.amplitude = amplitude;
+	};
 
 	/**
 	 * Update wave
 	 *
-	 * @param dt Delta time
 	 * @returns New value
 	 */
-	public update(dt: number): number {
-		return (this.amplitude * math.sin(this.frequency * tick() + this.phaseShift) + this.verticalShift) * 60 * dt;
-	}
+	public update = (): number => {
+		return this.amplitude * math.sin(os.clock() * this.frequency + this.phase) * this.multiplier;
+	};
 }
+
+export const lerp = (a: number, b: number, t: number): number => {
+	return a + (b - a) * t;
+};
+
+export const inverseLerp = (a: number, b: number, x: number) => {
+	return (x - a) / (b - a);
+};

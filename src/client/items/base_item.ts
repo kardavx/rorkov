@@ -4,6 +4,8 @@ import { Spring } from "shared/math_utility";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
+import { Bobbing } from "client/render_pipelines/nodes/bobbing";
+import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets, Actions } from "client/types/items";
 
@@ -19,6 +21,7 @@ export class BaseItem {
 
 	private idle: AnimationTrack | undefined;
 	private equipanim: AnimationTrack | undefined;
+	private renderPipeline: RenderPipeline;
 
 	protected state: State;
 	protected equippedItem: EquippedItem;
@@ -76,7 +79,14 @@ export class BaseItem {
 		return this.state.isAnyActive(this.blockingStates);
 	};
 
-	constructor(private input: Input, private itemName: string, states: string[] = [], blockingStates: string[] = [], springs: Springs = {}, actions: Actions) {
+	constructor(
+		private input: Input,
+		private itemName: string,
+		states: string[] = [],
+		blockingStates: string[] = [],
+		springs: Springs = {},
+		actions: Actions = new Map(),
+	) {
 		this.states = [...this.states, ...states];
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
@@ -84,28 +94,31 @@ export class BaseItem {
 		this.actions = new Map([...this.actions, ...actions]);
 
 		this.bindActions();
-
-		this.state.activateState("equip");
-
 		this.equippedItem = this.createEquippedItem(this.itemName);
-		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
+		this.renderPipeline = new RenderPipeline([Bobbing]);
 
-		const idle = new Instance("Animation");
-		idle.AnimationId = `rbxassetid://${14375693467}`;
+		task.spawn(() => {
+			this.state.activateState("equip");
 
-		const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
-		const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
+			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
-		this.idle = animator.LoadAnimation(idle);
-		const idle2 = animatorhum.LoadAnimation(idle);
-		// this.equipanim = animator.LoadAnimation(equip);
+			const idle = new Instance("Animation");
+			idle.AnimationId = `rbxassetid://${14375693467}`;
 
-		// this.equipanim.Play(0, 10, 1);
-		this.idle.Play(0);
-		idle2.Play(0);
-		// this.equipanim.Stopped.Wait();
+			const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
+			const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
 
-		this.state.disableState("equip");
+			this.idle = animator.LoadAnimation(idle);
+			const idle2 = animatorhum.LoadAnimation(idle);
+			// this.equipanim = animator.LoadAnimation(equip);
+
+			// this.equipanim.Play(0, 10, 1);
+			this.idle.Play(0);
+			idle2.Play(0);
+			// this.equipanim.Stopped.Wait();
+
+			this.state.disableState("equip");
+		});
 	}
 
 	public destroy = (): void => {
@@ -119,14 +132,12 @@ export class BaseItem {
 	};
 
 	onRender = (dt: number): void => {
-		const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
+		// const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
 		const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
-		const finalCFrame = baseCFrame;
 
-		for (const [_, updatedSpringOffset] of pairs(updatedSprings)) {
-			finalCFrame.mul(CFrame.Angles(updatedSpringOffset.X, updatedSpringOffset.Y, updatedSpringOffset.Z));
-		}
+		this.equippedItem.viewmodel.PivotTo(baseCFrame);
+		this.renderPipeline.preUpdate(dt);
 
-		this.equippedItem.viewmodel.PivotTo(finalCFrame);
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame));
 	};
 }
