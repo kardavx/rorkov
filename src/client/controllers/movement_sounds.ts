@@ -23,7 +23,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 	private VectorXZ = new Vector3(1, 1, 1);
 	private materialSounds: MaterialSounds = {
 		Plastic: {
-			Step: [5682504255, 988593556],
+			Step: [5682504255, 4817498373],
 			Jump: [14380892475],
 			Land: [14380890500],
 			Turn: [14380891843],
@@ -73,8 +73,10 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 
 		this.humanoid.StateChanged.Connect((oldValue: Enum.HumanoidStateType, newValue: Enum.HumanoidStateType) => {
 			const currentTick = os.clock();
-			if (this.humanoid!.GetState() === Enum.HumanoidStateType.Jumping) this.playSound("Jump", this.humanoid!.FloorMaterial.Name);
-			this.lastStep = currentTick;
+			if (this.humanoid!.GetState() === Enum.HumanoidStateType.Jumping) {
+				this.playSound("Jump", this.humanoid!.FloorMaterial.Name);
+				this.lastStep = currentTick;
+			}
 
 			const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 
@@ -102,7 +104,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 		this.oldCamLV = camLV;
 
 		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
-		if (velocity < 0.1) return;
+		if (velocity < 0.3) return;
 
 		const currentTick = os.clock();
 		if (currentTick - this.lastStep < this.amplitude / velocity) return;
