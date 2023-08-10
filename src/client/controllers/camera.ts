@@ -65,7 +65,7 @@ export class Modifier {
 @Controller({})
 export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
-	static baseOffset = new Vector3(0, -0.5, -0.5);
+	static baseOffset = new Vector3(-0.5, -0.5, 0);
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;

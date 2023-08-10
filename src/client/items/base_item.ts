@@ -130,7 +130,7 @@ export class BaseItem {
 		this.state.activateState("unequip");
 
 		this.idle!.Stop(0);
-		this.equipanim!.Play(0, 10, -1);
+		// this.equipanim!.Play(0, 10, -1);
 		this.cameraModifier.destroy();
 		this.destroyEquippedItem();
 
