@@ -1,11 +1,11 @@
 import { Players, Workspace } from "@rbxts/services";
-
 import { Spring } from "shared/math_utility";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
+import { Modifier } from "client/controllers/camera";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets, Actions } from "client/types/items";
 
@@ -22,12 +22,15 @@ export class BaseItem {
 	private idle: AnimationTrack | undefined;
 	private equipanim: AnimationTrack | undefined;
 	private renderPipeline: RenderPipeline;
+	private cameraModifier: Modifier;
 
 	protected state: State;
 	protected equippedItem: EquippedItem;
 
 	//Inputs
 	private testAction = (inputState: boolean) => {
+		if (!inputState) return;
+
 		print("testAction fired!");
 	};
 
@@ -92,10 +95,11 @@ export class BaseItem {
 		this.springs = { ...this.springs, ...springs };
 		this.state = new State(this.states);
 		this.actions = new Map([...this.actions, ...actions]);
+		this.renderPipeline = new RenderPipeline([Bobbing]);
+		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
 		this.equippedItem = this.createEquippedItem(this.itemName);
-		this.renderPipeline = new RenderPipeline([Bobbing]);
 
 		task.spawn(() => {
 			this.state.activateState("equip");
@@ -125,7 +129,8 @@ export class BaseItem {
 		this.state.activateState("unequip");
 
 		this.idle!.Stop(0);
-		this.equipanim!.Play(0, 10, -1);
+		// this.equipanim!.Play(0, 10, -1);
+		this.cameraModifier.destroy();
 		this.destroyEquippedItem();
 
 		this.state.disableState("unequip");
