@@ -51,7 +51,7 @@ export class Modifier {
 		if (this.destroyed) throw `Attempt to update modifier after it was destroyed`;
 
 		if (this.isAutomaticallyDampened) {
-			this.setOffset(this.getOffset().Lerp(new CFrame(), 20 * deltaTime));
+			this.setOffset(this.getOffset().Lerp(new CFrame(), Modifier.dampenAmount * deltaTime));
 		}
 	};
 
