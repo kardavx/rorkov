@@ -8,6 +8,11 @@ export class Modifier {
 	static modifiers: Modifiers = {};
 	static dampenAmount = 5;
 
+	static create = (name: string, isAutomaticallyDampened = false): Modifier => {
+		if (!Modifier.modifiers[name]) Modifier.modifiers[name] = new Modifier(name, isAutomaticallyDampened);
+		return Modifier.modifiers[name] as Modifier;
+	};
+
 	static getSummedOffsets = (): CFrame => {
 		let finalOffset = new CFrame();
 		for (const [_, modifierObject] of pairs(Modifier.modifiers)) {
@@ -48,6 +53,7 @@ export class Modifier {
 	};
 
 	public destroy = (): void => {
+		this.setOffset(new CFrame());
 		Modifier.modifiers[this.name] = undefined;
 		this.destroyed = true;
 	};
@@ -69,8 +75,8 @@ export class Camera implements OnPostCameraRender, OnCharacterAdded {
 		this.humanoid!.CameraOffset = offsetInObjectSpace;
 	}
 	private applyRotation(summedOffset: CFrame) {
-		const [X, Y, Z] = summedOffset.ToOrientation();
-		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(X, Y, Z));
+		const [x, y, z] = summedOffset.ToOrientation();
+		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
 	}
 
 	onCharacterAdded(character: Model): void {
