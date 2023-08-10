@@ -6,10 +6,11 @@ import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Modifier } from "client/controllers/camera";
+import { OnCharacterAdded } from "client/controllers/core";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets, Actions } from "client/types/items";
 
-export class BaseItem {
+export class BaseItem implements OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
 
 	private states: string[] = ["equip", "unequip"];
@@ -136,13 +137,23 @@ export class BaseItem {
 		this.state.disableState("unequip");
 	};
 
+	private humanoidRootPart: BasePart | undefined = undefined;
+
+	onCharacterAdded(character: Model): void {
+		print("xdd");
+		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
+		print("added");
+	}
+
 	onRender = (dt: number): void => {
 		// const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
 		const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
+		const velocity = this.humanoidRootPart !== undefined ? this.humanoidRootPart.AssemblyLinearVelocity.Magnitude : 0;
+		print(this.humanoidRootPart === undefined);
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt);
+		this.renderPipeline.preUpdate(dt, velocity);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity));
 	};
 }
