@@ -9,18 +9,13 @@ export class Input {
 		return string.format("%s-%s", binderId, actionName);
 	}
 
-	public bindInput(
-		binderId: string,
-		actionName: string,
-		actionUse: (inputState: boolean) => void,
-		...keycodes: [Enum.KeyCode | Enum.UserInputType]
-	) {
+	public bindInput(binderId: string, actionName: string, actionUse: (inputState: boolean) => void, ...keycodes: [Enum.KeyCode | Enum.UserInputType]) {
 		if (this.inputs[binderId] === undefined) this.inputs[binderId] = new Map<string, boolean>();
 
 		const binder = this.inputs[binderId];
 		const actionExists = binder.has(actionName);
 
-		if (actionExists) throw `Action of name ${actionName} already exists on binder ${binderId}`;
+		if (actionExists) throw `Action '${actionName}' already exists on binder ${binderId}!`;
 
 		ContextActionService.BindAction(
 			this.getFormattedActionName(binderId, actionName),

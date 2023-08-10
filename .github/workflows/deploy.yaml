@@ -1,0 +1,38 @@
+name: Deploy master branch
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - name: Install roblox-ts@2.1.0
+      run: npm install -g roblox-ts@2.1.0
+
+    - name: Install depedencies
+      run: npm install
+
+    - name: Build game
+      run: rbxtsc --rojo build.project.json
+
+    - name: Setup aftman
+      uses: ok-nick/setup-aftman@v0.3.0
+
+    - name: Upload game to roblox
+      run: rojo upload --api_key 0VvLwUwoLUO7IoyFx9o3u9091Z44ThZN2Pbt7UD0t8xerWyc --asset_id 14353822519 --universe_id 4961904283 build.project.json
+
+    
+

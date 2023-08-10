@@ -1,11 +1,9 @@
 import { Spring } from "shared/math_utility";
 
-export type InventoryBinds = Enum.KeyCode[];
-export type Sights = Sight[];
+export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
 export interface Viewmodel extends Model {
-	UpperTorso: BasePart;
-	HumanoidRootPart: BasePart;
+	Torso: BasePart;
 	CameraBone: BasePart;
 	AnimationController: AnimationController & {
 		Animator: Animator;
@@ -29,7 +27,7 @@ export interface Sight extends Model {
 
 export interface Item extends Model {
 	Grip: BasePart;
-	Sights?: Sights;
+	Sights?: Sight[];
 	Muzzle?: BasePart;
 }
 
@@ -37,9 +35,9 @@ export type Springs = {
 	[springName in string]: Spring;
 };
 
-export interface UpdatedSprings {
-	[springName: string]: Vector3;
-}
+export type UpdatedSprings = {
+	[springName in string]: Vector3;
+};
 
 export interface Alphas {
 	[alphaName: string]: number;
