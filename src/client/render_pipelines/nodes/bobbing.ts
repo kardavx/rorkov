@@ -4,28 +4,38 @@ import { Node } from "../node";
 
 @Controller({})
 export class Bobbing implements Node {
-	private frequency = 1;
-
-	private sines = {
-		X: new Sine(0.5, this.frequency, 0),
-		Z: new Sine(0.5, this.frequency, 0),
+	private frequency = 0.5;
+	private amplitudes = {
+		X: 0.25,
+		Y: 0.1,
+		Z: 1,
 	};
 
-	private bobbingAmount: Vector3 = new Vector3();
+	private sines = {
+		X: new Sine(this.amplitudes.X, this.frequency, 0),
+		Y: new Sine(this.amplitudes.Y, this.frequency, 0),
+		Z: new Sine(this.amplitudes.Z, this.frequency, 0),
+	};
 
-	getSin(amplitude: number, frequency: number, phase: number) {
-		return amplitude * math.sin(os.clock() * frequency + phase) * 0.1;
-	}
+	private bobbingAmount: CFrame = new CFrame();
 
 	preUpdate(deltaTime: number, playerVelocity: number): void {
-		this.sines.X.setFrequency(playerVelocity * this.frequency * 2);
+		this.sines.X.setFrequency((playerVelocity * this.frequency) / 2);
+		this.sines.X.setAmplitude((this.amplitudes.X * playerVelocity) / 20);
+		this.sines.Y.setFrequency(playerVelocity * this.frequency * 2);
+		this.sines.Y.setAmplitude((this.amplitudes.Y * playerVelocity) / 20);
 		this.sines.Z.setFrequency(playerVelocity * this.frequency);
-		print(this.frequency, playerVelocity);
-		this.bobbingAmount = new Vector3(this.sines.X.update(), 0, this.sines.Z.update());
+		this.sines.Z.setAmplitude((this.amplitudes.Z * playerVelocity) / 20);
+
+		const bobX = this.sines.X.update();
+		const bobY = this.sines.Y.update();
+		const bobZ = this.sines.Z.update();
+
+		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(bobX, bobY, bobZ).mul(CFrame.Angles(0, 0, bobZ)), 5 * deltaTime);
 	}
 
 	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number): CFrame {
-		return currentCFrame.add(this.bobbingAmount);
-		//return currentCFrame.mul(CFrame.Angles(this.xSine.update(), this.ySine.update(), this.zSine.update()));
+		// Apply the calculated bobbing amount to the player's position
+		return currentCFrame.mul(this.bobbingAmount);
 	}
 }

@@ -1,10 +1,10 @@
-import { ItemTypes } from "./core";
+import { ItemTypes, OnCharacterAdded } from "./core";
 import { Controller, OnRender, OnStart } from "@flamework/core";
 import { BaseItem } from "client/items/base_item";
 import { Input } from "./input";
 
 @Controller({})
-export class Items implements OnStart, OnRender {
+export class Items implements OnStart, OnRender, OnCharacterAdded {
 	static inventoryBinds: Enum.KeyCode[] = [
 		Enum.KeyCode.One,
 		Enum.KeyCode.Two,
@@ -26,6 +26,7 @@ export class Items implements OnStart, OnRender {
 
 	private inventory = ["SR-16"];
 	private currentItemObject: BaseItem | undefined;
+	private character: Model | undefined;
 
 	constructor(private input: Input) {}
 
@@ -34,6 +35,7 @@ export class Items implements OnStart, OnRender {
 		if (itemName === undefined) return;
 
 		this.currentItemObject = new Items.itemNameToType[itemName](new Input(), itemName);
+		this.currentItemObject.character = this.character;
 	}
 
 	private unequip() {
@@ -69,5 +71,9 @@ export class Items implements OnStart, OnRender {
 		if (this.currentItemObject) {
 			this.currentItemObject.onRender(dt);
 		}
+	}
+
+	onCharacterAdded(character: Model): void {
+		this.character = character;
 	}
 }

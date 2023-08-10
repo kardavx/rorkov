@@ -4,13 +4,13 @@ import { Input } from "client/controllers/input";
 import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
+import { Sway } from "client/render_pipelines/nodes/sway";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Modifier } from "client/controllers/camera";
-import { OnCharacterAdded } from "client/controllers/core";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets, Actions } from "client/types/items";
 
-export class BaseItem implements OnCharacterAdded {
+export class BaseItem {
 	static camera = Workspace.CurrentCamera;
 
 	private states: string[] = ["equip", "unequip"];
@@ -24,6 +24,7 @@ export class BaseItem implements OnCharacterAdded {
 	private equipanim: AnimationTrack | undefined;
 	private renderPipeline: RenderPipeline;
 	private cameraModifier: Modifier;
+	public character: Model | undefined;
 
 	protected state: State;
 	protected equippedItem: EquippedItem;
@@ -96,7 +97,7 @@ export class BaseItem implements OnCharacterAdded {
 		this.springs = { ...this.springs, ...springs };
 		this.state = new State(this.states);
 		this.actions = new Map([...this.actions, ...actions]);
-		this.renderPipeline = new RenderPipeline([Bobbing]);
+		this.renderPipeline = new RenderPipeline([Bobbing, Sway]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
@@ -137,23 +138,17 @@ export class BaseItem implements OnCharacterAdded {
 		this.state.disableState("unequip");
 	};
 
-	private humanoidRootPart: BasePart | undefined = undefined;
-
-	onCharacterAdded(character: Model): void {
-		print("xdd");
-		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
-		print("added");
-	}
-
 	onRender = (dt: number): void => {
 		// const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
 		const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
-		const velocity = this.humanoidRootPart !== undefined ? this.humanoidRootPart.AssemblyLinearVelocity.Magnitude : 0;
-		print(this.humanoidRootPart === undefined);
+		const humanoidRootPart = this.character !== undefined ? (this.character.FindFirstChild("HumanoidRootPart") as BasePart) : undefined;
+		const velocity = humanoidRootPart !== undefined ? humanoidRootPart.AssemblyLinearVelocity.Magnitude : 0;
+
+		const camCF = BaseItem.camera!.CFrame;
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt, velocity);
+		this.renderPipeline.preUpdate(dt, velocity, camCF);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, camCF));
 	};
 }
