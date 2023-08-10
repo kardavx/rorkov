@@ -26,7 +26,7 @@ export class RenderPipeline implements PreUpdate, Update {
 		let finalCFrame: CFrame = currentCFrame;
 
 		this.nodes.forEach((node: Node) => {
-			finalCFrame = finalCFrame.mul(node.update(deltaTime, finalCFrame, ...args));
+			finalCFrame = node.update(deltaTime, finalCFrame, ...args);
 		});
 
 		return finalCFrame;
