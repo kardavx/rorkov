@@ -101,8 +101,10 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 		Modifier.updateOffsets(deltaTime);
 		const summedOffset = Modifier.getSummedOffsets();
+
 		this.applyRotation(summedOffset);
-		this.applyPosition(summedOffset);
+		if (this.humanoid) this.applyPosition(summedOffset);
+
 		this.lastOffsets = summedOffset;
 	}
 }
