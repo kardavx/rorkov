@@ -74,7 +74,7 @@ export class BaseItem {
 
 	private bindActions = () => {
 		this.actions.forEach((keycodeAction: (inputState: boolean) => void, keyCode: Enum.KeyCode) => {
-			this.input.bindInput("Actions", keyCode.Name, keycodeAction, keyCode);
+			this.input.bindAction(`action${keyCode.Name}`, keyCode, 10, keycodeAction);
 		});
 	};
 
