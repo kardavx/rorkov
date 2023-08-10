@@ -1,4 +1,5 @@
 import { Springs } from "client/types/items";
+import { SineWave } from "shared/math_utility";
 import { Node } from "../node";
 
 export class Sway implements Node {
