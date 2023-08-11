@@ -91,25 +91,15 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender {
 
 	onStart(): void {
 		Movement.inputMap.forEach((keyCodeVector: Vector3, keyCode: Enum.KeyCode) => {
-			this.input.bindInput(
-				"movement",
-				keyCode.Name,
-				(inputState: boolean) => {
-					this.moveVector = inputState ? this.moveVector.add(keyCodeVector) : this.moveVector.sub(keyCodeVector);
-				},
-				keyCode,
-			);
+			this.input.bindAction(`movement${keyCode.Name}`, keyCode, 2, (inputState: boolean) => {
+				this.moveVector = inputState ? this.moveVector.add(keyCodeVector) : this.moveVector.sub(keyCodeVector);
+			});
 		});
 
 		Movement.keyBinds.forEach((ability: string, keyCode: Enum.KeyCode) => {
-			this.input.bindInput(
-				"movement",
-				keyCode.Name,
-				(inputState: boolean) => {
-					this.abilities[ability as keyof typeof this.abilities](inputState);
-				},
-				keyCode,
-			);
+			this.input.bindAction(`movement${keyCode.Name}`, keyCode, 2, (inputState: boolean) => {
+				this.abilities[ability as keyof typeof this.abilities](inputState);
+			});
 		});
 
 		Movement.controlModule.Enable(Movement.controlModule, false);
