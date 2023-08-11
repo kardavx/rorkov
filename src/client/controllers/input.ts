@@ -46,6 +46,7 @@ export class Input implements OnInputBegin, OnInputEnd {
 				foundAction !== action &&
 				foundAction.keyCode === action.keyCode &&
 				foundAction.actionPriority === action.actionPriority &&
+				foundAction.inputType === action.inputType &&
 				this.areModifierKeysPressed(inputObject, foundAction),
 		);
 	}
