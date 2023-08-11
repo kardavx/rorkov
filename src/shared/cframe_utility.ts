@@ -1,7 +1,7 @@
 export const offsetFromPivot = (cFrame: CFrame, pivot: CFrame, offset: CFrame) => {
 	const pivotToCFrameOffset = pivot.ToObjectSpace(cFrame);
 
-	pivot.mul(offset);
+	pivot = pivot.mul(offset);
 	return pivot.mul(pivotToCFrameOffset);
 };
 

@@ -2,10 +2,11 @@ import { Controller } from "@flamework/core";
 import { Sine } from "shared/math_utility";
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
+import { offsetFromPivot } from "shared/cframe_utility";
 
 @Controller({})
 export class Bobbing implements Node {
-	private frequency = 0.5;
+	static speed = 7;
 	// private amplitudes = {
 	// 	X: 0.25,
 	// 	Y: 0.1,
@@ -19,17 +20,17 @@ export class Bobbing implements Node {
 	// };
 
 	private sines = {
-		x: new Sine(0, 2, 0.2),
-		y: new Sine(0.015, 3, 0.3),
-		z: new Sine(0.05, 2, 0.1),
-		pitch: new Sine(0.1, 2, 0.25),
-		yaw: new Sine(0.015, 1, 0.5),
-		roll: new Sine(0.5, 1.5, 0.8),
+		zOrientation: new Sine(0.5, Bobbing.speed),
+		xOrientation: new Sine(0.2, Bobbing.speed * 2, 1.56),
+		yOrientation: new Sine(0.05, Bobbing.speed * 2, 1.56),
+		z: new Sine(0.6, Bobbing.speed * 2, 1.56),
+		y: new Sine(0.6, Bobbing.speed * 2, 1.56),
+		x: new Sine(0.2, Bobbing.speed * 2, 1.56),
 	};
 
 	private bobbingAmount: CFrame = new CFrame();
 
-	preUpdate(deltaTime: number, playerVelocity: number, camCF: CFrame, equippedItem: EquippedItem): void {
+	preUpdate(deltaTime: number, playerVelocity: number, equippedItem: EquippedItem): void {
 		// this.sines.X.setFrequency((playerVelocity * this.frequency) / 2);
 		// this.sines.X.setAmplitude((this.amplitudes.X * playerVelocity) / 20);
 		// this.sines.Y.setFrequency(playerVelocity * this.frequency * 2);
@@ -41,17 +42,24 @@ export class Bobbing implements Node {
 		// const bobY = this.sines.Y.update();
 		// const bobZ = this.sines.Z.update();
 
-		const x = this.sines.x.update();
-		const y = this.sines.y.update();
-		const z = this.sines.z.update();
-		const pitch = this.sines.pitch.update();
-		const yaw = this.sines.yaw.update();
-		const roll = this.sines.roll.update();
+		// const x = this.sines.x.update();
+		// const y = this.sines.y.update();
+		// const z = this.sines.z.update();
+		// const pitch = this.sines.pitch.update();
+		// const yaw = this.sines.yaw.update();
+		// const roll = this.sines.roll.update();
 
-		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, z).mul(CFrame.Angles(pitch, yaw, roll)), 5 * deltaTime);
+		const zOrientation = this.sines.zOrientation.update();
+		const xOrientation = this.sines.xOrientation.update();
+		const yOrientation = this.sines.yOrientation.update();
+		const z = this.sines.z.update();
+		const y = this.sines.y.update();
+		const x = this.sines.x.update();
+
+		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, -z).mul(CFrame.Angles(-xOrientation, yOrientation, zOrientation)), 5 * deltaTime);
 	}
 
-	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number, camCF: CFrame, equippedItem: EquippedItem): CFrame {
-		return currentCFrame.mul(this.bobbingAmount);
+	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number, equippedItem: EquippedItem): CFrame {
+		return offsetFromPivot(currentCFrame, equippedItem.item.CenterPart.CFrame, this.bobbingAmount);
 	}
 }

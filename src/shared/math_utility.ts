@@ -85,7 +85,7 @@ export class Sine {
 	/**
 	 * Simple class for sinusoidal motion
 	 */
-	public constructor(private amplitude: number, private frequency: number, private phase: number, private multiplier: number = 0.1) {}
+	public constructor(private amplitude: number, private frequency: number, private phase: number = 0, private multiplier: number = 0.1) {}
 
 	/**
 	 * Change frequency of the sine wave, phase gets adjusted
