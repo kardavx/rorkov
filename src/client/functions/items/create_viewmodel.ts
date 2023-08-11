@@ -19,7 +19,7 @@ export default (itemName: string) => {
 	viewmodelClone.Name = "viewmodel";
 	itemClone.Name = "item";
 
-	if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.Torso;
+	if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.CameraBone;
 	if (!itemClone.PrimaryPart) itemClone.PrimaryPart = itemClone.Grip;
 
 	viewmodelClone.PivotTo(new CFrame(0, 0, 0));
