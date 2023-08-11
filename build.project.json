@@ -43,7 +43,7 @@
 			"$path": "out/workspace.rbxm",
 			"$properties": {
 				"FilteringEnabled": true,
-				"Gravity": 35
+				"Gravity": 192
 			}
 		},
 		"HttpService": {

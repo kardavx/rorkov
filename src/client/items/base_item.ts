@@ -4,6 +4,7 @@ import { Input } from "client/controllers/input";
 import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
+import { Sway } from "client/render_pipelines/nodes/sway";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Modifier } from "client/controllers/camera";
 
@@ -23,6 +24,7 @@ export class BaseItem {
 	private equipanim: AnimationTrack | undefined;
 	private renderPipeline: RenderPipeline;
 	private cameraModifier: Modifier;
+	public character: Model | undefined;
 
 	protected state: State;
 	protected equippedItem: EquippedItem;
@@ -107,7 +109,7 @@ export class BaseItem {
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 			const idle = new Instance("Animation");
-			idle.AnimationId = `rbxassetid://${14375693467}`;
+			idle.AnimationId = `rbxassetid://${14393419898}`;
 
 			const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
 			const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
@@ -139,10 +141,12 @@ export class BaseItem {
 	onRender = (dt: number): void => {
 		// const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
 		const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
+		const humanoidRootPart = this.character !== undefined ? (this.character.FindFirstChild("HumanoidRootPart") as BasePart) : undefined;
+		const velocity = humanoidRootPart !== undefined ? humanoidRootPart.AssemblyLinearVelocity.Magnitude : 0;
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt);
+		this.renderPipeline.preUpdate(dt, velocity, this.equippedItem);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, this.equippedItem));
 	};
 }

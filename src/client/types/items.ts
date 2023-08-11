@@ -28,6 +28,7 @@ export interface Sight extends Model {
 export interface Item extends Model {
 	Grip: BasePart;
 	Sights?: Sight[];
+	CenterPart: BasePart;
 	Muzzle?: BasePart;
 }
 
