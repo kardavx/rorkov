@@ -18,10 +18,10 @@ export class Bobbing implements Node {
 	// };
 
 	private sines = {
-		zOrientation: new Sine(0.3, 0.5, 0),
-		y: new Sine(0.2, 1, 0),
-		x: new Sine(0.3, 0.5, 0),
-		z: new Sine(0.4, 1, 0),
+		zOrientation: new Sine(1.3, 1, 0),
+		y: new Sine(1.2, 2, 0),
+		x: new Sine(1.3, 1, 0),
+		z: new Sine(1.4, 2, 0),
 	};
 
 	private bobbingAmount: CFrame = new CFrame();
