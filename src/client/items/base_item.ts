@@ -139,16 +139,13 @@ export class BaseItem {
 
 	onRender = (dt: number): void => {
 		// const updatedSprings: UpdatedSprings = this.getUpdatedSprings(dt);
-		const baseCFrame = BaseItem.camera!.CFrame;
-		//const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
+		const baseCFrame = BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0));
 		const humanoidRootPart = this.character !== undefined ? (this.character.FindFirstChild("HumanoidRootPart") as BasePart) : undefined;
 		const velocity = humanoidRootPart !== undefined ? humanoidRootPart.AssemblyLinearVelocity.Magnitude : 0;
 
-		const camCF = BaseItem.camera!.CFrame;
-
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt, velocity, camCF, this.equippedItem);
+		this.renderPipeline.preUpdate(dt, velocity, this.equippedItem);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, camCF, this.equippedItem));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, this.equippedItem));
 	};
 }
