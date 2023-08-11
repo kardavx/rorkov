@@ -3,7 +3,7 @@ import { OnInputBegin, OnInputEnd } from "./core";
 import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
 import { UserInputService } from "@rbxts/services";
 import { log } from "shared/log_message";
-import localization from "client/localization/input";
+import localization from "client/localization/log/input";
 
 @Controller({})
 export class Input implements OnInputBegin, OnInputEnd {
