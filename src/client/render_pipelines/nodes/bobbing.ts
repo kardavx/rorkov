@@ -43,7 +43,7 @@ export class Bobbing implements Node {
 		const x = this.sines.x.update();
 		const z = this.sines.z.update();
 
-		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, z).mul(CFrame.Angles(0, 0, zOrientation)), 5 * deltaTime);
+		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, -z).mul(CFrame.Angles(0, 0, zOrientation)), 5 * deltaTime);
 	}
 
 	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number): CFrame {
