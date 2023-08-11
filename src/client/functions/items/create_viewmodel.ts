@@ -26,7 +26,7 @@ export default (itemName: string) => {
 	itemClone.PivotTo(new CFrame(0, 0, 0));
 
 	const [centerOfItem, itemSize] = itemClone.GetBoundingBox();
-	const centerPart = new Instance("Part");
+	const centerPart: BasePart = new Instance("Part");
 	centerPart.Name = "CenterPart";
 	centerPart.Transparency = 1;
 	centerPart.CFrame = centerOfItem;

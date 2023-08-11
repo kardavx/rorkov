@@ -109,7 +109,7 @@ export class BaseItem {
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 			const idle = new Instance("Animation");
-			idle.AnimationId = `rbxassetid://${14396810728}`;
+			idle.AnimationId = `rbxassetid://${14393419898}`;
 
 			const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
 			const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
