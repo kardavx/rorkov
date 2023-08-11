@@ -97,7 +97,7 @@ export class BaseItem {
 		this.springs = { ...this.springs, ...springs };
 		this.state = new State(this.states);
 		this.actions = new Map([...this.actions, ...actions]);
-		this.renderPipeline = new RenderPipeline([Bobbing, Sway]);
+		this.renderPipeline = new RenderPipeline([Bobbing]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
@@ -109,7 +109,7 @@ export class BaseItem {
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 			const idle = new Instance("Animation");
-			idle.AnimationId = `rbxassetid://${14375693467}`;
+			idle.AnimationId = `rbxassetid://${14393419898}`;
 
 			const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
 			const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
@@ -147,8 +147,8 @@ export class BaseItem {
 		const camCF = BaseItem.camera!.CFrame;
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt, velocity, camCF);
+		this.renderPipeline.preUpdate(dt, velocity, camCF, this.equippedItem);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, camCF));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, camCF, this.equippedItem));
 	};
 }
