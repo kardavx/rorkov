@@ -1,7 +1,7 @@
 import { log } from "./log_message";
 import { generateUUID, UUID } from "./uuid";
 import { Signal } from "@rbxts/beacon";
-import { validateType } from "./types_utility";
+import { validateType } from "./utilities/types_utility";
 import object from "./object";
 import { States, ChangedSignals, StateName, SignalConnections, SignalWithConnetions, SignalReturn, ChangedCallback } from "./types/state";
 
