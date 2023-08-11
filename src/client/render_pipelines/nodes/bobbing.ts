@@ -2,56 +2,59 @@ import { Controller } from "@flamework/core";
 import { Sine } from "shared/utilities/sine_utility";
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
+import { offsetFromPivot } from "shared/cframe_utility";
+
+type Sines = {
+	[axis in string]: Sine;
+};
+
+type SineValues = {
+	[axis in string]: {
+		amplitude: number;
+		frequency: number;
+	};
+};
 
 @Controller({})
 export class Bobbing implements Node {
-	private frequency = 0.5;
-	// private amplitudes = {
-	// 	X: 0.25,
-	// 	Y: 0.1,
-	// 	Z: 1,
-	// };
+	static frequency = 7;
+	static amplitude = 1;
 
-	// private sines = {
-	// 	X: new Sine(this.amplitudes.X, this.frequency, 0),
-	// 	Y: new Sine(this.amplitudes.Y, this.frequency, 0),
-	// 	Z: new Sine(this.amplitudes.Z, this.frequency, 0),
-	// };
+	private sineValues: SineValues = {
+		yaw: { amplitude: 0.2, frequency: 14 },
+		pitch: { amplitude: 0.05, frequency: 14 },
+		roll: { amplitude: 0.5, frequency: 7 },
+		x: { amplitude: 0.6, frequency: 14 },
+		y: { amplitude: 0.6, frequency: 14 },
+		z: { amplitude: 0.2, frequency: 14 },
+	};
 
-	private sines = {
-		x: new Sine(0, 2, 0.2),
-		y: new Sine(0.015, 3, 0.3),
-		z: new Sine(0.05, 2, 0.1),
-		pitch: new Sine(0.1, 2, 0.25),
-		yaw: new Sine(0.015, 1, 0.5),
-		roll: new Sine(0.5, 1.5, 0.8),
+	private sines: Sines = {
+		yaw: new Sine(this.sineValues.yaw.amplitude, this.sineValues.yaw.frequency, 1.56),
+		pitch: new Sine(this.sineValues.pitch.amplitude, this.sineValues.pitch.frequency, 1.56),
+		roll: new Sine(this.sineValues.roll.amplitude, this.sineValues.roll.frequency),
+		x: new Sine(this.sineValues.x.amplitude, this.sineValues.x.frequency, 1.56),
+		y: new Sine(this.sineValues.y.amplitude, this.sineValues.y.frequency, 1.56),
+		z: new Sine(this.sineValues.z.amplitude, this.sineValues.z.frequency, 1.56),
 	};
 
 	private bobbingAmount: CFrame = new CFrame();
 
-	preUpdate(deltaTime: number, playerVelocity: number, camCF: CFrame, equippedItem: EquippedItem): void {
-		// this.sines.X.setFrequency((playerVelocity * this.frequency) / 2);
-		// this.sines.X.setAmplitude((this.amplitudes.X * playerVelocity) / 20);
-		// this.sines.Y.setFrequency(playerVelocity * this.frequency * 2);
-		// this.sines.Y.setAmplitude((this.amplitudes.Y * playerVelocity) / 20);
-		// this.sines.Z.setFrequency(playerVelocity * this.frequency);
-		// this.sines.Z.setAmplitude((this.amplitudes.Z * playerVelocity) / 20);
+	preUpdate(deltaTime: number, playerVelocity: number, equippedItem: EquippedItem): void {
+		for (const [axis, sine] of pairs(this.sines)) {
+			sine.setAmplitude((this.sineValues[axis].amplitude * playerVelocity) / 15);
+			sine.setFrequency((this.sineValues[axis].frequency * playerVelocity) / 15);
+		}
 
-		// const bobX = this.sines.X.update();
-		// const bobY = this.sines.Y.update();
-		// const bobZ = this.sines.Z.update();
-
-		const x = this.sines.x.update();
-		const y = this.sines.y.update();
-		const z = this.sines.z.update();
-		const pitch = this.sines.pitch.update();
-		const yaw = this.sines.yaw.update();
-		const roll = this.sines.roll.update();
-
-		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, z).mul(CFrame.Angles(pitch, yaw, roll)), 5 * deltaTime);
+		this.bobbingAmount = this.bobbingAmount.Lerp(
+			new CFrame(this.sines.x.update(), this.sines.y.update(), -this.sines.z.update()).mul(
+				CFrame.Angles(-this.sines.yaw.update(), this.sines.pitch.update(), this.sines.roll.update()),
+			),
+			5 * deltaTime,
+		);
 	}
 
-	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number, camCF: CFrame, equippedItem: EquippedItem): CFrame {
-		return currentCFrame.mul(this.bobbingAmount);
+	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number, equippedItem: EquippedItem): CFrame {
+		return offsetFromPivot(currentCFrame, equippedItem.item.CenterPart.CFrame, this.bobbingAmount);
 	}
 }

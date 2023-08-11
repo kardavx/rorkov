@@ -19,11 +19,19 @@ export default (itemName: string) => {
 	viewmodelClone.Name = "viewmodel";
 	itemClone.Name = "item";
 
-	if (!viewmodelClone.PrimaryPart) viewmodelClone.PrimaryPart = viewmodelClone.Torso;
-	if (!itemClone.PrimaryPart) itemClone.PrimaryPart = itemClone.Grip;
+	viewmodelClone.PrimaryPart = viewmodelClone.Torso;
+	itemClone.PrimaryPart = itemClone.Grip;
 
 	viewmodelClone.PivotTo(new CFrame(0, 0, 0));
 	itemClone.PivotTo(new CFrame(0, 0, 0));
+
+	const [centerOfItem, itemSize] = itemClone.GetBoundingBox();
+	const centerPart: BasePart = new Instance("Part");
+	centerPart.Name = "CenterPart";
+	centerPart.Transparency = 1;
+	centerPart.CFrame = centerOfItem;
+	centerPart.Size = itemSize;
+	centerPart.Parent = itemClone;
 
 	const properties = { Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false };
 	setDescendantBasePartsProperties(viewmodelClone, properties, ["HumanoidRootPart"]);
