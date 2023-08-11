@@ -4,7 +4,6 @@ import { Input } from "client/controllers/input";
 import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
-import { Sway } from "client/render_pipelines/nodes/sway";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Modifier } from "client/controllers/camera";
 
