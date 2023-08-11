@@ -3,7 +3,7 @@ import { OnInputBegin, OnInputEnd } from "./core";
 import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
 import { UserInputService } from "@rbxts/services";
 import { log } from "shared/log_message";
-import localization from "shared/localization/log/state";
+import localization from "client/localization/input";
 
 @Controller({})
 export class Input implements OnInputBegin, OnInputEnd {
@@ -17,11 +17,9 @@ export class Input implements OnInputBegin, OnInputEnd {
 
 	private isKeyDown(key: Enum.KeyCode | Enum.UserInputType): boolean {
 		const mouseButtons = ["MouseButton1", "MouseButton2", "MouseButton3"];
-		return Enum.KeyCode.GetEnumItems().includes(key as Enum.KeyCode)
-			? UserInputService.IsKeyDown(key as Enum.KeyCode)
-			: mouseButtons.includes(key.Name)
-			? UserInputService.IsMouseButtonPressed(key as Enum.UserInputType)
-			: false;
+		if (Enum.KeyCode.GetEnumItems().includes(key as Enum.KeyCode)) return UserInputService.IsKeyDown(key as Enum.KeyCode);
+		if (mouseButtons.includes(key.Name)) return UserInputService.IsMouseButtonPressed(key as Enum.UserInputType);
+		return false;
 	}
 
 	private areModifierKeysPressed(inputObject: InputObject, action: BaseAction): boolean {
@@ -68,13 +66,11 @@ export class Input implements OnInputBegin, OnInputEnd {
 		const hasDuplicates = this.getActionsWithSameMetadata(inputObject, sourceAction);
 		if (hasDuplicates.size() === 0) return;
 		this.formatLog(sourceAction, hasDuplicates);
-		const callback =
-			sourceAction.inputType === "DoubleClick"
-				? (action: BaseAction) => this.handleDoubleClickAction(action, clickedAt)
-				: sourceAction.inputType === "Hold"
-				? (action: BaseAction) => this.handleHoldAction(action, clickedAt, Input.holdDuration)
-				: (action: BaseAction) => this.handleDefaultAction(action, hasDoubleClick, clickedAt);
-		hasDuplicates.forEach((action) => callback(action));
+		hasDuplicates.forEach((action) => {
+			if (sourceAction.inputType === "DoubleClick") return this.handleDoubleClickAction(action, clickedAt);
+			if (sourceAction.inputType === "Hold") return this.handleHoldAction(action, clickedAt, Input.holdDuration);
+			this.handleDefaultAction(action, hasDoubleClick, clickedAt);
+		});
 	}
 
 	private handleHoldAction(action: BaseAction, clickedAt: number, holdDuration: number, inputObject?: InputObject): void {
@@ -164,7 +160,7 @@ export class Input implements OnInputBegin, OnInputEnd {
 		this.boundActions.push({
 			actionName,
 			actionPriority,
-			inputCallback: callback,
+			inputCallback: (inputState: boolean) => task.spawn(() => callback(inputState)),
 			modifierKeys: requireModifierKeys,
 			inputType: actionInputType,
 			keyCode: actionKey,
