@@ -6,7 +6,7 @@ import { UserInputService } from "@rbxts/services";
 @Controller({})
 export class Input implements OnInputBegin, OnInputEnd {
 	static doubleClickWindow = 0.2;
-	static holdDuration = 1;
+	static holdDuration = 2.5;
 
 	private buttonsClickedCache: Map<Enum.KeyCode | Enum.UserInputType, number> = new Map<Enum.KeyCode | Enum.UserInputType, number>();
 	private boundActions: ActionTypes[] = [];
@@ -20,12 +20,23 @@ export class Input implements OnInputBegin, OnInputEnd {
 			: false;
 	}
 
-	private areModifierKeysPressed(inputObject: InputObject, keys: Enum.ModifierKey[]) {
+	private areModifierKeysPressed(inputObject: InputObject, action: BaseAction): boolean {
+		if (action.modifierKeys.size() === 0) {
+			const key = inputObject.UserInputType === Enum.UserInputType.Keyboard ? inputObject.KeyCode : inputObject.UserInputType;
+			const keyHasModifierAction = this.boundActions.find(
+				(action) => action.keyCode === key && action.actionPriority === action.actionPriority && action.modifierKeys.size() > 0,
+			);
+			if (!keyHasModifierAction) return true;
+			return keyHasModifierAction.modifierKeys.find((modifierKey) => inputObject.IsModifierKeyDown(modifierKey)) === undefined;
+		}
 		const modifierKeys = Enum.ModifierKey.GetEnumItems().filter((key) => inputObject.IsModifierKeyDown(key));
-		return modifierKeys.find((key) => !keys.includes(key)) === undefined && keys.find((key) => !modifierKeys.includes(key)) === undefined;
+		return (
+			modifierKeys.find((key) => !action.modifierKeys.includes(key)) === undefined &&
+			action.modifierKeys.find((key) => !modifierKeys.includes(key)) === undefined
+		);
 	}
 
-	private handleHoldAction(action: BaseAction, clickedAt: number, holdDuration: number = Input.holdDuration) {
+	private handleHoldAction(action: BaseAction, clickedAt: number, holdDuration: number = Input.holdDuration): void {
 		task.delay(holdDuration, () => {
 			if (this.buttonsClickedCache.get(action.keyCode) === clickedAt) {
 				const isButtonDown = this.isKeyDown(action.keyCode);
@@ -39,7 +50,7 @@ export class Input implements OnInputBegin, OnInputEnd {
 		});
 	}
 
-	private handleDefaultAction(action: BaseAction, hasDoubleClickAction: boolean, clickedAt: number) {
+	private handleDefaultAction(action: BaseAction, hasDoubleClickAction: boolean, clickedAt: number): void {
 		if (!hasDoubleClickAction && !action.isKeyDown) {
 			if (action.inputType === "Default") action.isKeyDown = true;
 			action.inputCallback(true);
@@ -48,7 +59,7 @@ export class Input implements OnInputBegin, OnInputEnd {
 		this.handleHoldAction(action, clickedAt, Input.doubleClickWindow);
 	}
 
-	private handleDoubleClickAction(action: BaseAction, clickedAt: number) {
+	private handleDoubleClickAction(action: BaseAction, clickedAt: number): void {
 		if (!this.buttonsClickedCache.has(action.keyCode)) return;
 		if (clickedAt - this.buttonsClickedCache.get(action.keyCode)! < Input.doubleClickWindow) {
 			action.inputCallback(true);
@@ -133,16 +144,10 @@ export class Input implements OnInputBegin, OnInputEnd {
 		const actionsBoundToKey = this.boundActions.filter((action) => action.keyCode === key);
 
 		const actionTypes = new Map<string, ActionTypes | undefined>([
-			[
-				"defaultAction",
-				actionsBoundToKey.find((action) => action.inputType === "Default" && this.areModifierKeysPressed(inputObject, action.modifierKeys)),
-			],
-			["clickAction", actionsBoundToKey.find((action) => action.inputType === "Click" && this.areModifierKeysPressed(inputObject, action.modifierKeys))],
-			["holdAction", actionsBoundToKey.find((action) => action.inputType === "Hold" && this.areModifierKeysPressed(inputObject, action.modifierKeys))],
-			[
-				"doubleClickAction",
-				actionsBoundToKey.find((action) => action.inputType === "DoubleClick" && this.areModifierKeysPressed(inputObject, action.modifierKeys)),
-			],
+			["defaultAction", actionsBoundToKey.find((action) => action.inputType === "Default" && this.areModifierKeysPressed(inputObject, action))],
+			["clickAction", actionsBoundToKey.find((action) => action.inputType === "Click" && this.areModifierKeysPressed(inputObject, action))],
+			["holdAction", actionsBoundToKey.find((action) => action.inputType === "Hold" && this.areModifierKeysPressed(inputObject, action))],
+			["doubleClickAction", actionsBoundToKey.find((action) => action.inputType === "DoubleClick" && this.areModifierKeysPressed(inputObject, action))],
 		]);
 
 		actionTypes.forEach((actionType, actionIndex) => {
