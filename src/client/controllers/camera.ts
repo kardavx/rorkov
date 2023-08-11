@@ -2,6 +2,7 @@ import { Controller } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
 import { Workspace } from "@rbxts/services";
+import { offsetFromPivot } from "shared/cframe_utility";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
 
@@ -94,6 +95,11 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	onPreCameraRender(): void {
 		if (!Camera.camera) return;
 		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
+
+		const part = Workspace.WaitForChild("Part") as BasePart;
+		const pivot = Workspace.WaitForChild("Pivot") as BasePart;
+
+		part.CFrame = offsetFromPivot(part.CFrame, pivot.CFrame, CFrame.Angles(0, 0, math.rad(40)));
 	}
 
 	onPostCameraRender(deltaTime: number): void {
