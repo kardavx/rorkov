@@ -19,9 +19,10 @@ export class Bobbing implements Node {
 
 	private sines = {
 		zOrientation: new Sine(1.3, 1, 0),
-		y: new Sine(1.2, 2, 0),
+		yOrientation: new Sine(0.6, 1, 0),
+		y: new Sine(1.2, 0.5, 0),
 		x: new Sine(1.3, 1, 0),
-		z: new Sine(1.4, 2, 0),
+		z: new Sine(1.4, 0.5, 0),
 	};
 
 	private bobbingAmount: CFrame = new CFrame();
@@ -39,11 +40,12 @@ export class Bobbing implements Node {
 		// const bobZ = this.sines.Z.update();
 
 		const zOrientation = this.sines.zOrientation.update();
+		const yOrientation = this.sines.yOrientation.update();
 		const y = this.sines.y.update();
 		const x = this.sines.x.update();
 		const z = this.sines.z.update();
 
-		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, -z).mul(CFrame.Angles(0, 0, zOrientation)), 5 * deltaTime);
+		this.bobbingAmount = this.bobbingAmount.Lerp(new CFrame(x, y, -z).mul(CFrame.Angles(0, yOrientation, zOrientation)), 5 * deltaTime);
 	}
 
 	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number): CFrame {
