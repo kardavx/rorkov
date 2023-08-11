@@ -2,7 +2,7 @@ import { Controller } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
 import { Workspace } from "@rbxts/services";
-import { offsetFromPivot } from "shared/cframe_utility";
+import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
 

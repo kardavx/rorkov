@@ -2,7 +2,7 @@ import { Controller } from "@flamework/core";
 import { Sine } from "shared/utilities/sine_utility";
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
-import { offsetFromPivot } from "shared/cframe_utility";
+import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
 type Sines = {
 	[axis in string]: Sine;
