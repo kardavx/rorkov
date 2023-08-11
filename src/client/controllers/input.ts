@@ -2,11 +2,15 @@ import { Controller } from "@flamework/core";
 import { OnInputBegin, OnInputEnd } from "./core";
 import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
 import { UserInputService } from "@rbxts/services";
+import { log } from "shared/log_message";
+import localization from "shared/localization/log/state";
 
 @Controller({})
 export class Input implements OnInputBegin, OnInputEnd {
 	static doubleClickWindow = 0.2;
 	static holdDuration = 2.5;
+	static logType = localization.multipleBindsAtSamePriority[0];
+	static logMessageTemplate = localization.multipleBindsAtSamePriority[1];
 
 	private buttonsClickedCache: Map<Enum.KeyCode | Enum.UserInputType, number> = new Map<Enum.KeyCode | Enum.UserInputType, number>();
 	private boundActions: ActionTypes[] = [];
@@ -36,7 +40,43 @@ export class Input implements OnInputBegin, OnInputEnd {
 		);
 	}
 
-	private handleHoldAction(action: BaseAction, clickedAt: number, holdDuration: number = Input.holdDuration): void {
+	private getActionsWithSameMetadata(inputObject: InputObject, action: BaseAction) {
+		return this.boundActions.filter(
+			(foundAction) =>
+				foundAction !== action &&
+				foundAction.keyCode === action.keyCode &&
+				foundAction.actionPriority === action.actionPriority &&
+				this.areModifierKeysPressed(inputObject, foundAction),
+		);
+	}
+
+	private formatLog(sourceAction: BaseAction, duplicateActions: BaseAction[]): void {
+		log(
+			Input.logType,
+			string.format(
+				Input.logMessageTemplate,
+				sourceAction.keyCode.Name,
+				sourceAction.modifierKeys.join(", "),
+				sourceAction.inputType,
+				[sourceAction.actionName, ...duplicateActions.map((action) => action.actionName)].join(", "),
+			),
+		);
+	}
+
+	private handleDuplicates(sourceAction: BaseAction, inputObject: InputObject, clickedAt: number, hasDoubleClick = false): void {
+		const hasDuplicates = this.getActionsWithSameMetadata(inputObject, sourceAction);
+		if (hasDuplicates.size() === 0) return;
+		this.formatLog(sourceAction, hasDuplicates);
+		const callback =
+			sourceAction.inputType === "DoubleClick"
+				? (action: BaseAction) => this.handleDoubleClickAction(action, clickedAt)
+				: sourceAction.inputType === "Hold"
+				? (action: BaseAction) => this.handleHoldAction(action, clickedAt, Input.holdDuration)
+				: (action: BaseAction) => this.handleDefaultAction(action, hasDoubleClick, clickedAt);
+		hasDuplicates.forEach((action) => callback(action));
+	}
+
+	private handleHoldAction(action: BaseAction, clickedAt: number, holdDuration: number, inputObject?: InputObject): void {
 		task.delay(holdDuration, () => {
 			if (this.buttonsClickedCache.get(action.keyCode) === clickedAt) {
 				const isButtonDown = this.isKeyDown(action.keyCode);
@@ -48,22 +88,25 @@ export class Input implements OnInputBegin, OnInputEnd {
 				}
 			}
 		});
+		if (inputObject) this.handleDuplicates(action, inputObject, clickedAt, false);
 	}
 
-	private handleDefaultAction(action: BaseAction, hasDoubleClickAction: boolean, clickedAt: number): void {
+	private handleDefaultAction(action: BaseAction, hasDoubleClickAction: boolean, clickedAt: number, inputObject?: InputObject): void {
 		if (!hasDoubleClickAction && !action.isKeyDown) {
 			if (action.inputType === "Default") action.isKeyDown = true;
 			action.inputCallback(true);
-			return;
+		} else {
+			this.handleHoldAction(action, clickedAt, Input.doubleClickWindow);
 		}
-		this.handleHoldAction(action, clickedAt, Input.doubleClickWindow);
+		if (inputObject) this.handleDuplicates(action, inputObject, clickedAt, hasDoubleClickAction);
 	}
 
-	private handleDoubleClickAction(action: BaseAction, clickedAt: number): void {
+	private handleDoubleClickAction(action: BaseAction, clickedAt: number, inputObject?: InputObject): void {
 		if (!this.buttonsClickedCache.has(action.keyCode)) return;
 		if (clickedAt - this.buttonsClickedCache.get(action.keyCode)! < Input.doubleClickWindow) {
 			action.inputCallback(true);
 		}
+		if (inputObject) this.handleDuplicates(action, inputObject, clickedAt, false);
 	}
 
 	public bindAction(actionName: string, actionKey: BindableActionKey, actionPriotity: number, callback: (inputState: boolean) => void): void;
@@ -155,10 +198,11 @@ export class Input implements OnInputBegin, OnInputEnd {
 
 		const clickedAt = tick();
 		const hasDoubleClick = actionTypes.has("doubleClickAction");
-		if (actionTypes.has("defaultAction")) this.handleDefaultAction(actionTypes.get("defaultAction")!, hasDoubleClick, clickedAt);
-		if (actionTypes.has("clickAction")) this.handleDefaultAction(actionTypes.get("clickAction")!, hasDoubleClick, clickedAt);
-		if (hasDoubleClick) this.handleDoubleClickAction(actionTypes.get("doubleClickAction")!, clickedAt);
-		if (actionTypes.has("holdAction")) this.handleHoldAction(actionTypes.get("holdAction")!, clickedAt);
+
+		if (actionTypes.has("defaultAction")) this.handleDefaultAction(actionTypes.get("defaultAction")!, hasDoubleClick, clickedAt, inputObject);
+		if (actionTypes.has("clickAction")) this.handleDefaultAction(actionTypes.get("clickAction")!, hasDoubleClick, clickedAt, inputObject);
+		if (hasDoubleClick) this.handleDoubleClickAction(actionTypes.get("doubleClickAction")!, clickedAt, inputObject);
+		if (actionTypes.has("holdAction")) this.handleHoldAction(actionTypes.get("holdAction")!, clickedAt, Input.holdDuration, inputObject);
 		this.buttonsClickedCache.set(key, clickedAt);
 	}
 
