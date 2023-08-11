@@ -1,5 +1,5 @@
 import { Controller } from "@flamework/core";
-import { Sine } from "shared/math_utility";
+import { Sine } from "shared/utilities/sine_utility";
 import { Node } from "../node";
 import { UserInputService } from "@rbxts/services";
 import { EquippedItem } from "client/types/items";

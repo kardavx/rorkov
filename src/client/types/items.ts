@@ -1,4 +1,4 @@
-import { Spring } from "shared/math_utility";
+import { Spring } from "shared/utilities/sine_utility";
 
 export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
