@@ -95,11 +95,6 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	onPreCameraRender(): void {
 		if (!Camera.camera) return;
 		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
-
-		const part = Workspace.WaitForChild("Part") as BasePart;
-		const pivot = Workspace.WaitForChild("Pivot") as BasePart;
-
-		part.CFrame = offsetFromPivot(part.CFrame, pivot.CFrame, CFrame.Angles(0, 0, math.rad(40)));
 	}
 
 	onPostCameraRender(deltaTime: number): void {
