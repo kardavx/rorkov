@@ -116,8 +116,6 @@ export class Input implements OnInputBegin, OnInputEnd {
 
 		if (!callback) throw `No callback was provided for ${actionName}`;
 		if (this.boundActions.find((bind) => bind.actionName === actionName)) throw `Action ${actionName} already exists!`;
-		if (this.boundActions.find((bind) => bind.keyCode === actionKey && bind.inputType === actionInputType && bind.modifierKeys === requireModifierKeys))
-			throw `Key ${actionKey} with type ${actionInputType} and ${requireModifierKeys} modifierKeys} already exists!`;
 
 		this.boundActions.push({
 			actionName,
