@@ -17,7 +17,7 @@ export class Useable extends BaseItem {
 		this.destroy();
 	};
 
-	constructor(input: Input, itemName: string) {
-		super(input, itemName, Useable.states, Useable.blockingStates, Useable.springs, Useable.actions);
+	constructor(itemName: string) {
+		super(itemName, Useable.states, Useable.blockingStates, Useable.springs, Useable.actions);
 	}
 }

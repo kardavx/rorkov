@@ -2,6 +2,7 @@ import { Controller } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
 import { Workspace } from "@rbxts/services";
+import { UserInputService } from "@rbxts/services";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
@@ -72,6 +73,8 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	private humanoid: Humanoid | undefined;
 
 	private lastOffsets: CFrame = new CFrame();
+	private rotationDelta: Vector2 = new Vector2();
+	private lastCameraCFrame: CFrame | undefined;
 
 	private applyPosition(summedOffset: CFrame) {
 		const headCF = this.head!.CFrame;
@@ -84,6 +87,26 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	private applyRotation(summedOffset: CFrame) {
 		const [x, y, z] = summedOffset.ToOrientation();
 		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
+	}
+
+	private updateRotationDelta() {
+		if (this.lastCameraCFrame) {
+			// const lastX = this.lastCameraCFrame.LookVector.X;
+			// const lastY = this.lastCameraCFrame.LookVector.Y;
+
+			// const currentX = Camera.camera!.CFrame.LookVector.X;
+			// const currentY = Camera.camera!.CFrame.LookVector.Y;
+
+			const difference = Camera.camera!.CFrame.LookVector.sub(this.lastCameraCFrame.LookVector);
+
+			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(1000);
+		}
+
+		this.lastCameraCFrame = Camera.camera!.CFrame;
+	}
+
+	getRotationDelta(): Vector2 {
+		return this.rotationDelta;
 	}
 
 	onCharacterAdded(character: Model): void {
@@ -105,6 +128,8 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 		this.applyRotation(summedOffset);
 		if (this.humanoid) this.applyPosition(summedOffset);
+
+		this.updateRotationDelta();
 
 		this.lastOffsets = summedOffset;
 	}

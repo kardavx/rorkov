@@ -34,7 +34,7 @@ export class Items implements OnStart, OnRender, OnCharacterAdded {
 		const itemName = this.inventory[slot];
 		if (itemName === undefined) return;
 
-		this.currentItemObject = new Items.itemNameToType[itemName](new Input(), itemName);
+		this.currentItemObject = new Items.itemNameToType[itemName](itemName);
 		this.currentItemObject.character = this.character;
 	}
 

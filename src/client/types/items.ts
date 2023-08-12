@@ -1,4 +1,4 @@
-import { Spring } from "shared/utilities/sine_utility";
+import { VectorSpring } from "shared/Spring/spring";
 
 export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
@@ -33,7 +33,7 @@ export interface Item extends Model {
 }
 
 export type Springs = {
-	[springName in string]: Spring;
+	[springName in string]: VectorSpring;
 };
 
 export type UpdatedSprings = {
@@ -53,4 +53,5 @@ export interface EquippedItem {
 	item: Item;
 	alphas: Alphas;
 	offsets: Offsets;
+	springs: Springs;
 }

@@ -1,12 +1,12 @@
-import { Controller } from "@flamework/core";
+import { Controller, OnInit } from "@flamework/core";
 import { OnInputBegin, OnInputEnd } from "./core";
 import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
-import { UserInputService } from "@rbxts/services";
+import { ContextActionService, UserInputService } from "@rbxts/services";
 import { log } from "shared/log_message";
 import localization from "client/localization/log/input";
 
 @Controller({})
-export class Input implements OnInputBegin, OnInputEnd {
+export class Input implements OnInputBegin, OnInputEnd, OnInit {
 	static doubleClickWindow = 0.2;
 	static holdDuration = 2.5;
 	static logType = localization.multipleBindsAtSamePriority[0];
@@ -214,5 +214,9 @@ export class Input implements OnInputBegin, OnInputEnd {
 		task.delay(Input.doubleClickWindow, () => {
 			if (!this.isKeyDown(key)) this.buttonsClickedCache.delete(key);
 		});
+	}
+
+	onInit(): void {
+		ContextActionService.UnbindAllActions();
 	}
 }

@@ -3,6 +3,7 @@ import { Sine } from "shared/utilities/sine_utility";
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
+import { getCharacterSpeed, isCharacterGrounded } from "shared/utilities/character_utility";
 
 type Sines = {
 	[axis in string]: Sine;
@@ -21,12 +22,12 @@ export class Bobbing implements Node {
 	static amplitude = 1;
 
 	private sineValues: SineValues = {
-		yaw: { amplitude: 0.2, frequency: 14 },
-		pitch: { amplitude: 0.05, frequency: 14 },
-		roll: { amplitude: 0.5, frequency: 7 },
-		x: { amplitude: 0.6, frequency: 14 },
-		y: { amplitude: 0.6, frequency: 14 },
-		z: { amplitude: 0.2, frequency: 14 },
+		yaw: { amplitude: 0.01, frequency: Bobbing.frequency * 2 },
+		pitch: { amplitude: 0.05, frequency: Bobbing.frequency * 2 },
+		roll: { amplitude: 0.6, frequency: Bobbing.frequency },
+		x: { amplitude: 0.6, frequency: Bobbing.frequency * 2 },
+		y: { amplitude: 0.8, frequency: Bobbing.frequency * 2 },
+		z: { amplitude: 0.8, frequency: Bobbing.frequency * 2 },
 	};
 
 	private sines: Sines = {
@@ -40,21 +41,24 @@ export class Bobbing implements Node {
 
 	private bobbingAmount: CFrame = new CFrame();
 
-	preUpdate(deltaTime: number, playerVelocity: number, equippedItem: EquippedItem): void {
+	preUpdate(deltaTime: number, character: Model): void {
+		const characterSpeed = getCharacterSpeed(character);
+		const isGrounded = isCharacterGrounded(character);
+
+		const bobbingMultiplier = isGrounded === true ? characterSpeed : 0;
+
 		for (const [axis, sine] of pairs(this.sines)) {
-			sine.setAmplitude((this.sineValues[axis].amplitude * playerVelocity) / 15);
-			sine.setFrequency((this.sineValues[axis].frequency * playerVelocity) / 15);
+			sine.setAmplitude((this.sineValues[axis].amplitude * bobbingMultiplier) / 20);
+			sine.setFrequency((this.sineValues[axis].frequency * bobbingMultiplier) / 11);
 		}
 
 		this.bobbingAmount = this.bobbingAmount.Lerp(
-			new CFrame(this.sines.x.update(), this.sines.y.update(), -this.sines.z.update()).mul(
-				CFrame.Angles(-this.sines.yaw.update(), this.sines.pitch.update(), this.sines.roll.update()),
-			),
+			new CFrame(0, this.sines.y.update(), -this.sines.z.update()).mul(CFrame.Angles(0, this.sines.pitch.update(), this.sines.roll.update())),
 			5 * deltaTime,
 		);
 	}
 
-	update(deltaTime: number, currentCFrame: CFrame, playerVelocity: number, equippedItem: EquippedItem): CFrame {
+	update(deltaTime: number, currentCFrame: CFrame, character: Model, equippedItem: EquippedItem): CFrame {
 		return offsetFromPivot(currentCFrame, equippedItem.item.CenterPart.CFrame, this.bobbingAmount);
 	}
 }
