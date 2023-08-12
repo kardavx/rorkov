@@ -20,7 +20,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 	private camera = Workspace.CurrentCamera;
 	private turnSound: Sound | undefined = undefined;
 	private turnSoundCooldown = false;
-	private VectorXZ = new Vector3(1, 1, 1);
+	private vectorXZ = new Vector3(1, 1, 1);
 	private materialSounds: MaterialSounds = {
 		Plastic: {
 			Step: [5682504255, 4817498373],
@@ -94,7 +94,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 
 		const deltaX = math.abs(UserInputService.GetMouseDelta().X);
 
-		const camLV = this.camera!.CFrame.LookVector.mul(this.VectorXZ);
+		const camLV = this.camera!.CFrame.LookVector.mul(this.vectorXZ);
 
 		if (deltaX >= 5 && !this.turnSoundCooldown) {
 			this.turnSoundCooldown = true;
