@@ -1,0 +1,35 @@
+name: Lint source code
+
+on:
+  pull_request:
+    branches:
+    - master
+
+permissions:
+  checks: write
+  contents: write
+
+jobs:
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run linters
+      uses: wearerequired/lint-action@v2
+      with:
+        auto_fix: true
+        eslint: true
+        eslint_extensions: ts
+        prettier: true

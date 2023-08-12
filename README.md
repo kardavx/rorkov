@@ -27,10 +27,13 @@
 # Skrypty npm
 
 ## `npm run devbuild`
+
 Kompiluje projekt do lua, tworzy plik `devbuild.rbxl` zawierający wszystkie modele gry i od razu otwiera go w roblox studio. Używaj go tylko jeśli nie masz place z aktualnymi modelami
 
 ## `npm run build`
+
 Kompiluje projekt do lua i od razu uruchamia server rojo. Używaj gdy już masz place z modelami i potrzebujesz przetestować kod.
 
 ## `npm run watch`
+
 Uruchamia `rbxtsc` w trybie watch - kompilacja sie uruchamia przy kazdym zapisie/utworzeniu pliku w folderze projektu

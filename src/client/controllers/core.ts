@@ -1,8 +1,28 @@
-import { Modding, Controller, OnInit } from "@flamework/core";
-import { Players } from "@rbxts/services";
+import { Controller, Modding, OnInit } from "@flamework/core";
+import { Players, UserInputService } from "@rbxts/services";
+import { RunService } from "@rbxts/services";
+import { Weapon } from "client/items/weapon";
+import { Grenade } from "client/items/grenade";
+import { Useable } from "client/items/useable";
 
 export interface OnCharacterAdded {
 	onCharacterAdded(character: Model): void;
+}
+
+export interface OnPostCameraRender {
+	onPostCameraRender(deltaTime: number): void;
+}
+
+export interface OnPreCameraRender {
+	onPreCameraRender(deltaTime: number): void;
+}
+
+export interface OnInputBegin {
+	onInputBegin(inputObject: InputObject): void;
+}
+
+export interface OnInputEnd {
+	onInputEnd(inputObject: InputObject): void;
 }
 
 @Controller({})
@@ -28,3 +48,70 @@ export class CharacterAdded implements OnInit {
 		}
 	}
 }
+
+@Controller({})
+export class PostCameraRender implements OnInit {
+	onInit(): void {
+		const listeners = new Set<OnPostCameraRender>();
+
+		Modding.onListenerAdded<OnPostCameraRender>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnPostCameraRender>((object) => listeners.delete(object));
+
+		RunService.BindToRenderStep("onPostCameraRender", Enum.RenderPriority.Camera.Value + 1, (deltaTime: number) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onPostCameraRender(deltaTime));
+			}
+		});
+	}
+}
+
+@Controller({})
+export class PreCameraRender implements OnInit {
+	onInit(): void {
+		const listeners = new Set<OnPreCameraRender>();
+
+		Modding.onListenerAdded<OnPreCameraRender>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnPreCameraRender>((object) => listeners.delete(object));
+
+		RunService.BindToRenderStep("onPreCameraRender", Enum.RenderPriority.Camera.Value - 1, (deltaTime: number) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onPreCameraRender(deltaTime));
+			}
+		});
+	}
+}
+
+@Controller({})
+export class InputBegin implements OnInit {
+	onInit(): void | Promise<void> {
+		const listeners = new Set<OnInputBegin>();
+
+		Modding.onListenerAdded<OnInputBegin>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnInputBegin>((object) => listeners.delete(object));
+
+		UserInputService.InputBegan.Connect((inputObject: InputObject, gameProcessed: boolean) => {
+			if (gameProcessed) return;
+			for (const listener of listeners) {
+				task.spawn(() => listener.onInputBegin(inputObject));
+			}
+		});
+	}
+}
+
+@Controller({})
+export class InputEnd implements OnInit {
+	onInit(): void | Promise<void> {
+		const listeners = new Set<OnInputEnd>();
+
+		Modding.onListenerAdded<OnInputEnd>((object) => listeners.add(object));
+		Modding.onListenerRemoved<OnInputEnd>((object) => listeners.delete(object));
+
+		UserInputService.InputEnded.Connect((inputObject: InputObject) => {
+			for (const listener of listeners) {
+				task.spawn(() => listener.onInputEnd(inputObject));
+			}
+		});
+	}
+}
+
+export const ItemTypes = { Weapon, Grenade, Useable };
