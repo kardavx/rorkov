@@ -1,20 +1,41 @@
 import { Controller } from "@flamework/core";
 import { OnInputBegin, OnInputEnd } from "./core";
-import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
+import { BindableActionKey, InputType, ActionTypes, BaseAction, ActionInvokeCallback } from "client/types/input";
 import { UserInputService } from "@rbxts/services";
 import { log } from "shared/log_message";
 import localization from "client/localization/log/input";
 
 @Controller({})
+/**
+ * Class responsile for processing user input
+ * @author Krzymen
+ * @class Input
+ * @implements {OnInputBegin}
+ * @implements {OnInputEnd}
+ */
 export class Input implements OnInputBegin, OnInputEnd {
+	/**
+	 * @static Maximum time between key presses to invoke action with `DoubleClick` type
+	 */
 	static doubleClickWindow = 0.2;
+	/**
+	 * @static How long key needs to be held to invoke action with `Hold` type
+	 */
 	static holdDuration = 2.5;
+
 	static logType = localization.multipleBindsAtSamePriority[0];
 	static logMessageTemplate = localization.multipleBindsAtSamePriority[1];
 
 	private buttonsClickedCache: Map<Enum.KeyCode | Enum.UserInputType, number> = new Map<Enum.KeyCode | Enum.UserInputType, number>();
 	private boundActions: ActionTypes[] = [];
 
+	/**
+	 * Check if key or mouse button is pressed
+	 * @private
+	 * @author Krzymen
+	 * @param {Enum.KeyCode | Enum.MouseButton} key - key to check
+	 * @returns {boolean} - true if key is pressed
+	 */
 	private isKeyDown(key: Enum.KeyCode | Enum.UserInputType): boolean {
 		const mouseButtons = ["MouseButton1", "MouseButton2", "MouseButton3"];
 		if (Enum.KeyCode.GetEnumItems().includes(key as Enum.KeyCode)) return UserInputService.IsKeyDown(key as Enum.KeyCode);
@@ -22,6 +43,14 @@ export class Input implements OnInputBegin, OnInputEnd {
 		return false;
 	}
 
+	/**
+	 * Checks if pressed modifier keys allows the action to run
+	 * @private
+	 * @author Krzymen
+	 * @param {InputObject} inputObject - input object got from `UserInputService.InputBegan`
+	 * @param {BaseAction} action - action to check if can run
+	 * @returns {boolean} - true if action can run
+	 */
 	private areModifierKeysPressed(inputObject: InputObject, action: BaseAction): boolean {
 		if (action.modifierKeys.size() === 0) {
 			const key = inputObject.UserInputType === Enum.UserInputType.Keyboard ? inputObject.KeyCode : inputObject.UserInputType;
@@ -38,7 +67,15 @@ export class Input implements OnInputBegin, OnInputEnd {
 		);
 	}
 
-	private getActionsWithSameMetadata(inputObject: InputObject, action: BaseAction) {
+	/**
+	 * Gets actions with same keyCode, type and priority to given one
+	 * @private
+	 * @author Krzymen
+	 * @param {InputObject} inputObject - input object got from `UserInputService.InputBegan`
+	 * @param {BaseAction} action - action object used to compare metadata
+	 * @returns {BaseAction[]} - array of actions with same metadata or empty array if no actions with same metadata exists
+	 */
+	private getActionsWithSameMetadata(inputObject: InputObject, action: BaseAction): BaseAction[] {
 		return this.boundActions.filter(
 			(foundAction) =>
 				foundAction !== action &&
@@ -49,6 +86,14 @@ export class Input implements OnInputBegin, OnInputEnd {
 		);
 	}
 
+	/**
+	 * Sends a warning message to logger about duplicate actions
+	 * @private
+	 * @author Krzymen
+	 * @param {BaseAction} sourceAction - first found action that meets the criteria
+	 * @param {BaseAction} duplicateActions - array of duplicate actions with same metadata got from {@link Input.getActionsWithSameMetadata}
+	 * @returns {void}
+	 */
 	private formatLog(sourceAction: BaseAction, duplicateActions: BaseAction[]): void {
 		log(
 			Input.logType,
@@ -62,6 +107,17 @@ export class Input implements OnInputBegin, OnInputEnd {
 		);
 	}
 
+	/**
+	 * Finds any actions with same metadata to given one using {@link Input.getActionsWithSameMetadata}
+	 * If any are found then {@link Input.formatLog} gets invoked and all duplicate actions are passed to the appropriate handler
+	 * @private
+	 * @author Krzymen
+	 * @param {BaseAction} sourceAction - found action that meets the criteria
+	 * @param {InputObject} inputObject - input object got from `UserInputService.InputBegan`
+	 * @param {number} clickedAt - tick at which button has been pressed
+	 * @param {boolean} [hasDoubleClick = false] - whether there is an action with same keyCode with `DoubleClick` type
+	 * @returns {void}
+	 */
 	private handleDuplicates(sourceAction: BaseAction, inputObject: InputObject, clickedAt: number, hasDoubleClick = false): void {
 		const hasDuplicates = this.getActionsWithSameMetadata(inputObject, sourceAction);
 		if (hasDuplicates.size() === 0) return;
@@ -73,6 +129,16 @@ export class Input implements OnInputBegin, OnInputEnd {
 		});
 	}
 
+	/**
+	 * Handles given action with `Hold` type or `Default`/`Click` type if action action with same keyCode with `DoubleClick` type exists
+	 * @private
+	 * @author Krzymen
+	 * @param {BaseAction} action - action to handle
+	 * @param {number} clickedAt - tick at which button has been pressed
+	 * @param {number} holdDuration - how long key needs to be held before invoking action callback
+	 * @param {InputObject=} inputObject - input object got from `UserInputService.InputBegan`, when provided {@link Input.handleDuplicates} invokes
+	 * @returns {void}
+	 */
 	private handleHoldAction(action: BaseAction, clickedAt: number, holdDuration: number, inputObject?: InputObject): void {
 		task.delay(holdDuration, () => {
 			if (this.buttonsClickedCache.get(action.keyCode) === clickedAt) {
@@ -88,6 +154,16 @@ export class Input implements OnInputBegin, OnInputEnd {
 		if (inputObject) this.handleDuplicates(action, inputObject, clickedAt, false);
 	}
 
+	/**
+	 * Handles given action with `Default` or `Click` type
+	 * @private
+	 * @author Krzymen
+	 * @param {BaseAction} action - action to handle
+	 * @param {boolean} hasDoubleClickAction - whether there is an action with same keyCode with `DoubleClick` type
+	 * @param {number} clickedAt - tick at which button has been pressed
+	 * @param {InputObject=} inputObject - input object got from `UserInputService.InputBegan`, when provided {@link Input.handleDuplicates} invokes
+	 * @returns {void}
+	 */
 	private handleDefaultAction(action: BaseAction, hasDoubleClickAction: boolean, clickedAt: number, inputObject?: InputObject): void {
 		if (!hasDoubleClickAction && !action.isKeyDown) {
 			if (action.inputType === "Default") action.isKeyDown = true;
@@ -98,6 +174,13 @@ export class Input implements OnInputBegin, OnInputEnd {
 		if (inputObject) this.handleDuplicates(action, inputObject, clickedAt, hasDoubleClickAction);
 	}
 
+	/**
+	 * Handles given action with `DoubleClick` type
+	 * @param {BaseAction} action - action to handle
+	 * @param {number} clickedAt - tick at which button has been pressed
+	 * @param {InputObject} inputObject - input object got from `UserInputService.InputBegan`, when provided {@link Input.handleDuplicates} invokes
+	 * @returns {void}
+	 */
 	private handleDoubleClickAction(action: BaseAction, clickedAt: number, inputObject?: InputObject): void {
 		if (!this.buttonsClickedCache.has(action.keyCode)) return;
 		if (clickedAt - this.buttonsClickedCache.get(action.keyCode)! < Input.doubleClickWindow) {
@@ -106,28 +189,72 @@ export class Input implements OnInputBegin, OnInputEnd {
 		if (inputObject) this.handleDuplicates(action, inputObject, clickedAt, false);
 	}
 
-	public bindAction(actionName: string, actionKey: BindableActionKey, actionPriotity: number, callback: (inputState: boolean) => void): void;
+	/**
+	 * Bounds an action with given name, keyCode and priority
+	 * @public
+	 * @author Krzymen
+	 * @param {string} actionName - unique name of the action
+	 * @param {BindableActionKey} actionKey - key which needs to be pressed to invoke action
+	 * @param {number} actionPriotity - priority of the action; On key press action with highest priority will invoke and other actions with the same type will be ignored
+	 * @param {ActionInvokeCallback} callback - callback invoked when the action is invoked
+	 * @return {void}
+	 */
+	public bindAction(actionName: string, actionKey: BindableActionKey, actionPriotity: number, callback: ActionInvokeCallback): void;
+	/**
+	 * Bounds an action with given name, keyCode, priority and modifierKeys
+	 * @public
+	 * @author Krzymen
+	 * @param {string} actionName - unique name of the action
+	 * @param {BindableActionKey} actionKey - key which needs to be pressed to invoke action
+	 * @param {number} actionPriotity - priority of the action; On key press action with highest priority will invoke and other actions with the same type will be ignored
+	 * @param {Enum.ModifierKey[]} requireModifierKeys - array of modifier keys which need to be pressed in order to invoke action
+	 * @param {ActionInvokeCallback} callback - callback invoked when the action is invoked
+	 * @return {void}
+	 */
 	public bindAction(
 		actionName: string,
 		actionKey: BindableActionKey,
 		actionPriotity: number,
 		requireModifierKeys: Enum.ModifierKey[],
-		callback: (inputState: boolean) => void,
+		callback: ActionInvokeCallback,
 	): void;
+	/**
+	 * Bounds an action with given name, keyCode, priority and type
+	 * @public
+	 * @author Krzymen
+	 * @param {string} actionName - unique name of the action
+	 * @param {BindableActionKey} actionKey - key which needs to be pressed to invoke action
+	 * @param {number} actionPriotity - priority of the action; On key press action with highest priority will invoke and other actions with the same type will be ignored
+	 * @param {InputType} actionInputType - type of input required to invoke action
+	 * @param {ActionInvokeCallback} callback - callback invoked when the action is invoked
+	 * @return {void}
+	 */
 	public bindAction(
 		actionName: string,
 		actionKey: BindableActionKey,
 		actionPriotity: number,
 		actionInputType: InputType,
-		callback: (inputState: boolean) => void,
+		callback: ActionInvokeCallback,
 	): void;
+	/**
+	 * Bounds an action with given name, keyCode, priority, type and modifierKeys
+	 * @public
+	 * @author Krzymen
+	 * @param {string} actionName - unique name of the action
+	 * @param {BindableActionKey} actionKey - key which needs to be pressed to invoke action
+	 * @param {number} actionPriotity - priority of the action; On key press action with highest priority will invoke and other actions with the same type will be ignored
+	 * @param {InputType} actionInputType - type of input required to invoke action
+	 * @param {Enum.ModifierKey[]} requireModifierKeys - array of modifier keys which need to be pressed in order to invoke action
+	 * @param {ActionInvokeCallback} callback - callback invoked when the action is invoked
+	 * @return {void}
+	 */
 	public bindAction(
 		actionName: string,
 		actionKey: BindableActionKey,
 		actionPriotity: number,
 		actionInputType: InputType,
 		requireModifierKeys: Enum.ModifierKey[],
-		callback: (inputState: boolean) => void,
+		callback: ActionInvokeCallback,
 	): void;
 
 	public bindAction(
@@ -145,7 +272,7 @@ export class Input implements OnInputBegin, OnInputEnd {
 				: fourthArgument !== undefined && typeIs(fourthArgument, "table")
 				? (fourthArgument as Enum.ModifierKey[])
 				: [];
-		const callback: ((inputState: boolean) => void) | undefined =
+		const callback: ActionInvokeCallback | undefined =
 			sixthArgument !== undefined && typeIs(sixthArgument, "function")
 				? sixthArgument
 				: fifthArgument !== undefined && typeIs(fifthArgument, "function")
@@ -170,6 +297,13 @@ export class Input implements OnInputBegin, OnInputEnd {
 		this.boundActions = this.boundActions.sort((actionA, actionB) => actionA.actionPriority > actionB.actionPriority);
 	}
 
+	/**
+	 * Unbinds an action with given actionName
+	 * @public
+	 * @author Krzymen
+	 * @param {string} actionName - name of the action to unbind
+	 * @returns {boolean} - whether the action was successfully unbound
+	 */
 	public unbindAction(actionName: string): boolean {
 		const index = this.boundActions.findIndex((action) => action.actionName === actionName);
 		if (index === -1) return false;

@@ -1,5 +1,6 @@
 export type InputType = "Default" | "DoubleClick" | "Hold" | "Click";
 export type BindableActionKey = Enum.KeyCode | Enum.UserInputType.MouseButton1 | Enum.UserInputType.MouseButton2 | Enum.UserInputType.MouseButton3;
+export type ActionInvokeCallback = (inputState: boolean) => void;
 
 export type BaseAction = {
 	inputType: InputType;
@@ -8,7 +9,7 @@ export type BaseAction = {
 	actionName: string;
 	actionPriority: number;
 	isKeyDown: boolean;
-	inputCallback: (inputState: boolean) => void;
+	inputCallback: ActionInvokeCallback;
 };
 
 export type ActionTypes = BaseAction;
