@@ -4,14 +4,15 @@ import { Input } from "client/controllers/input";
 import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
-import { Sway } from "client/render_pipelines/nodes/sway";
+import { Pullback } from "client/render_pipelines/nodes/pullback";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Modifier } from "client/controllers/camera";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, UpdatedSprings, Offsets, Actions } from "client/types/items";
 
 export class BaseItem {
-	static camera = Workspace.CurrentCamera;
+	static camera = Workspace.CurrentCamera as Camera;
+	private raycastParams: RaycastParams = new RaycastParams();
 
 	private states: string[] = ["equip", "unequip"];
 	private blockingStates: string[] = ["equip", "unequip"];
@@ -97,7 +98,7 @@ export class BaseItem {
 		this.springs = { ...this.springs, ...springs };
 		this.state = new State(this.states);
 		this.actions = new Map([...this.actions, ...actions]);
-		this.renderPipeline = new RenderPipeline([Bobbing]);
+		this.renderPipeline = new RenderPipeline([Bobbing, Pullback]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
@@ -111,8 +112,11 @@ export class BaseItem {
 			const idle = new Instance("Animation");
 			idle.AnimationId = `rbxassetid://${14393419898}`;
 
-			const humanoid = Players.LocalPlayer.Character!.WaitForChild("Humanoid") as Humanoid;
+			const character = Players.LocalPlayer.Character as Model;
+			const humanoid = character!.WaitForChild("Humanoid") as Humanoid;
 			const animatorhum = humanoid.FindFirstChild("Animator") as Animator;
+			this.raycastParams.FilterType = Enum.RaycastFilterType.Blacklist;
+			this.raycastParams.FilterDescendantsInstances = [BaseItem.camera, character];
 
 			this.idle = animator.LoadAnimation(idle);
 			const idle2 = animatorhum.LoadAnimation(idle);
@@ -145,8 +149,8 @@ export class BaseItem {
 		const velocity = humanoidRootPart !== undefined ? humanoidRootPart.AssemblyLinearVelocity.Magnitude : 0;
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt, velocity, this.equippedItem);
+		this.renderPipeline.preUpdate(dt, velocity, this.equippedItem, BaseItem.camera, this.raycastParams);
 
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, this.equippedItem));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, velocity, this.equippedItem, BaseItem.camera));
 	};
 }
