@@ -96,7 +96,7 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 			if (!this.state.isStateActive("Walking")) this.state.activateState("Walking");
 		} else if (this.state.isStateActive("Walking")) this.state.disableState("Walking");
 
-		if (this.state.isStateActive("RunningRequest") && this.moveVector.Z === -1 && currentVelocity > 0 && isCharacterGrounded(this.character)) {
+		if (this.state.isStateActive("RunningRequest") && this.moveVector.Z === -1 && currentVelocity > 5 && isCharacterGrounded(this.character)) {
 			if (!this.state.isStateActive("Running")) this.state.activateState("Running");
 		} else {
 			if (this.state.isStateActive("Running")) this.state.disableState("Running");
