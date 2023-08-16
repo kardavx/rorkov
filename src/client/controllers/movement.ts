@@ -96,7 +96,6 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 			if (!this.state.isStateActive("Walking")) this.state.activateState("Walking");
 		} else if (this.state.isStateActive("Walking")) this.state.disableState("Walking");
 
-		// this.moveVector.Z === -1 - checks if player is going forward or not
 		if (this.state.isStateActive("RunningRequest") && this.moveVector.Z === -1 && currentVelocity > 0 && isCharacterGrounded(this.character)) {
 			if (!this.state.isStateActive("Running")) this.state.activateState("Running");
 		} else {
@@ -104,7 +103,6 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		}
 	}
 
-	// 14448996756
 	onRender(dt: number): void {
 		if (!this.humanoid || !this.character || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
 

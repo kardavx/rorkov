@@ -63,8 +63,31 @@ export class BaseItem {
 		this.state.disableState("magCheck");
 	};
 
-	private actions = new Map<Enum.KeyCode, { action: (inputState: boolean) => void; inputType?: InputType }>([
-		[Enum.KeyCode.R, { action: this.magCheck, inputType: "Hold" }],
+	private reload = (inputState: boolean) => {
+		if (!inputState || this.isAnyBlockingStateActive()) return;
+
+		print("Reloading");
+
+		this.state.activateState("magCheck");
+
+		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
+
+		const magcheck = new Instance("Animation");
+		magcheck.AnimationId = `rbxassetid://${14447427935}`;
+
+		const animationmc = animator.LoadAnimation(magcheck);
+		animationmc.Play();
+		animationmc.Stopped.Wait();
+
+		this.state.disableState("magCheck");
+	};
+
+	private actions = new Map<
+		Enum.KeyCode,
+		{ actionName: string; action: (inputState: boolean) => void; inputType?: InputType; modifierKeys?: Enum.ModifierKey[] }
+	>([
+		[Enum.KeyCode.R, { actionName: "magCheck", action: this.magCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Alt] }],
+		[Enum.KeyCode.R, { actionName: "reload", action: this.reload, inputType: "Click" }],
 	]);
 
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
@@ -96,14 +119,14 @@ export class BaseItem {
 	};
 
 	private bindActions = () => {
-		this.actions.forEach(({ action, inputType }, keyCode: Enum.KeyCode) => {
-			this.input.bindAction(`action${keyCode.Name}`, keyCode, 10, inputType || "Default", action);
+		this.actions.forEach(({ actionName, action, inputType = "Default", modifierKeys = [] }, keyCode: Enum.KeyCode) => {
+			this.input.bindAction(actionName, keyCode, 10, inputType, modifierKeys, action);
 		});
 	};
 
 	private unbindActions = () => {
-		this.actions.forEach((_, keyCode: Enum.KeyCode) => {
-			this.input.unbindAction(`action${keyCode.Name}`);
+		this.actions.forEach(({ actionName }) => {
+			this.input.unbindAction(actionName);
 		});
 	};
 

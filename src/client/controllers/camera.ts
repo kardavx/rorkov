@@ -96,7 +96,7 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 			const currentCameraLV = Camera.camera!.CFrame.LookVector;
 			const shouldInvert = Camera.baseLV.Dot(currentCameraLV) >= 0;
 			const difference = currentCameraLV.sub(this.lastCameraCFrame.LookVector);
-			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(1000).mul(shouldInvert ? new Vector2(-1, 1) : 1);
+			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(100).mul(shouldInvert ? new Vector2(-1, 1) : 1);
 		}
 
 		this.lastCameraCFrame = Camera.camera!.CFrame;
