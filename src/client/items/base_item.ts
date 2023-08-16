@@ -120,7 +120,6 @@ export class BaseItem {
 
 	private bindActions = () => {
 		this.actions.forEach(({ keyCode, action, inputType = "Default", modifierKeys = [] }, actionName: string) => {
-			print(actionName, keyCode, modifierKeys, inputType);
 			this.input.bindAction(actionName, keyCode, 10, inputType, modifierKeys, action);
 		});
 	};
