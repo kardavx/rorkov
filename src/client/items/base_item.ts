@@ -14,6 +14,7 @@ import { lerp } from "shared/utilities/number_utility";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
+import { Obstruction } from "client/render_pipelines/nodes/obstruction";
 
 let ischambered = false;
 
@@ -40,7 +41,6 @@ export class BaseItem {
 	private currentXAxisFactor = this.targetXAxisFactor;
 	public character: Model | undefined;
 
-	protected state: State;
 	protected equippedItem: EquippedItem;
 
 	private input = Dependency<Input>();
@@ -49,7 +49,7 @@ export class BaseItem {
 	private magCheck = (inputState: boolean) => {
 		if (!inputState || this.isAnyBlockingStateActive()) return;
 
-		this.state.activateState("magCheck");
+		this.equippedItem.state.activateState("magCheck");
 
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
@@ -60,13 +60,13 @@ export class BaseItem {
 		animationmc.Play();
 		animationmc.Stopped.Wait();
 
-		this.state.disableState("magCheck");
+		this.equippedItem.state.disableState("magCheck");
 	};
 
 	private reload = (inputState: boolean) => {
 		if (!inputState || this.isAnyBlockingStateActive()) return;
 
-		this.state.activateState("reload");
+		this.equippedItem.state.activateState("reload");
 
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
@@ -77,7 +77,7 @@ export class BaseItem {
 		animationmc.Play();
 		animationmc.Stopped.Wait();
 
-		this.state.disableState("reload");
+		this.equippedItem.state.disableState("reload");
 	};
 
 	private actions = new Map<
@@ -102,6 +102,8 @@ export class BaseItem {
 		const alphas: Alphas = this.createAlphas();
 		const offsets: Offsets = this.createOffsets(viewmodel);
 		const springs = this.springs;
+		const state = new State(this.states);
+		const blockingStates = this.blockingStates;
 
 		return {
 			viewmodel,
@@ -109,6 +111,8 @@ export class BaseItem {
 			alphas,
 			offsets,
 			springs,
+			state,
+			blockingStates,
 		};
 	};
 
@@ -129,23 +133,22 @@ export class BaseItem {
 	};
 
 	public isAnyBlockingStateActive = (): boolean => {
-		return this.state.isAnyActive(this.blockingStates);
+		return this.equippedItem.state.isAnyActive(this.blockingStates);
 	};
 
 	constructor(public itemName: string, states: string[] = [], blockingStates: string[] = [], springs: Springs = {}, actions: Actions = new Map()) {
 		this.states = [...this.states, ...states];
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
-		this.state = new State(this.states);
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Bobbing, MoveSway, Sway, Jump]);
+		this.renderPipeline = new RenderPipeline([Bobbing, MoveSway, Sway, Jump, Obstruction]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
 		this.equippedItem = this.createEquippedItem(this.itemName);
 
 		task.spawn(() => {
-			this.state.activateState("equip");
+			this.equippedItem.state.activateState("equip");
 
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
@@ -175,19 +178,19 @@ export class BaseItem {
 				this.idle.Play(0);
 				animationctr.Stopped.Wait();
 
-				this.state.disableState("equip");
+				this.equippedItem.state.disableState("equip");
 			} else {
 				this.equipanim.Play(0, undefined, 1);
 				this.idle.Play(0);
 				this.equipanim.Stopped.Wait();
 
-				this.state.disableState("equip");
+				this.equippedItem.state.disableState("equip");
 			}
 		});
 	}
 
 	public destroy = (): void => {
-		this.state.activateState("unequip");
+		this.equippedItem.state.activateState("unequip");
 
 		this.idle!.Stop(0);
 		this.equipanim!.Play(0, undefined, -1);
@@ -196,7 +199,7 @@ export class BaseItem {
 		this.cameraModifier.destroy();
 		this.destroyEquippedItem();
 
-		this.state.disableState("unequip");
+		this.equippedItem.state.disableState("unequip");
 	};
 
 	onJump(): void {

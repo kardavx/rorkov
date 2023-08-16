@@ -1,4 +1,5 @@
 import { VectorSpring } from "shared/Spring/spring";
+import State from "shared/state";
 
 export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
@@ -54,4 +55,6 @@ export interface EquippedItem {
 	alphas: Alphas;
 	offsets: Offsets;
 	springs: Springs;
+	state: State;
+	blockingStates: string[];
 }
