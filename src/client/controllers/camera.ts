@@ -69,6 +69,7 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	static camera = Workspace.CurrentCamera;
 	static player = Players.LocalPlayer;
 	static baseOffset = new Vector3(0, -0.5, -1.5);
+	static baseLV = Vector3.zAxis;
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;
@@ -92,8 +93,10 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 	private updateRotationDelta() {
 		if (this.lastCameraCFrame) {
-			const difference = Camera.camera!.CFrame.LookVector.sub(this.lastCameraCFrame.LookVector);
-			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(1000);
+			const currentCameraLV = Camera.camera!.CFrame.LookVector;
+			const shouldInvert = Camera.baseLV.Dot(currentCameraLV) >= 0;
+			const difference = currentCameraLV.sub(this.lastCameraCFrame.LookVector);
+			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(1000).mul(shouldInvert ? new Vector2(-1, 1) : 1);
 		}
 
 		this.lastCameraCFrame = Camera.camera!.CFrame;
