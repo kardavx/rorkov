@@ -83,11 +83,11 @@ export class BaseItem {
 	};
 
 	private actions = new Map<
-		Enum.KeyCode,
-		{ actionName: string; action: (inputState: boolean) => void; inputType?: InputType; modifierKeys?: Enum.ModifierKey[] }
+		string,
+		{ keyCode: Enum.KeyCode; action: (inputState: boolean) => void; inputType?: InputType; modifierKeys?: Enum.ModifierKey[] }
 	>([
-		[Enum.KeyCode.R, { actionName: "magCheck", action: this.magCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Alt] }],
-		[Enum.KeyCode.R, { actionName: "reload", action: this.reload, inputType: "Click" }],
+		["magCheck", { keyCode: Enum.KeyCode.R, action: this.magCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Alt] }],
+		["reload", { keyCode: Enum.KeyCode.R, action: this.reload, inputType: "Click" }],
 	]);
 
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
@@ -119,13 +119,14 @@ export class BaseItem {
 	};
 
 	private bindActions = () => {
-		this.actions.forEach(({ actionName, action, inputType = "Default", modifierKeys = [] }, keyCode: Enum.KeyCode) => {
+		this.actions.forEach(({ keyCode, action, inputType = "Default", modifierKeys = [] }, actionName: string) => {
+			print(actionName, keyCode, modifierKeys, inputType);
 			this.input.bindAction(actionName, keyCode, 10, inputType, modifierKeys, action);
 		});
 	};
 
 	private unbindActions = () => {
-		this.actions.forEach(({ actionName }) => {
+		this.actions.forEach((_, actionName: string) => {
 			this.input.unbindAction(actionName);
 		});
 	};

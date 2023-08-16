@@ -24,9 +24,9 @@ export class Input implements OnInputBegin, OnInputEnd, OnStart {
 
 	private areModifierKeysPressed(inputObject: InputObject, action: BaseAction): boolean {
 		if (action.modifierKeys.size() === 0) {
-			const key = inputObject.UserInputType === Enum.UserInputType.Keyboard ? inputObject.KeyCode : inputObject.UserInputType;
 			const keyHasModifierAction = this.boundActions.find(
-				(action) => action.keyCode === key && action.actionPriority === action.actionPriority && action.modifierKeys.size() > 0,
+				(foundAction) =>
+					foundAction.keyCode === action.keyCode && foundAction.actionPriority === action.actionPriority && foundAction.modifierKeys.size() > 0,
 			);
 			if (!keyHasModifierAction) return true;
 			return keyHasModifierAction.modifierKeys.find((modifierKey) => inputObject.IsModifierKeyDown(modifierKey)) === undefined;
@@ -156,7 +156,6 @@ export class Input implements OnInputBegin, OnInputEnd, OnStart {
 
 		if (!callback) throw `No callback was provided for ${actionName}`;
 		if (this.boundActions.find((bind) => bind.actionName === actionName)) throw `Action ${actionName} already exists!`;
-
 		this.boundActions.push({
 			actionName,
 			actionPriority,
