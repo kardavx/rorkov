@@ -20,8 +20,8 @@ let ischambered = false;
 export class BaseItem {
 	static camera = Workspace.CurrentCamera;
 
-	private states: string[] = ["equip", "unequip", "magCheck"];
-	private blockingStates: string[] = ["equip", "unequip", "magCheck"];
+	private states: string[] = ["equip", "unequip", "magCheck", "reload"];
+	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload"];
 	private springs: Springs = {
 		Sway: new VectorSpring(1, 20, 60, undefined, undefined, undefined, {
 			x: new NumberRange(-Sway.maxSway, Sway.maxSway),
@@ -54,7 +54,7 @@ export class BaseItem {
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 		const magcheck = new Instance("Animation");
-		magcheck.AnimationId = `rbxassetid://${14447427935}`;
+		magcheck.AnimationId = `rbxassetid://${14461030401}`;
 
 		const animationmc = animator.LoadAnimation(magcheck);
 		animationmc.Play();
@@ -66,20 +66,18 @@ export class BaseItem {
 	private reload = (inputState: boolean) => {
 		if (!inputState || this.isAnyBlockingStateActive()) return;
 
-		print("Reloading");
-
-		this.state.activateState("magCheck");
+		this.state.activateState("reload");
 
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
-		const magcheck = new Instance("Animation");
-		magcheck.AnimationId = `rbxassetid://${14447427935}`;
+		const reload = new Instance("Animation");
+		reload.AnimationId = `rbxassetid://${14461014204}`;
 
-		const animationmc = animator.LoadAnimation(magcheck);
+		const animationmc = animator.LoadAnimation(reload);
 		animationmc.Play();
 		animationmc.Stopped.Wait();
 
-		this.state.disableState("magCheck");
+		this.state.disableState("reload");
 	};
 
 	private actions = new Map<
