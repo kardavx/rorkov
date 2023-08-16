@@ -23,7 +23,7 @@ export class Footsteps implements OnStart, OnTick, OnCharacterAdded {
 	private materialSounds: MaterialSounds = {};
 
 	getSound(): Sound {
-		const materialSounds = this.materialSounds[this.humanoid!.FloorMaterial.Name];
+		const materialSounds = this.materialSounds[this.humanoid!.FloorMaterial.Name] || this.materialSounds["Plastic"];
 		const sound: Sound = materialSounds[math.random(materialSounds.size()) - 1].Clone();
 
 		return sound;

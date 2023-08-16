@@ -1,19 +1,35 @@
-import { Controller, OnStart, OnRender } from "@flamework/core";
+import { Controller, OnStart, OnRender, OnTick, Modding } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
 import { Players, Workspace } from "@rbxts/services";
 import { Input } from "./input";
+import { isCharacterGrounded } from "shared/utilities/character_utility";
+import State from "shared/state";
+import { setTimeout } from "@rbxts/set-timeout";
 
 interface ControlModule {
 	Enable: (ControlModule: ControlModule, Enabled: boolean) => void;
 }
 export type MovementState = "walk" | "run";
 
+export interface OnJump {
+	onJump(): void;
+}
+
+export interface OnRunningChanged {
+	onRunningChanged(runningState: boolean): void;
+}
+
+export interface OnWalkingChanged {
+	onWalkingChanged(runningState: boolean): void;
+}
+
 @Controller({})
-export class Movement implements OnCharacterAdded, OnStart, OnRender {
+export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 	static localPlayer = Players.LocalPlayer;
 	static playerScripts = Movement.localPlayer.WaitForChild("PlayerScripts");
 	static playerModule = Movement.playerScripts.WaitForChild("PlayerModule");
 	static controlModule = require(Movement.playerModule.WaitForChild("ControlModule") as ModuleScript) as ControlModule;
+	static states = ["Jumping", "Walking", "Running", "RunningRequest"];
 
 	static inputMap = new Map<Enum.KeyCode, Vector3>([
 		[Enum.KeyCode.W, new Vector3(0, 0, -1)],
@@ -29,10 +45,14 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender {
 
 	private camera: Camera = Workspace.CurrentCamera as Camera;
 	private moveVector: Vector3 = Vector3.zero;
-	private humanoid: Humanoid | undefined = undefined;
-	private humanoidRootPart: BasePart | undefined = undefined;
-
-	private movementState: MovementState = "walk";
+	private lastMoveVector: Vector3 = this.moveVector;
+	private lastVelocity = 0;
+	private character: Model | undefined;
+	private humanoid: Humanoid | undefined;
+	private humanoidRootPart: BasePart | undefined;
+	private state: State = new State(Movement.states);
+	private slowDown = false;
+	private clearSlowDown: (() => void) | undefined;
 
 	static speedConstant = {
 		crouch: 6,
@@ -41,7 +61,7 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender {
 	};
 
 	static forceConstant = {
-		jump: 0,
+		jump: { up: 250, directional: 4 },
 	};
 
 	static accelerationConstant = {
@@ -53,20 +73,62 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender {
 	constructor(private input: Input) {}
 
 	onCharacterAdded(character: Model) {
+		this.character = character;
 		this.humanoid = character.WaitForChild("Humanoid") as Humanoid;
 		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 
-		this.humanoid.WalkSpeed = 0;
+		if (this.humanoid) {
+			this.humanoid.WalkSpeed = 0;
+			this.humanoid.JumpPower = 0;
+
+			this.humanoid.GetPropertyChangedSignal("JumpPower").Connect(() => {
+				this.humanoid!.JumpPower = 0;
+			});
+		}
 	}
 
+	onTick(): void {
+		if (!this.character || !this.humanoidRootPart) return;
+
+		const currentVelocity = this.humanoidRootPart.AssemblyLinearVelocity.Magnitude;
+
+		if (this.moveVector.Magnitude === 0 || !isCharacterGrounded(this.character) || this.state.isStateActive("Jumping")) {
+			if (!this.state.isStateActive("Walking")) this.state.activateState("Walking");
+		} else if (this.state.isStateActive("Walking")) this.state.disableState("Walking");
+
+		// this.moveVector.Z === -1 - checks if player is going forward or not
+		if (this.state.isStateActive("RunningRequest") && this.moveVector.Z === -1 && currentVelocity > 0 && isCharacterGrounded(this.character)) {
+			if (!this.state.isStateActive("Running")) this.state.activateState("Running");
+		} else {
+			if (this.state.isStateActive("Running")) this.state.disableState("Running");
+		}
+	}
+
+	// 14448996756
 	onRender(dt: number): void {
-		if (!this.humanoid || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
+		if (!this.humanoid || !this.character || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
+
+		if (!isCharacterGrounded(this.character) || this.state.isStateActive("Jumping")) return;
+
+		if (this.lastMoveVector !== this.moveVector) {
+			if (this.lastMoveVector.add(this.moveVector).Magnitude === 0 && this.lastVelocity > 1) {
+				if (this.clearSlowDown) {
+					this.clearSlowDown();
+				}
+				this.slowDown = true;
+				this.clearSlowDown = setTimeout(() => (this.slowDown = false), 0.2);
+			}
+		}
+
+		const movementState = this.state.isStateActive("Running") ? "run" : "walk";
 		const input: Vector3 = this.moveVector;
 		const currentVelocity = this.humanoidRootPart.AssemblyLinearVelocity.Magnitude;
-		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * Movement.accelerationConstant[this.movementState];
-		const limitedVelocity = math.clamp(desiredVelocity, 0, Movement.speedConstant[this.movementState]);
+		const desiredVelocity = currentVelocity + dt * (-1 + input.Magnitude * 2) * Movement.accelerationConstant[movementState];
+		const limitedVelocity = math.clamp(this.slowDown ? desiredVelocity / 2.5 : desiredVelocity, 0, Movement.speedConstant[movementState]);
 
 		this.humanoid.WalkSpeed = limitedVelocity;
+		this.lastVelocity = limitedVelocity;
+		this.lastMoveVector = this.moveVector;
 
 		if (input.Magnitude <= 0) return;
 		const y = this.camera.CFrame.ToOrientation()[1];
@@ -79,17 +141,56 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender {
 	private abilities = {
 		jump: (inputState: boolean) => {
 			if (!inputState) return;
-			if (this.humanoid?.FloorMaterial === Enum.Material.Air) return;
+			if (!this.character || !this.humanoid || !this.humanoidRootPart || !isCharacterGrounded(this.character) || this.state.isStateActive("Jumping"))
+				return;
 
-			this.humanoid?.ChangeState(Enum.HumanoidStateType.Jumping);
-			this.humanoidRootPart?.ApplyImpulse(new Vector3(0, Movement.forceConstant.jump, 0).mul(this.humanoidRootPart.AssemblyMass));
+			this.state.activateState("Jumping");
+
+			this.humanoid.WalkSpeed = this.moveVector.mul(
+				Movement.forceConstant.jump.directional * (this.humanoidRootPart.AssemblyLinearVelocity.Magnitude / 3),
+			).Magnitude;
+
+			this.humanoidRootPart!.ApplyImpulse(
+				this.moveVector
+					.add(new Vector3(0, Movement.forceConstant.jump.up, 0))
+					.mul(new Vector3(this.humanoidRootPart.AssemblyLinearVelocity.Magnitude, 1, this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude)),
+			);
+
+			task.delay(1, () => this.state.disableState("Jumping"));
 		},
 		sprint: (inputState: boolean) => {
-			this.movementState = inputState ? "run" : "walk";
+			if (inputState) {
+				this.state.activateState("RunningRequest");
+			} else {
+				this.state.disableState("RunningRequest");
+			}
 		},
 	};
 
+	getRawMoveVector() {
+		return this.moveVector;
+	}
+
+	getMoveVector(): Vector3 {
+		return this.character && isCharacterGrounded(this.character) ? this.getRawMoveVector() : Vector3.zero;
+	}
+
+	isWalking(): boolean {
+		return this.state.isStateActive("Walking");
+	}
+
 	onStart(): void {
+		const jumpListeners = new Set<OnJump>();
+		const runningChangedListeners = new Set<OnRunningChanged>();
+		const walkingChangedListeners = new Set<OnWalkingChanged>();
+
+		Modding.onListenerAdded<OnJump>((object) => jumpListeners.add(object));
+		Modding.onListenerRemoved<OnJump>((object) => jumpListeners.delete(object));
+		Modding.onListenerAdded<OnRunningChanged>((object) => runningChangedListeners.add(object));
+		Modding.onListenerRemoved<OnRunningChanged>((object) => runningChangedListeners.delete(object));
+		Modding.onListenerAdded<OnWalkingChanged>((object) => walkingChangedListeners.add(object));
+		Modding.onListenerRemoved<OnWalkingChanged>((object) => walkingChangedListeners.delete(object));
+
 		Movement.inputMap.forEach((keyCodeVector: Vector3, keyCode: Enum.KeyCode) => {
 			this.input.bindAction(`movement${keyCode.Name}`, keyCode, 2, (inputState: boolean) => {
 				this.moveVector = inputState ? this.moveVector.add(keyCodeVector) : this.moveVector.sub(keyCodeVector);
@@ -100,6 +201,30 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender {
 			this.input.bindAction(`movement${keyCode.Name}`, keyCode, 2, (inputState: boolean) => {
 				this.abilities[ability as keyof typeof this.abilities](inputState);
 			});
+		});
+
+		this.state.bindToStateChanged("Jumping", (state: boolean) => {
+			if (!state) return;
+
+			for (const listener of jumpListeners) {
+				task.spawn(() => listener.onJump());
+			}
+
+			this.humanoid!.ChangeState(Enum.HumanoidStateType.Jumping);
+		});
+
+		this.state.bindToStateChanged("Walking", (state: boolean) => {
+			print("asdasdasd");
+			for (const listener of walkingChangedListeners) {
+				task.spawn(() => listener.onWalkingChanged(state));
+			}
+		});
+
+		this.state.bindToStateChanged("Running", (state: boolean) => {
+			print("asdasdasd");
+			for (const listener of runningChangedListeners) {
+				task.spawn(() => listener.onRunningChanged(state));
+			}
 		});
 
 		Movement.controlModule.Enable(Movement.controlModule, false);

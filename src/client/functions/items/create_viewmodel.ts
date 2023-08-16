@@ -33,11 +33,10 @@ export default (itemName: string) => {
 	centerPart.Size = itemSize;
 	centerPart.Parent = itemClone;
 
-	const properties = { Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false };
+	const properties = { Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false, CastShadow: true };
 	setDescendantBasePartsProperties(viewmodelClone, properties, ["HumanoidRootPart"]);
-	setDescendantBasePartsProperties(itemClone, properties);
+	welder(itemClone, itemClone.PrimaryPart, properties);
 
-	welder(itemClone);
 	viewmodelClone.Parent = camera;
 	itemClone.Parent = viewmodelClone;
 

@@ -1,6 +1,6 @@
 import { log } from "./log_message";
 
-export default (model: Model, root?: BasePart, propertiesToDisable?: string[]) => {
+export default (model: Model, root?: BasePart, properties?: { [propertyName in string]: boolean }) => {
 	let weldRoot = root;
 	if (!weldRoot) {
 		if (!model.PrimaryPart) throw "No root has been specified and models primary part doesnt exist!";
@@ -11,7 +11,11 @@ export default (model: Model, root?: BasePart, propertiesToDisable?: string[]) =
 	model.GetDescendants().forEach((child) => {
 		if (!child.IsA("BasePart")) return;
 
-		if (propertiesToDisable) propertiesToDisable.forEach((propertyName: string) => (child[propertyName] = false));
+		if (properties !== undefined) {
+			for (const [propertyName, propertyValue] of pairs(properties)) {
+				child[propertyName] = propertyValue;
+			}
+		}
 
 		const part0 = weldRoot;
 		const part1 = child;

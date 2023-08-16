@@ -1,4 +1,4 @@
-import { Controller, OnInit } from "@flamework/core";
+import { Controller, OnInit, OnStart } from "@flamework/core";
 import { OnInputBegin, OnInputEnd } from "./core";
 import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
 import { ContextActionService, UserInputService } from "@rbxts/services";
@@ -6,9 +6,9 @@ import { log } from "shared/log_message";
 import localization from "client/localization/log/input";
 
 @Controller({})
-export class Input implements OnInputBegin, OnInputEnd, OnInit {
+export class Input implements OnInputBegin, OnInputEnd, OnStart {
 	static doubleClickWindow = 0.2;
-	static holdDuration = 2.5;
+	static holdDuration = 0.6;
 	static logType = localization.multipleBindsAtSamePriority[0];
 	static logMessageTemplate = localization.multipleBindsAtSamePriority[1];
 
@@ -216,7 +216,7 @@ export class Input implements OnInputBegin, OnInputEnd, OnInit {
 		});
 	}
 
-	onInit(): void {
+	onStart(): void {
 		ContextActionService.UnbindAllActions();
 	}
 }

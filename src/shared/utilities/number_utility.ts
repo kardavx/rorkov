@@ -14,6 +14,21 @@ export const remap = (n: number, oldMin: number, oldMax: number, min: number, ma
 	return min + (max - min) * ((n - oldMin) / (oldMax - oldMin));
 };
 
+export const smoothStep = (edge0: number, edge1: number, x: number) => {
+	const y = math.clamp((x - edge0) / (edge1 - edge0), 0, 1);
+	return y * y * (3 - 2 * y);
+};
+
+export const smoothClamp = (x: number, a: number, b: number) => {
+	const t = math.clamp(x, a, b);
+	return t !== x ? t : b + (a - b) / (1 + math.exp(((b - a) * (3 * x - a - b)) / ((x - a) * (b - x))));
+};
+
+export const softClamp = (x: number, a: number, b: number) => {
+	const mid = (a + b) * 0.5;
+	return mid + smoothClamp((x - mid) * 0.5, a - mid, b - mid);
+};
+
 export const bitRight = (a: number, b: number) => {
 	const right = b;
 

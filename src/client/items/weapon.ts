@@ -1,5 +1,4 @@
 import { BaseItem } from "./base_item";
-import { Input } from "client/controllers/input";
 import { Actions } from "client/types/items";
 
 export class Weapon extends BaseItem {

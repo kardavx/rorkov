@@ -1,7 +1,7 @@
 import { Controller } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
-import { Workspace } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
 import { UserInputService } from "@rbxts/services";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
@@ -67,7 +67,8 @@ export class Modifier {
 @Controller({})
 export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
-	static baseOffset = new Vector3(0, 0, -0.5);
+	static player = Players.LocalPlayer;
+	static baseOffset = new Vector3(0, -0.5, -1.5);
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;
@@ -91,14 +92,7 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 	private updateRotationDelta() {
 		if (this.lastCameraCFrame) {
-			// const lastX = this.lastCameraCFrame.LookVector.X;
-			// const lastY = this.lastCameraCFrame.LookVector.Y;
-
-			// const currentX = Camera.camera!.CFrame.LookVector.X;
-			// const currentY = Camera.camera!.CFrame.LookVector.Y;
-
 			const difference = Camera.camera!.CFrame.LookVector.sub(this.lastCameraCFrame.LookVector);
-
 			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(1000);
 		}
 
@@ -113,6 +107,8 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		this.head = character.WaitForChild("Head", 5) as BasePart;
 		this.rootPart = character.WaitForChild("HumanoidRootPart", 5) as BasePart;
 		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
+
+		Camera.player.CameraMode = Enum.CameraMode.LockFirstPerson;
 	}
 
 	onPreCameraRender(): void {
