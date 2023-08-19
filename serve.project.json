@@ -10,6 +10,10 @@
 			"$className": "ServerScriptService",
 			"$path": "out/server"
 		},
+		"ReplicatedFirst": {
+			"$className": "ReplicatedFirst",
+			"$path": "out/preload"
+		},
 		"ReplicatedStorage": {
 			"$className": "ReplicatedStorage",
 			"rbxts_include": {
@@ -23,6 +27,9 @@
 						"$path": "node_modules/@flamework"
 					}
 				}
+			},
+			"stories": {
+				"$path": "out/stories"
 			},
 			"$path": "out/shared"
 		},

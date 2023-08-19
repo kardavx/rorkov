@@ -10,6 +10,8 @@ export class MoveSway implements Node {
 	private movement = Dependency<Movement>();
 	private moveSwayAmount = new CFrame();
 
+	initialize(...args: unknown[]): void {}
+
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
 		const sideDirection = this.movement.getMoveVector().X;
 		const pitchDirection = this.movement.getMoveVector().Z;

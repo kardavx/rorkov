@@ -16,6 +16,8 @@ export class Sway implements Node {
 	private getSmoothenedSway = (number: number): number =>
 		this.isNegative(number) ? lerp(-Sway.maxSway, 0, smoothStep(-Sway.maxSway, 0, number)) : lerp(0, Sway.maxSway, smoothStep(0, Sway.maxSway, number));
 
+	initialize(...args: unknown[]): void {}
+
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
 		const cameraDelta = this.camera.getRotationDelta();
 		const y = cameraDelta.Y;

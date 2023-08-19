@@ -3,6 +3,8 @@ import { EquippedItem } from "client/types/items";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
 export class Jump implements Node {
+	initialize(...args: unknown[]): void {}
+
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {}
 
 	update(deltaTime: number, currentCFrame: CFrame, character: Model, equippedItem: EquippedItem): CFrame {

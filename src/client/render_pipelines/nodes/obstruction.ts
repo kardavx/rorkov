@@ -12,6 +12,8 @@ export class Obstruction implements Node {
 
 	private pullBack: CFrame = new CFrame();
 
+	initialize(...args: unknown[]): void {}
+
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
 		Obstruction.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
 		Obstruction.raycastParams.FilterDescendantsInstances = [character, Obstruction.camera!];
@@ -24,10 +26,13 @@ export class Obstruction implements Node {
 		const raycastResult = Workspace.Raycast(origin, direction, Obstruction.raycastParams);
 		const pullBackAmount = raycastResult ? math.clamp(6 - raycastResult.Distance, 0, 6) : 0;
 
-		this.pullBack = this.pullBack.Lerp(new CFrame(0, 0, pullBackAmount), 10 * deltaTime);
-
 		if (pullBackAmount >= 2) {
-			this.pullBack = this.pullBack.Lerp(this.pullBack.mul(new CFrame(0.25, -0.5, 0).mul(CFrame.Angles(0, math.pi / 2, 0))), 10 * deltaTime);
+			this.pullBack = this.pullBack.Lerp(new CFrame(0.25, -0.5, pullBackAmount).mul(CFrame.Angles(0, math.pi / 2, 0)), 10 * deltaTime);
+		} else {
+			this.pullBack = this.pullBack.Lerp(
+				new CFrame(pullBackAmount / 10, 0, pullBackAmount).mul(CFrame.Angles(0, 0, pullBackAmount / 10)),
+				10 * deltaTime,
+			);
 		}
 	}
 

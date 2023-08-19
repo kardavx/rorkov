@@ -16,6 +16,12 @@ export class RenderPipeline implements PreUpdate, Update {
 		});
 	}
 
+	initialize(...args: unknown[]): void {
+		this.nodes.forEach((node: Node) => {
+			node.initialize(...args);
+		});
+	}
+
 	preUpdate(deltaTime: number, ...args: unknown[]): void {
 		this.nodes.forEach((node: Node) => {
 			node.preUpdate(deltaTime, ...args);

@@ -41,6 +41,8 @@ export class Bobbing implements Node {
 
 	private bobbingAmount: CFrame = new CFrame();
 
+	initialize(...args: unknown[]): void {}
+
 	preUpdate(deltaTime: number, character: Model): void {
 		const characterSpeed = getCharacterSpeed(character);
 		const isGrounded = isCharacterGrounded(character);

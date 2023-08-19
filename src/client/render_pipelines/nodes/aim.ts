@@ -1,10 +1,13 @@
+import { TweenService } from "@rbxts/services";
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
-import { Sine } from "shared/utilities/sine_utility";
+import { lerp } from "shared/utilities/number_utility";
 
 export class Breathing implements Node {
-	initialize(...args: unknown[]): void {}
+	private aimFactor = 0;
+
+	initialize(character: Model, equippedItem: EquippedItem): void {}
 
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {}
 
