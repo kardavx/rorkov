@@ -30,12 +30,13 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 
 	static itemNameToType: { [itemName: string]: typeof ItemTypes[keyof typeof ItemTypes] } = {
 		"SR-16": ItemTypes.Weapon,
+		M19: ItemTypes.Weapon,
 		"RGD-5": ItemTypes.Grenade,
 		Salewa: ItemTypes.Useable,
 		Mayonnaise: ItemTypes.Useable,
 	};
 
-	private inventory = ["SR-16"];
+	private inventory = ["SR-16", "M19"];
 	private currentItemObject: BaseItem | undefined;
 	private character: Model | undefined;
 
@@ -94,6 +95,10 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		Modding.onListenerAdded<OnItemUnequipped>((object) => Items.unequippedlisteners.add(object));
 		Modding.onListenerRemoved<OnItemUnequipped>((object) => Items.unequippedlisteners.delete(object));
 	}
+
+	getItemConfiguration() {}
+
+	getItemAnimations() {}
 
 	onCharacterAdded(character: Model): void {
 		this.character = character;

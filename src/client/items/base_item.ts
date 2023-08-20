@@ -11,17 +11,19 @@ import { Sway } from "client/render_pipelines/nodes/sway";
 import { MoveSway } from "client/render_pipelines/nodes/move_sway";
 import { Jump } from "client/render_pipelines/nodes/jump";
 import { lerp } from "shared/utilities/number_utility";
+import { Aim } from "client/render_pipelines/nodes/aim";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
 import { Obstruction } from "client/render_pipelines/nodes/obstruction";
+import { getItemAnimations } from "shared/utilities/items_utility";
 
 let ischambered = false;
 
 export class BaseItem {
 	static camera = Workspace.CurrentCamera;
 
-	private states: string[] = ["equip", "unequip", "magCheck", "reload"];
+	private states: string[] = ["equip", "unequip", "magCheck", "reload", "aiming"];
 	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload"];
 	private springs: Springs = {
 		Sway: new VectorSpring(1, 20, 60, undefined, undefined, undefined, {
@@ -80,12 +82,28 @@ export class BaseItem {
 		this.equippedItem.state.disableState("reload");
 	};
 
+	private aim = (inputState: boolean) => {
+		inputState ? this.equippedItem.state.activateState("aiming") : this.equippedItem.state.disableState("aiming");
+	};
+
 	private actions = new Map<
 		string,
-		{ keyCode: Enum.KeyCode; action: (inputState: boolean) => void; inputType?: InputType; modifierKeys?: Enum.ModifierKey[] }
+		{
+			keyCode: Enum.KeyCode | Enum.UserInputType.MouseButton1 | Enum.UserInputType.MouseButton2;
+			action: (inputState: boolean) => void;
+			inputType?: InputType;
+			modifierKeys?: Enum.ModifierKey[];
+		}
 	>([
 		["magCheck", { keyCode: Enum.KeyCode.R, action: this.magCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Alt] }],
 		["reload", { keyCode: Enum.KeyCode.R, action: this.reload, inputType: "Click" }],
+		[
+			"aim",
+			{
+				keyCode: Enum.UserInputType.MouseButton2,
+				action: this.aim,
+			},
+		],
 	]);
 
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
@@ -141,11 +159,14 @@ export class BaseItem {
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Bobbing, MoveSway, Sway, Jump, Obstruction]);
+		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
 		this.equippedItem = this.createEquippedItem(this.itemName);
+
+		this.renderPipeline.initialize(this.character, this.equippedItem);
+		getItemAnimations();
 
 		task.spawn(() => {
 			this.equippedItem.state.activateState("equip");

@@ -9,13 +9,6 @@ const loadingCircle = 14494487318;
 export = (target: Frame): (() => void) => {
 	const loadingScreen = (
 		<frame Size={new UDim2(1, 0, 1, 0)} AnchorPoint={new Vector2(0.5, 0.5)} Position={new UDim2(0.5, 0, 0.5, 0)}>
-			<frame
-				BackgroundColor3={new Color3(0, 0, 0)}
-				Size={new UDim2(1, 0, 1, 0)}
-				AnchorPoint={new Vector2(0.5, 0.5)}
-				Position={new UDim2(0.5, 0, 0.5, 0)}
-				ZIndex={2}
-			/>
 			<imagelabel
 				Image={`rbxassetid://${loadingScreenId}`}
 				Size={new UDim2(1, 0, 1, 0)}

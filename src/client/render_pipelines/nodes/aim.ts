@@ -1,22 +1,30 @@
 import { TweenService } from "@rbxts/services";
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
-import { offsetFromPivot } from "shared/utilities/cframe_utility";
-import { lerp } from "shared/utilities/number_utility";
+// import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
-export class Breathing implements Node {
-	private aimFactor = 0;
+export class Aim implements Node {
+	private aimFactor = new Instance("NumberValue");
+	private aimCFrame = new CFrame();
 
-	initialize(character: Model, equippedItem: EquippedItem): void {}
+	initialize(character: Model, equippedItem: EquippedItem): void {
+		this.aimFactor.Value = 0;
+		equippedItem.state.bindToStateChanged("aiming", (state: boolean) => {
+			print("essa");
+			TweenService.Create(this.aimFactor, new TweenInfo(0.6, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), { Value: state ? 1 : 0 }).Play();
+		});
+	}
 
-	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {}
+	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
+		this.aimCFrame = equippedItem.item.Sights![0].AimPart.CFrame.mul(new CFrame(0, 0, 1.3));
+	}
 
 	update(deltaTime: number, currentCFrame: CFrame, character: Model, equippedItem: EquippedItem): CFrame {
-		const offset = new Vector3();
-		return offsetFromPivot(
-			currentCFrame,
-			equippedItem.item.CenterPart.CFrame,
-			new CFrame(offset.Y, offset.X, offset.Z).mul(CFrame.Angles(offset.X, offset.Y, offset.Z)),
+		return currentCFrame.Lerp(
+			currentCFrame
+				.mul(new CFrame(0, (equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number) * -1, 0))
+				.mul(this.aimCFrame.ToObjectSpace(currentCFrame)),
+			this.aimFactor.Value,
 		);
 	}
 }
