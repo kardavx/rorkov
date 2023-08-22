@@ -1,10 +1,13 @@
 import { VectorSpring } from "shared/Spring/spring";
 import State from "shared/state";
+import { ItemConfig } from "shared/configurations/items";
 
 export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
 export interface Viewmodel extends Model {
-	Torso: BasePart;
+	Torso: BasePart & {
+		GunJoint: Motor6D;
+	};
 	CameraBone: BasePart;
 	AnimationController: AnimationController & {
 		Animator: Animator;
@@ -56,5 +59,6 @@ export interface EquippedItem {
 	offsets: Offsets;
 	springs: Springs;
 	state: State;
+	currentItemConfiguration: ItemConfig;
 	blockingStates: string[];
 }

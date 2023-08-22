@@ -33,11 +33,11 @@ export interface UseableProperties extends DefaultProperties {
 	capacity: number;
 }
 
-const globalDefaultProperties: DefaultProperties = {
+const globalDefaultProperties: Readonly<DefaultProperties> = {
 	itemLength: 3,
-} as const;
+};
 
-export const weaponDefaultProperties: WeaponProperties = {
+export const weaponDefaultProperties: Readonly<WeaponProperties> = {
 	...globalDefaultProperties,
 	...{
 		fireRate: 650,
@@ -55,18 +55,18 @@ export const weaponDefaultProperties: WeaponProperties = {
 		},
 		allowedFireModes: ["Semi"],
 	},
-} as const;
+};
 
-export const grenadeDefaultProperties: GrenadeProperties = {
+export const grenadeDefaultProperties: Readonly<GrenadeProperties> = {
 	...globalDefaultProperties,
 	...{
 		grenadeEffect: "Flash",
 		weight: 1.3,
 		timeToExplode: 7,
 	},
-} as const;
+};
 
-export const useableDefaultProperties: UseableProperties = {
+export const useableDefaultProperties: Readonly<UseableProperties> = {
 	...globalDefaultProperties,
 	...{
 		useableType: "Heal",
@@ -74,4 +74,4 @@ export const useableDefaultProperties: UseableProperties = {
 		healthAddAmount: 20,
 		capacity: 60,
 	},
-} as const;
+};

@@ -23,7 +23,18 @@ export class Aim implements Node {
 		return currentCFrame.Lerp(
 			currentCFrame
 				.mul(new CFrame(0, (equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number) * -1, 0))
-				.mul(this.aimCFrame.ToObjectSpace(currentCFrame)),
+				.mul(
+					this.aimCFrame
+						.ToObjectSpace(currentCFrame)
+						.mul(
+							new CFrame().Lerp(
+								equippedItem.viewmodel.Torso.GunJoint.Transform.mul(
+									new CFrame(0.616989672, 0.59187007, -2.0026648, 1, 0, 0, 0, 1, 0, 0, 0, 1).Inverse(),
+								),
+								0.4,
+							),
+						),
+				),
 			this.aimFactor.Value,
 		);
 	}

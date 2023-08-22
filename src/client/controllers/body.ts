@@ -7,6 +7,7 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped {
 	static allBodyParts = ["Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"];
 	static bodyPartsToShow = ["Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"];
 	static bodyPartsToShowWithItemEquipped = ["Head", "Torso", "Left Leg", "Right Leg"];
+	static modelsToShow = ["top", "bottom"];
 	static player = Players.LocalPlayer;
 
 	private currentBodyPartsShowState = Body.bodyPartsToShow;
@@ -28,6 +29,21 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped {
 			const bodyPartObject = character.FindFirstChild(bodyPart) as BasePart;
 			if (!bodyPartObject) return;
 			bodyPartObject.LocalTransparencyModifier = 0;
+		});
+
+		Body.modelsToShow.forEach((model: string) => {
+			const modelObject = character.FindFirstChild(model) as Model;
+			if (!modelObject) return;
+
+			modelObject.GetChildren().forEach((limb) => {
+				if (!limb.IsA("Model")) return;
+
+				limb.GetDescendants().forEach((descendant) => {
+					if (!descendant.IsA("BasePart")) return;
+					descendant.LocalTransparencyModifier =
+						this.currentBodyPartsShowState.find((bodyPart: string) => bodyPart === limb.Name) !== undefined ? 0 : 1;
+				});
+			});
 		});
 	}
 

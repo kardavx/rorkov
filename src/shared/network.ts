@@ -4,7 +4,10 @@ interface ServerEvents {}
 
 interface ClientEvents {}
 
-interface ServerFunctions {}
+interface ServerFunctions {
+	getCurrentTop(): Model;
+	getCurrentBottom(): Model;
+}
 
 interface ClientFunctions {}
 

@@ -10,18 +10,13 @@ export interface Animations {
 }
 
 export interface DefaultAnimations extends Animations {
-	something: {
-		type: "Pose";
-		id: 14461014204;
-	};
-}
-
-export interface WeaponAnimations extends DefaultAnimations {
-	reload: {
+	interact: {
 		type: "Animation";
 		id: 14461014204;
 	};
 }
+
+export interface WeaponAnimations extends DefaultAnimations {}
 
 export interface GrenadeAnimations extends DefaultAnimations {
 	throw: {
@@ -38,20 +33,18 @@ export interface UseableAnimations extends DefaultAnimations {
 }
 
 const globalDefaultAnimations: DefaultAnimations = {
-	something: {
-		type: "Pose",
+	interact: {
+		type: "Animation",
+		id: 14461014204,
+	},
+	checkWatch: {
+		type: "Animation",
 		id: 14461014204,
 	},
 };
 
 export const weaponDefaultAnimations: WeaponAnimations = {
 	...globalDefaultAnimations,
-	...{
-		reload: {
-			type: "Animation",
-			id: 14461014204,
-		},
-	},
 };
 
 export const grenadeDefaultAnimations: GrenadeAnimations = {

@@ -4,27 +4,26 @@ import { Properties } from "./default/properties";
 import { weaponDefaultProperties, grenadeDefaultProperties, useableDefaultProperties } from "./default/properties";
 import { weaponDefaultAnimations, grenadeDefaultAnimations, useableDefaultAnimations } from "./default/animations";
 
-type Item = { animations: Animations; properties: Properties; itemType: string };
+export type ItemConfig = { animations: Animations; properties: Properties; itemType: string };
 
 const items = script.GetChildren();
-const ignored = ["default"];
 
-const itemTypeToDefault: { readonly [itemType: string]: readonly [Properties, Animations] } = {
+const itemTypeToDefault: Readonly<{ [itemType: string]: [Properties, Animations] }> = {
 	weapon: [weaponDefaultProperties, weaponDefaultAnimations],
 	grenade: [grenadeDefaultProperties, grenadeDefaultAnimations],
 	useable: [useableDefaultProperties, useableDefaultAnimations],
-} as const;
+};
 
-const attachData = (item: Item, name: string) => ({
-	properties: { ...item.properties, ...itemTypeToDefault[item.itemType][0] },
-	animations: { ...item.animations, ...itemTypeToDefault[item.itemType][1] },
+const attachData = (item: ItemConfig, name: string) => ({
+	properties: { ...itemTypeToDefault[item.itemType][0], ...item.properties },
+	animations: { ...itemTypeToDefault[item.itemType][1], ...item.animations },
 	itemType: item.itemType,
 	name,
 });
 
-export default new ReadonlyMap<string, Item>(
+export const configs = new ReadonlyMap<string, ItemConfig>(
 	(items as ModuleScript[])
-		.filter((item) => ignored.find((ignoredItem: string) => ignoredItem === item.Name) === undefined)
-		.map((item) => attachData(require(item) as Item, item.Name))
+		.filter((item) => item.IsA("ModuleScript"))
+		.map((item) => attachData(require(item) as ItemConfig, item.Name))
 		.map(({ animations, properties, itemType, name }) => [name, { animations, properties, itemType }]),
 );

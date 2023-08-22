@@ -17,6 +17,7 @@ import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Action
 import { InputType } from "client/types/input";
 import { Obstruction } from "client/render_pipelines/nodes/obstruction";
 import { getItemAnimations } from "shared/utilities/items_utility";
+import { configs, ItemConfig } from "shared/configurations/items";
 
 let ischambered = false;
 
@@ -56,7 +57,7 @@ export class BaseItem {
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 		const magcheck = new Instance("Animation");
-		magcheck.AnimationId = `rbxassetid://${14461030401}`;
+		magcheck.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.magCheck.id}`;
 
 		const animationmc = animator.LoadAnimation(magcheck);
 		animationmc.Play();
@@ -73,7 +74,7 @@ export class BaseItem {
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 		const reload = new Instance("Animation");
-		reload.AnimationId = `rbxassetid://${14461014204}`;
+		reload.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.reload.id}`;
 
 		const animationmc = animator.LoadAnimation(reload);
 		animationmc.Play();
@@ -122,6 +123,7 @@ export class BaseItem {
 		const springs = this.springs;
 		const state = new State(this.states);
 		const blockingStates = this.blockingStates;
+		const currentItemConfiguration = configs.get(itemName) as ItemConfig;
 
 		return {
 			viewmodel,
@@ -130,6 +132,7 @@ export class BaseItem {
 			offsets,
 			springs,
 			state,
+			currentItemConfiguration,
 			blockingStates,
 		};
 	};
@@ -174,16 +177,16 @@ export class BaseItem {
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 			const idle = new Instance("Animation");
-			idle.AnimationId = `rbxassetid://${14447422907}`;
+			idle.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.idle.id}`;
 
 			const equip = new Instance("Animation");
-			equip.AnimationId = `rbxassetid://${14447419427}`;
+			equip.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.equip.id}`;
 
 			const chambertoready = new Instance("Animation");
-			chambertoready.AnimationId = `rbxassetid://${14447411436}`;
+			chambertoready.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.chamberToReady.id}`;
 
 			const run = new Instance("Animation");
-			run.AnimationId = `rbxassetid://${14449811036}`;
+			run.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.run.id}`;
 
 			this.idle = animator.LoadAnimation(idle);
 			this.equipanim = animator.LoadAnimation(equip);

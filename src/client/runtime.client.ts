@@ -1,7 +1,7 @@
 import { Flamework } from "@flamework/core";
-import items from "shared/configurations/items";
+import { configs } from "shared/configurations/items";
 
-print(items);
+print(configs);
 
 Flamework.addPaths("src/client/components");
 Flamework.addPaths("src/client/controllers");
