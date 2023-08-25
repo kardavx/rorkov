@@ -63,6 +63,29 @@
 			"$properties": {
 				"RespectFilteringEnabled": true
 			}
+		},
+		"Lighting": {
+			"$path": "out/lighting.rbxm",
+			"$properties": {
+				"Brightness": 0,
+				"ShadowSoftness": 1,
+				"ClockTime": 14.5,
+				"GeographicLatitude": 0,
+				"GlobalShadows": true,
+				"Ambient": [
+					0.337255,
+					0.356863,
+					0.294118
+				],
+				"OutdoorAmbient": [
+					0,
+					0,
+					0
+				],
+				"EnvironmentDiffuseScale": 1,
+				"EnvironmentSpecularScale": 1,
+				"Technology": "Future"
+			}
 		}
 	}
 }
