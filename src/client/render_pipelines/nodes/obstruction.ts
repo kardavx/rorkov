@@ -18,10 +18,10 @@ export class Obstruction implements Node {
 		Obstruction.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
 		Obstruction.raycastParams.FilterDescendantsInstances = [character, Obstruction.camera!];
 
-		const firePart: BasePart | undefined = equippedItem.viewmodel.item.FindFirstChild("FirePart") as BasePart | undefined;
+		const muzzle: BasePart | undefined = equippedItem.viewmodel.item.FindFirstChild("Muzzle") as BasePart | undefined;
 
 		const origin = Obstruction.camera!.CFrame.Position;
-		const direction = firePart!.CFrame.Position.sub(origin);
+		const direction = muzzle!.CFrame.Position.sub(origin);
 
 		const raycastResult = Workspace.Raycast(origin, direction, Obstruction.raycastParams);
 		const pullBackAmount = raycastResult ? math.clamp(6 - raycastResult.Distance, 0, 6) : 0;

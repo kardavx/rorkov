@@ -30,7 +30,9 @@ export interface Sight extends Model {
 }
 
 export interface Item extends Model {
-	Grip: BasePart;
+	Grip: BasePart & {
+		Slide?: Motor6D;
+	};
 	Sights?: Sight[];
 	CenterPart: BasePart;
 	Muzzle?: BasePart;
@@ -59,6 +61,10 @@ export interface EquippedItem {
 	offsets: Offsets;
 	springs: Springs;
 	state: State;
-	currentItemConfiguration: ItemConfig;
+	configuration: ItemConfig;
+	slide: {
+		targetSlideOffset: Vector3;
+		currentSlideOffset: Vector3;
+	};
 	blockingStates: string[];
 }

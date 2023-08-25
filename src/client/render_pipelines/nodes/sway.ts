@@ -23,11 +23,9 @@ export class Sway implements Node {
 		const y = cameraDelta.Y;
 		const x = cameraDelta.X;
 
-		equippedItem.springs.Sway.impulse(new Vector3(y / 500, -x / 600));
-
 		task.spawn(() => {
 			task.wait(0.03);
-			equippedItem.springs.Sway.impulse(new Vector3(y / 50, -x / 30));
+			equippedItem.springs.Sway.impulse(new Vector3(y / 130, -x / 105).mul(math.max(1, equippedItem.configuration.properties.weight as number)));
 		});
 	}
 

@@ -16,8 +16,8 @@ import { Aim } from "client/render_pipelines/nodes/aim";
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
 import { Obstruction } from "client/render_pipelines/nodes/obstruction";
-import { getItemAnimations } from "shared/utilities/items_utility";
 import { configs, ItemConfig } from "shared/configurations/items";
+import { Slide } from "client/render_pipelines/nodes/slide";
 
 let ischambered = false;
 
@@ -57,7 +57,7 @@ export class BaseItem {
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 		const magcheck = new Instance("Animation");
-		magcheck.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.magCheck.id}`;
+		magcheck.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.magCheck.id}`;
 
 		const animationmc = animator.LoadAnimation(magcheck);
 		animationmc.Play();
@@ -74,7 +74,7 @@ export class BaseItem {
 		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 		const reload = new Instance("Animation");
-		reload.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.reload.id}`;
+		reload.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.reload.id}`;
 
 		const animationmc = animator.LoadAnimation(reload);
 		animationmc.Play();
@@ -85,6 +85,14 @@ export class BaseItem {
 
 	private aim = (inputState: boolean) => {
 		inputState ? this.equippedItem.state.activateState("aiming") : this.equippedItem.state.disableState("aiming");
+	};
+
+	private shoot = () => {
+		if (this.equippedItem.item.Grip.Slide) {
+			this.equippedItem.slide.targetSlideOffset = new Vector3(this.equippedItem.configuration.properties.slideMoveBack as number, 0, 0);
+			task.wait(0.1);
+			this.equippedItem.slide.targetSlideOffset = new Vector3(0, 0, 0);
+		}
 	};
 
 	private actions = new Map<
@@ -105,17 +113,19 @@ export class BaseItem {
 				action: this.aim,
 			},
 		],
+		["shoot", { keyCode: Enum.UserInputType.MouseButton1, action: this.shoot, inputType: "Click" }],
 	]);
 
 	private createOffsets = (viewmodel: ViewmodelWithItem) => ({
 		HumanoidRootPartToCameraBoneDistance: viewmodel.Torso.Position.Y - viewmodel.CameraBone.Position.Y,
+		...(viewmodel.item.Muzzle && { GripToMuzzleDistance: math.abs(viewmodel.item.Muzzle.Position.Y - viewmodel.item.Grip.Position.Y) }),
 	});
 
 	private createAlphas = () => ({
 		testAlpha: 0,
 	});
 
-	private createEquippedItem = (itemName: string) => {
+	private createEquippedItem = (itemName: string): EquippedItem => {
 		const viewmodel: ViewmodelWithItem = createViewmodel(itemName);
 		const item: Item = viewmodel.item;
 		const alphas: Alphas = this.createAlphas();
@@ -123,7 +133,11 @@ export class BaseItem {
 		const springs = this.springs;
 		const state = new State(this.states);
 		const blockingStates = this.blockingStates;
-		const currentItemConfiguration = configs.get(itemName) as ItemConfig;
+		const configuration = configs.get(itemName) as ItemConfig;
+		const slide = {
+			targetSlideOffset: Vector3.zero,
+			currentSlideOffset: Vector3.zero,
+		};
 
 		return {
 			viewmodel,
@@ -132,7 +146,8 @@ export class BaseItem {
 			offsets,
 			springs,
 			state,
-			currentItemConfiguration,
+			configuration,
+			slide,
 			blockingStates,
 		};
 	};
@@ -162,14 +177,13 @@ export class BaseItem {
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction]);
+		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction, Slide]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
 		this.equippedItem = this.createEquippedItem(this.itemName);
 
 		this.renderPipeline.initialize(this.character, this.equippedItem);
-		getItemAnimations();
 
 		task.spawn(() => {
 			this.equippedItem.state.activateState("equip");
@@ -177,16 +191,16 @@ export class BaseItem {
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
 
 			const idle = new Instance("Animation");
-			idle.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.idle.id}`;
+			idle.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.idle.id}`;
 
 			const equip = new Instance("Animation");
-			equip.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.equip.id}`;
+			equip.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.equip.id}`;
 
 			const chambertoready = new Instance("Animation");
-			chambertoready.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.chamberToReady.id}`;
+			chambertoready.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.chamberToReady.id}`;
 
 			const run = new Instance("Animation");
-			run.AnimationId = `rbxassetid://${this.equippedItem.currentItemConfiguration.animations.run.id}`;
+			run.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.run.id}`;
 
 			this.idle = animator.LoadAnimation(idle);
 			this.equipanim = animator.LoadAnimation(equip);

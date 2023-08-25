@@ -6,16 +6,18 @@ export interface Properties {
 }
 
 export interface DefaultProperties extends Properties {
-	itemLength: 3;
+	length: number;
+	weight: number; //kg's
 }
 
 export interface WeaponProperties extends DefaultProperties {
 	fireRate: number;
-	weight: number; //kg's
+	slideMoveBack: number;
 	recoil: {
-		shotsToControl: number; // the initial punch will chill out after x shots
-		camera: [[x: number, y: number, z: number], [rx: number, ry: number, rz: number]]; // [[x,y,z], [rx,ry,rz]]
-		weapon: [[x: number, y: number, z: number], [rx: number, ry: number, rz: number]]; // [[x,y,z], [rx,ry,rz]]
+		multiplier: 1;
+		// shotsToControl: number; // the initial punch will chill out after x shots
+		// camera: [[x: number, y: number, z: number], [rx: number, ry: number, rz: number]]; // [[x,y,z], [rx,ry,rz]]
+		// weapon: [[x: number, y: number, z: number], [rx: number, ry: number, rz: number]]; // [[x,y,z], [rx,ry,rz]]
 	};
 	allowedFireModes: AllowedFireModes[];
 }
@@ -34,24 +36,18 @@ export interface UseableProperties extends DefaultProperties {
 }
 
 const globalDefaultProperties: Readonly<DefaultProperties> = {
-	itemLength: 3,
+	length: 3,
+	weight: 1,
 };
 
 export const weaponDefaultProperties: Readonly<WeaponProperties> = {
 	...globalDefaultProperties,
 	...{
 		fireRate: 650,
-		weight: 13,
+		weight: 3,
+		slideMoveBack: -0.35,
 		recoil: {
-			shotsToControl: 6,
-			camera: [
-				[1, 1, 1],
-				[1, 1, 1],
-			],
-			weapon: [
-				[1, 1, 1],
-				[1, 1, 1],
-			],
+			multiplier: 1,
 		},
 		allowedFireModes: ["Semi"],
 	},
@@ -61,7 +57,7 @@ export const grenadeDefaultProperties: Readonly<GrenadeProperties> = {
 	...globalDefaultProperties,
 	...{
 		grenadeEffect: "Flash",
-		weight: 1.3,
+		weight: 2,
 		timeToExplode: 7,
 	},
 };
@@ -70,6 +66,7 @@ export const useableDefaultProperties: Readonly<UseableProperties> = {
 	...globalDefaultProperties,
 	...{
 		useableType: "Heal",
+		weight: 0.5,
 		healType: ["Bandage", "Splint", "Health"],
 		healthAddAmount: 20,
 		capacity: 60,
