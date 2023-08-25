@@ -1,7 +1,6 @@
 import { Node } from "../node";
 import { EquippedItem } from "client/types/items";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
-import { UserInputService } from "@rbxts/services";
 import { lerp, smoothStep } from "shared/utilities/number_utility";
 import { Dependency } from "@flamework/core";
 import { Camera } from "client/controllers/camera";
