@@ -1,14 +1,14 @@
-import { Controller } from "@flamework/core";
+import { Controller, OnInit, OnStart } from "@flamework/core";
 import { OnInputBegin, OnInputEnd } from "./core";
 import { BindableActionKey, InputType, ActionTypes, BaseAction } from "client/types/input";
-import { UserInputService } from "@rbxts/services";
+import { ContextActionService, UserInputService } from "@rbxts/services";
 import { log } from "shared/log_message";
 import localization from "client/localization/log/input";
 
 @Controller({})
-export class Input implements OnInputBegin, OnInputEnd {
+export class Input implements OnInputBegin, OnInputEnd, OnStart {
 	static doubleClickWindow = 0.2;
-	static holdDuration = 2.5;
+	static holdDuration = 0.6;
 	static logType = localization.multipleBindsAtSamePriority[0];
 	static logMessageTemplate = localization.multipleBindsAtSamePriority[1];
 
@@ -24,9 +24,9 @@ export class Input implements OnInputBegin, OnInputEnd {
 
 	private areModifierKeysPressed(inputObject: InputObject, action: BaseAction): boolean {
 		if (action.modifierKeys.size() === 0) {
-			const key = inputObject.UserInputType === Enum.UserInputType.Keyboard ? inputObject.KeyCode : inputObject.UserInputType;
 			const keyHasModifierAction = this.boundActions.find(
-				(action) => action.keyCode === key && action.actionPriority === action.actionPriority && action.modifierKeys.size() > 0,
+				(foundAction) =>
+					foundAction.keyCode === action.keyCode && foundAction.actionPriority === action.actionPriority && foundAction.modifierKeys.size() > 0,
 			);
 			if (!keyHasModifierAction) return true;
 			return keyHasModifierAction.modifierKeys.find((modifierKey) => inputObject.IsModifierKeyDown(modifierKey)) === undefined;
@@ -156,7 +156,6 @@ export class Input implements OnInputBegin, OnInputEnd {
 
 		if (!callback) throw `No callback was provided for ${actionName}`;
 		if (this.boundActions.find((bind) => bind.actionName === actionName)) throw `Action ${actionName} already exists!`;
-
 		this.boundActions.push({
 			actionName,
 			actionPriority,
@@ -214,5 +213,9 @@ export class Input implements OnInputBegin, OnInputEnd {
 		task.delay(Input.doubleClickWindow, () => {
 			if (!this.isKeyDown(key)) this.buttonsClickedCache.delete(key);
 		});
+	}
+
+	onStart(): void {
+		ContextActionService.UnbindAllActions();
 	}
 }

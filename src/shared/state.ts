@@ -57,15 +57,15 @@ export default class State {
 		return undefined;
 	}
 
-	isStateActive(stateName: StateName): boolean {
+	isStateActive = (stateName: StateName): boolean => {
 		if (!this.isStateValid(stateName)) {
 			this.sendToLogger(loggerLocalizations.tryingToCheckForStateThatIsntAllowed, stateName);
 		}
 
 		return this.states.find((activeState: StateName) => activeState === stateName) !== undefined;
-	}
+	};
 
-	isAnyActive(stateNames: StateName[]): boolean {
+	isAnyActive = (stateNames: StateName[]): boolean => {
 		for (const stateName of stateNames) {
 			if (this.isStateActive(stateName)) {
 				return true;
@@ -73,9 +73,9 @@ export default class State {
 		}
 
 		return false;
-	}
+	};
 
-	activateState(stateName: StateName) {
+	activateState = (stateName: StateName) => {
 		if (!this.isStateValid(stateName)) {
 			this.throwError(errorLocalizations.stateNotAllowed, stateName);
 		}
@@ -85,10 +85,14 @@ export default class State {
 			return;
 		}
 
-		this.states.push(stateName);
-	}
+		if (this.changedSignals[stateName] !== undefined) {
+			this.changedSignals[stateName]!.signal.Fire(true);
+		}
 
-	disableState(stateName: StateName) {
+		this.states.push(stateName);
+	};
+
+	disableState = (stateName: StateName) => {
 		if (!this.isStateValid(stateName)) {
 			this.throwError(errorLocalizations.stateNotAllowed, stateName);
 		}
@@ -98,19 +102,25 @@ export default class State {
 			return;
 		}
 
-		this.states.remove(this.states.indexOf(stateName));
-	}
+		if (this.changedSignals[stateName] !== undefined) {
+			this.changedSignals[stateName]!.signal.Fire(false);
+		}
 
-	bindToStateChanged(stateName: StateName, callback: ChangedCallback): UUID {
+		this.states.remove(this.states.indexOf(stateName));
+	};
+
+	bindToStateChanged = (stateName: StateName, callback: ChangedCallback): UUID => {
 		const changedSignal = this.getOrCreateChangedSignal(stateName);
 		const callbackUUID = generateUUID();
 		const connection = changedSignal.signal.Connect(callback);
 
+		print("state binded");
+
 		changedSignal.connections![callbackUUID] = connection;
 		return callbackUUID;
-	}
+	};
 
-	unbindFromStateChanged(UUID: UUID) {
+	unbindFromStateChanged = (UUID: UUID) => {
 		const stateNameAndSignalWithConnections = this.getSignalWithConnectionsFromUUID(UUID);
 		if (stateNameAndSignalWithConnections === undefined) {
 			throw this.formatLogMessage(errorLocalizations.UUIDNotFound);
@@ -128,5 +138,5 @@ export default class State {
 			validatedSignalWithConnections.signal.Destroy();
 			this.changedSignals[stateName] = undefined;
 		}
-	}
+	};
 }

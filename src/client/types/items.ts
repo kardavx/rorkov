@@ -1,9 +1,13 @@
-import { Spring } from "shared/utilities/sine_utility";
+import { VectorSpring } from "shared/Spring/spring";
+import State from "shared/state";
+import { ItemConfig } from "shared/configurations/items";
 
 export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 
 export interface Viewmodel extends Model {
-	Torso: BasePart;
+	Torso: BasePart & {
+		GunJoint: Motor6D;
+	};
 	CameraBone: BasePart;
 	AnimationController: AnimationController & {
 		Animator: Animator;
@@ -22,18 +26,22 @@ export interface SightElements extends Model {
 export interface Sight extends Model {
 	AimPart: BasePart;
 	Elements: SightElements;
-	Projector?: BasePart;
+	Projector?: BasePart & {
+		Container: SurfaceGui;
+	};
 }
 
 export interface Item extends Model {
-	Grip: BasePart;
-	Sights?: Sight[];
+	Grip: BasePart & {
+		Slide?: Motor6D;
+	};
+	Sights?: Model & Sight[];
 	CenterPart: BasePart;
 	Muzzle?: BasePart;
 }
 
 export type Springs = {
-	[springName in string]: Spring;
+	[springName in string]: VectorSpring;
 };
 
 export type UpdatedSprings = {
@@ -53,4 +61,12 @@ export interface EquippedItem {
 	item: Item;
 	alphas: Alphas;
 	offsets: Offsets;
+	springs: Springs;
+	state: State;
+	configuration: ItemConfig;
+	slide: {
+		targetSlideOffset: Vector3;
+		currentSlideOffset: Vector3;
+	};
+	blockingStates: string[];
 }

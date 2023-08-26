@@ -1,5 +1,4 @@
 import { BaseItem } from "./base_item";
-import { Input } from "client/controllers/input";
 import { Actions } from "client/types/items";
 
 export class Weapon extends BaseItem {
@@ -8,7 +7,7 @@ export class Weapon extends BaseItem {
 	static blockingStates = ["reload"];
 	static springs = {};
 
-	constructor(input: Input, itemName: string) {
-		super(input, itemName, Weapon.states, Weapon.blockingStates, Weapon.springs, Weapon.actions);
+	constructor(itemName: string) {
+		super(itemName, Weapon.states, Weapon.blockingStates, Weapon.springs, Weapon.actions);
 	}
 }

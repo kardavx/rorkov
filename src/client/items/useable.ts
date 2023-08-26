@@ -9,15 +9,13 @@ export class Useable extends BaseItem {
 	static springs = {};
 
 	private use = () => {
-		this.state.activateState("use");
-
-		// play use animation, and do things ig
-
-		this.state.disableState("use");
-		this.destroy();
+		// this.state.activateState("use");
+		// // play use animation, and do things ig
+		// this.state.disableState("use");
+		// this.destroy();
 	};
 
-	constructor(input: Input, itemName: string) {
-		super(input, itemName, Useable.states, Useable.blockingStates, Useable.springs, Useable.actions);
+	constructor(itemName: string) {
+		super(itemName, Useable.states, Useable.blockingStates, Useable.springs, Useable.actions);
 	}
 }

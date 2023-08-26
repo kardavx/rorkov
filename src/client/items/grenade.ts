@@ -8,7 +8,7 @@ export class Grenade extends BaseItem {
 	static blockingStates = ["reload"];
 	static springs = {};
 
-	constructor(input: Input, itemName: string) {
-		super(input, itemName, Grenade.states, Grenade.blockingStates, Grenade.springs, Grenade.actions);
+	constructor(itemName: string) {
+		super(itemName, Grenade.states, Grenade.blockingStates, Grenade.springs, Grenade.actions);
 	}
 }

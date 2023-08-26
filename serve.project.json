@@ -7,6 +7,10 @@
 			"$className": "ServerScriptService",
 			"$path": "out/server"
 		},
+		"ReplicatedFirst": {
+			"$className": "ReplicatedFirst",
+			"$path": "out/preload"
+		},
 		"ReplicatedStorage": {
 			"$className": "ReplicatedStorage",
 			"rbxts_include": {
@@ -21,10 +25,16 @@
 					}
 				}
 			},
+			"stories": {
+				"$path": "out/stories"
+			},
 			"$path": "out/shared"
 		},
 		"StarterPlayer": {
 			"$className": "StarterPlayer",
+			"StarterCharacter": {
+				"$path": "out/StarterCharacter.rbxm"
+			},
 			"StarterPlayerScripts": {
 				"$className": "StarterPlayerScripts",
 				"$path": "out/client"
@@ -55,17 +65,18 @@
 			}
 		},
 		"Lighting": {
+			"$path": "out/lighting.rbxm",
 			"$properties": {
-				"Brightness": 3,
-				"ShadowSoftness": 0.2,
+				"Brightness": 0,
+				"ShadowSoftness": 1,
 				"ClockTime": 14.5,
 				"GeographicLatitude": 0,
 				"GlobalShadows": true,
-				"Ambient": [0.27450980392156865, 0.27450980392156865, 0.27450980392156865],
-				"OutdoorAmbient": [0.27450980392156865, 0.27450980392156865, 0.27450980392156865],
+				"Ambient": [0.337255, 0.356863, 0.294118],
+				"OutdoorAmbient": [0, 0, 0],
 				"EnvironmentDiffuseScale": 1,
 				"EnvironmentSpecularScale": 1,
-				"Technology": "ShadowMap"
+				"Technology": "Future"
 			}
 		}
 	}

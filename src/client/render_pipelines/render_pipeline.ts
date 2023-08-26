@@ -8,11 +8,21 @@ export interface Update {
 	update(deltaTime: number, currentCFrame: CFrame, ...args: unknown[]): CFrame;
 }
 
+export interface Initialize {
+	initialize(...args: unknown[]): void;
+}
+
 export class RenderPipeline implements PreUpdate, Update {
 	private nodes: Node[] = [];
 	constructor(nodes: typeof Node[]) {
 		nodes.forEach((node: typeof Node) => {
 			this.nodes.push(new node());
+		});
+	}
+
+	initialize(...args: unknown[]): void {
+		this.nodes.forEach((node: Node) => {
+			node.initialize(...args);
 		});
 	}
 

@@ -1,5 +1,3 @@
-const validateType = <ValidType>(thingToValidate: ValidType): ValidType => {
+export const validateType = <ValidType>(thingToValidate: ValidType): ValidType => {
 	return thingToValidate;
 };
-
-export { validateType };

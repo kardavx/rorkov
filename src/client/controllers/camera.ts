@@ -1,7 +1,8 @@
 import { Controller } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
-import { Workspace } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
+import { UserInputService } from "@rbxts/services";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
@@ -66,12 +67,16 @@ export class Modifier {
 @Controller({})
 export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
-	static baseOffset = new Vector3(0, 0, -0.5);
+	static player = Players.LocalPlayer;
+	static baseOffset = new Vector3(0, -0.5, -1.5);
+	static baseLV = Vector3.zAxis;
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
 	private humanoid: Humanoid | undefined;
 
 	private lastOffsets: CFrame = new CFrame();
+	private rotationDelta: Vector2 = new Vector2();
+	private lastCameraCFrame: CFrame | undefined;
 
 	private applyPosition(summedOffset: CFrame) {
 		const headCF = this.head!.CFrame;
@@ -86,10 +91,27 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
 	}
 
+	private updateRotationDelta() {
+		if (this.lastCameraCFrame) {
+			const currentCameraLV = Camera.camera!.CFrame.LookVector;
+			const shouldInvert = Camera.baseLV.Dot(currentCameraLV) >= 0;
+			const difference = currentCameraLV.sub(this.lastCameraCFrame.LookVector);
+			this.rotationDelta = new Vector2(difference.X, difference.Y).mul(100).mul(shouldInvert ? new Vector2(-1, 1) : 1);
+		}
+
+		this.lastCameraCFrame = Camera.camera!.CFrame;
+	}
+
+	getRotationDelta(): Vector2 {
+		return this.rotationDelta;
+	}
+
 	onCharacterAdded(character: Model): void {
 		this.head = character.WaitForChild("Head", 5) as BasePart;
 		this.rootPart = character.WaitForChild("HumanoidRootPart", 5) as BasePart;
 		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
+
+		Camera.player.CameraMode = Enum.CameraMode.LockFirstPerson;
 	}
 
 	onPreCameraRender(): void {
@@ -105,6 +127,8 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 		this.applyRotation(summedOffset);
 		if (this.humanoid) this.applyPosition(summedOffset);
+
+		this.updateRotationDelta();
 
 		this.lastOffsets = summedOffset;
 	}
