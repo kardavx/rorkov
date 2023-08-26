@@ -26,14 +26,16 @@ export interface SightElements extends Model {
 export interface Sight extends Model {
 	AimPart: BasePart;
 	Elements: SightElements;
-	Projector?: BasePart;
+	Projector?: BasePart & {
+		Container: SurfaceGui;
+	};
 }
 
 export interface Item extends Model {
 	Grip: BasePart & {
 		Slide?: Motor6D;
 	};
-	Sights?: Sight[];
+	Sights?: Model & Sight[];
 	CenterPart: BasePart;
 	Muzzle?: BasePart;
 }

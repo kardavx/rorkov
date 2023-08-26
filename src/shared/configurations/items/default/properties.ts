@@ -13,6 +13,7 @@ export interface DefaultProperties extends Properties {
 export interface WeaponProperties extends DefaultProperties {
 	fireRate: number;
 	slideMoveBack: number;
+	slideDirection: Vector3;
 	recoil: {
 		multiplier: 1;
 		// shotsToControl: number; // the initial punch will chill out after x shots
@@ -45,7 +46,8 @@ export const weaponDefaultProperties: Readonly<WeaponProperties> = {
 	...{
 		fireRate: 650,
 		weight: 3,
-		slideMoveBack: -0.35,
+		slideMoveBack: 0.35,
+		slideDirection: new Vector3(-1, 0, 0),
 		recoil: {
 			multiplier: 1,
 		},

@@ -5,12 +5,10 @@ import { Dependency } from "@flamework/core";
 import { Movement } from "client/controllers/movement";
 import { offsetFromPivot } from "shared/utilities/cframe_utility";
 
-export class MoveSway implements Node {
+export class MoveSway extends Node {
 	static player = Players.LocalPlayer;
 	private movement = Dependency<Movement>();
 	private moveSwayAmount = new CFrame();
-
-	initialize(...args: unknown[]): void {}
 
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
 		const sideDirection = this.movement.getMoveVector().X;
@@ -25,6 +23,6 @@ export class MoveSway implements Node {
 	}
 
 	update(deltaTime: number, currentCFrame: CFrame, character: Model, equippedItem: EquippedItem): CFrame {
-		return offsetFromPivot(currentCFrame, equippedItem.item.CenterPart.CFrame, this.moveSwayAmount);
+		return offsetFromPivot(currentCFrame, equippedItem.item.Grip.CFrame, this.moveSwayAmount);
 	}
 }

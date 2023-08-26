@@ -17,7 +17,7 @@ type SineValues = {
 };
 
 @Controller({})
-export class Bobbing implements Node {
+export class Bobbing extends Node {
 	static frequency = 7;
 	static amplitude = 1;
 
@@ -40,8 +40,6 @@ export class Bobbing implements Node {
 	};
 
 	private bobbingAmount: CFrame = new CFrame();
-
-	initialize(...args: unknown[]): void {}
 
 	preUpdate(deltaTime: number, character: Model): void {
 		const characterSpeed = getCharacterSpeed(character);

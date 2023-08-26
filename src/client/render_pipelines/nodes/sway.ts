@@ -5,7 +5,7 @@ import { lerp, smoothStep } from "shared/utilities/number_utility";
 import { Dependency } from "@flamework/core";
 import { Camera } from "client/controllers/camera";
 
-export class Sway implements Node {
+export class Sway extends Node {
 	static maxSway = 0.2;
 
 	private camera = Dependency<Camera>();
@@ -14,8 +14,6 @@ export class Sway implements Node {
 	private isNegative = (number: number): boolean => number < 0;
 	private getSmoothenedSway = (number: number): number =>
 		this.isNegative(number) ? lerp(-Sway.maxSway, 0, smoothStep(-Sway.maxSway, 0, number)) : lerp(0, Sway.maxSway, smoothStep(0, Sway.maxSway, number));
-
-	initialize(...args: unknown[]): void {}
 
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
 		const cameraDelta = this.camera.getRotationDelta();

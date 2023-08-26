@@ -6,13 +6,11 @@ import { offsetFromPivot } from "shared/utilities/cframe_utility";
 import { inverseLerp } from "shared/utilities/number_utility";
 
 @Controller({})
-export class Obstruction implements Node {
+export class Obstruction extends Node {
 	static camera = Workspace.CurrentCamera;
 	static raycastParams = new RaycastParams();
 
 	private pullBack: CFrame = new CFrame();
-
-	initialize(...args: unknown[]): void {}
 
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
 		Obstruction.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;

@@ -7,7 +7,7 @@ import { Functions } from "server/network";
 
 @Service({})
 export class Outfit implements OnInit, OnCharacterAdded {
-	static choosenOutfit = { top: "operator", bottom: "operator_2" };
+	static choosenOutfit = { top: "operator_2", bottom: "operator" };
 
 	private outfits:
 		| {

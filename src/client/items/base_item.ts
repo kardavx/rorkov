@@ -12,12 +12,14 @@ import { MoveSway } from "client/render_pipelines/nodes/move_sway";
 import { Jump } from "client/render_pipelines/nodes/jump";
 import { lerp } from "shared/utilities/number_utility";
 import { Aim } from "client/render_pipelines/nodes/aim";
+import { Recoil } from "client/render_pipelines/nodes/recoil";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
 import { Obstruction } from "client/render_pipelines/nodes/obstruction";
 import { configs, ItemConfig } from "shared/configurations/items";
 import { Slide } from "client/render_pipelines/nodes/slide";
+import { Projectors } from "client/render_pipelines/nodes/projectors";
 
 let ischambered = false;
 
@@ -32,6 +34,7 @@ export class BaseItem {
 			y: new NumberRange(-Sway.maxSway, Sway.maxSway),
 		}),
 		Jump: new VectorSpring(3, 20, 60),
+		Recoil: new VectorSpring(1, 50, 200),
 	};
 
 	private idle: AnimationTrack | undefined;
@@ -88,8 +91,17 @@ export class BaseItem {
 	};
 
 	private shoot = () => {
+		this.springs.Recoil.impulse(
+			new Vector3(
+				math.max(0, 10 - (this.equippedItem.configuration.properties.weight as number) * 2),
+				math.random(-1, 1),
+				10 * (this.equippedItem.configuration.properties.weight as number),
+			),
+		);
+
 		if (this.equippedItem.item.Grip.Slide) {
-			this.equippedItem.slide.targetSlideOffset = new Vector3(this.equippedItem.configuration.properties.slideMoveBack as number, 0, 0);
+			const direction = this.equippedItem.configuration.properties.slideDirection as Vector3;
+			this.equippedItem.slide.targetSlideOffset = direction.mul(this.equippedItem.configuration.properties.slideMoveBack as number);
 			task.wait(0.1);
 			this.equippedItem.slide.targetSlideOffset = new Vector3(0, 0, 0);
 		}
@@ -177,7 +189,7 @@ export class BaseItem {
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction, Slide]);
+		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction, Slide, Recoil, Projectors]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
