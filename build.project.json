@@ -32,6 +32,9 @@
 		},
 		"StarterPlayer": {
 			"$className": "StarterPlayer",
+			"StarterCharacter": {
+				"$path": "out/StarterCharacter.rbxm"
+			},
 			"StarterPlayerScripts": {
 				"$className": "StarterPlayerScripts",
 				"$path": "out/client"
