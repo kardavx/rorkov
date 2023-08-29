@@ -1,7 +1,10 @@
-import { Controller, OnTick } from "@flamework/core";
+import { Controller, Dependency, OnTick } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
-import { SoundService, Workspace, UserInputService } from "@rbxts/services";
+import { SoundService } from "@rbxts/services";
 import waitForSound from "shared/wait_for_sound";
+import { lerp } from "shared/utilities/number_utility";
+import { OnJump, OnRunningChanged } from "./movement";
+import { Camera } from "./camera";
 
 type MaterialSounds = {
 	[materialName: string]: {
@@ -10,29 +13,27 @@ type MaterialSounds = {
 };
 
 @Controller({})
-export class MovementSounds implements OnTick, OnCharacterAdded {
+export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnRunningChanged {
+	static maxTurnVolume = 2;
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
 	private lastSoundId = 0;
 	private lastStep = 0;
 	private amplitude = 6;
-	private oldCamLV = Vector3.zero;
-	private camera = Workspace.CurrentCamera;
 	private turnSound: Sound | undefined = undefined;
 	private turnSoundCooldown = false;
-	private vectorXZ = new Vector3(1, 1, 1);
+	private isRunning = false;
 	private materialSounds: MaterialSounds = {
 		Plastic: {
-			Step: [5682504255, 4817498373],
+			Walk: [5682504255, 4817498373],
+			Run: [0, 0],
 			Jump: [14380892475],
 			Land: [14380890500],
 			Turn: [14380891843],
 		},
 	};
 
-	lerp(a: number, b: number, c: number) {
-		return a + (b - a) * c;
-	}
+	private camera = Dependency<Camera>();
 
 	createSound(soundId: number, volume: number): Sound {
 		const sound = new Instance("Sound");
@@ -72,13 +73,8 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 
 		this.humanoid.StateChanged.Connect((oldValue: Enum.HumanoidStateType, newValue: Enum.HumanoidStateType) => {
-			const currentTick = os.clock();
-			if (this.humanoid!.GetState() === Enum.HumanoidStateType.Jumping) {
-				this.playSound("Jump", this.humanoid!.FloorMaterial.Name);
-				this.lastStep = currentTick;
-			}
-
 			const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
+			const currentTick = os.clock();
 
 			if (this.humanoid!.GetState() === Enum.HumanoidStateType.Landed) {
 				this.playSound("Land", this.humanoid!.FloorMaterial.Name, math.clamp(velocity / 10, 0.1, 10));
@@ -87,21 +83,26 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 		});
 	}
 
+	onJump(): void {
+		const currentTick = os.clock();
+
+		this.playSound("Jump", this.humanoid!.FloorMaterial.Name);
+		this.lastStep = currentTick;
+	}
+
 	onTick(dt: number): void {
 		if (!this.humanoid || this.humanoid.Health === 0) return;
 		const floorMaterial = this.humanoid.FloorMaterial;
 		if (floorMaterial === Enum.Material.Air) return;
 
-		const deltaX = math.abs(UserInputService.GetMouseDelta().X);
-
-		const camLV = this.camera!.CFrame.LookVector.mul(this.vectorXZ);
+		const deltaX = math.abs(this.camera.getRotationDelta().X);
 
 		if (deltaX >= 5 && !this.turnSoundCooldown) {
 			this.turnSoundCooldown = true;
 			this.turnSound = this.playSound("Turn");
 		}
-		if (this.turnSound) this.turnSound.Volume = this.lerp(this.turnSound.Volume, math.clamp(deltaX * 5, 0, 10), 10 * dt);
-		this.oldCamLV = camLV;
+
+		if (this.turnSound) this.turnSound.Volume = lerp(this.turnSound.Volume, math.clamp(deltaX * 5, 0, MovementSounds.maxTurnVolume), 10 * dt);
 
 		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 		if (velocity < 0.3) return;
@@ -110,6 +111,10 @@ export class MovementSounds implements OnTick, OnCharacterAdded {
 		if (currentTick - this.lastStep < this.amplitude / velocity) return;
 		this.lastStep = currentTick;
 
-		this.playSound("Step", floorMaterial.Name);
+		this.playSound(this.isRunning ? "Run" : "Walk", floorMaterial.Name);
+	}
+
+	onRunningChanged(runningState: boolean): void {
+		this.isRunning = runningState;
 	}
 }
