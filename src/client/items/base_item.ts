@@ -33,7 +33,7 @@ export class BaseItem {
 			x: new NumberRange(-Sway.maxSway, Sway.maxSway),
 			y: new NumberRange(-Sway.maxSway, Sway.maxSway),
 		}),
-		Jump: new VectorSpring(3, 20, 60),
+		Jump: new VectorSpring(9.4, 34.6, 100),
 		Recoil: new VectorSpring(1, 50, 200),
 	};
 
@@ -254,7 +254,7 @@ export class BaseItem {
 
 	onJump(): void {
 		print("jumped");
-		this.springs.Jump.impulse(new Vector3(-3, -5, 0));
+		this.springs.Jump.impulse(new Vector3(-2, 0, 0));
 	}
 
 	onRunningChanged(runningState: boolean): void {
