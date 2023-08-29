@@ -1,5 +1,5 @@
 {
-	"name": "flamework-game",
+	"name": "rorkov",
 	"globIgnorePaths": ["**/package.json", "**/tsconfig.json"],
 	"tree": {
 		"$className": "DataModel",
@@ -24,6 +24,9 @@
 						"$path": "node_modules/@flamework"
 					}
 				}
+			},
+			"stories": {
+				"$path": "out/stories"
 			},
 			"$path": "out/shared"
 		},
