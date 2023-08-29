@@ -20,6 +20,7 @@ import { Obstruction } from "client/render_pipelines/nodes/obstruction";
 import { configs, ItemConfig } from "shared/configurations/items";
 import { Slide } from "client/render_pipelines/nodes/slide";
 import { Projectors } from "client/render_pipelines/nodes/projectors";
+import Tween from "shared/variableTween";
 
 let ischambered = false;
 
@@ -127,14 +128,10 @@ export class BaseItem {
 		...(viewmodel.item.Muzzle && { GripToMuzzleDistance: math.abs(viewmodel.item.Muzzle.Position.Y - viewmodel.item.Grip.Position.Y) }),
 	});
 
-	private createAlphas = () => ({
-		testAlpha: 0,
-	});
-
 	private createEquippedItem = (itemName: string): EquippedItem => {
 		const viewmodel: ViewmodelWithItem = createViewmodel(itemName);
 		const item: Item = viewmodel.item;
-		const alphas: Alphas = this.createAlphas();
+		const alphas: Alphas = {};
 		const offsets: Offsets = this.createOffsets(viewmodel);
 		const springs = this.springs;
 		const state = new State(this.states);
@@ -160,6 +157,21 @@ export class BaseItem {
 
 	private destroyEquippedItem = () => {
 		this.equippedItem!.viewmodel.Destroy();
+	};
+
+	private bindStateToAlpha = () => {
+		const registeredStates = this.equippedItem.state.getRegisteredStates();
+		if (!registeredStates) return;
+		registeredStates.forEach((state: string) => {
+			this.equippedItem.alphas[state] = this.equippedItem.state.isStateActive(state) ? 1 : 0;
+
+			const stateIdentificator = `${state}/state_to_alpha`;
+			const tweenInfo = new TweenInfo(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out);
+			this.equippedItem.state.bindToStateChanged(state, (stateActive: boolean) => {
+				const tween = Tween.create(stateIdentificator, this.equippedItem.alphas[state], tweenInfo, stateActive ? 1 : 0);
+				tween.play((newValue) => (this.equippedItem.alphas[state] = newValue as number));
+			});
+		});
 	};
 
 	private bindActions = () => {
@@ -188,6 +200,7 @@ export class BaseItem {
 
 		this.bindActions();
 		this.equippedItem = this.createEquippedItem(this.itemName);
+		this.bindStateToAlpha();
 
 		this.renderPipeline.initialize(this.character, this.equippedItem);
 

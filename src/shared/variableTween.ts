@@ -10,14 +10,23 @@ interface Lerpable {
 }
 
 export default class Tween {
-	static tweens: { [tweenIdentificator: string]: Tween } = {};
-	static create = (variableIdentificator: string, baseValue: AllowedTypes, tweenInfo: TweenInfo, target: typeof baseValue) => {
-		if (Tween.tweens[variableIdentificator]) {
-			Tween.tweens[variableIdentificator].cancel();
+	static tweens: { [identificator: string]: Tween | undefined } = {};
+	static create = (identificator: string, baseValue: AllowedTypes, tweenInfo: TweenInfo, target: typeof baseValue) => {
+		if (Tween.tweens[identificator] !== undefined) {
+			Tween.tweens[identificator]!.cancel();
 		}
 
-		Tween.tweens[variableIdentificator] = new Tween(baseValue, tweenInfo, target);
-		return Tween.tweens[variableIdentificator];
+		Tween.tweens[identificator] = new Tween(baseValue, tweenInfo, target);
+		return Tween.tweens[identificator] as Tween;
+	};
+	static destroy = (identificator: string) => {
+		if (Tween.tweens[identificator] === undefined) {
+			log("warning", `attempt to destroy a tween that doesn't exist (parsed identificator: ${identificator})`);
+			return;
+		}
+
+		Tween.tweens[identificator]!.cancel();
+		Tween.tweens[identificator] = undefined;
 	};
 
 	private playing = false;
