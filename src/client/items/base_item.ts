@@ -1,4 +1,4 @@
-import { Workspace } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
 import { VectorSpring } from "shared/Spring/spring";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
@@ -34,15 +34,15 @@ export class BaseItem {
 			y: new NumberRange(-Sway.maxSway, Sway.maxSway),
 		}),
 		Jump: new VectorSpring(3, 20, 60),
-		Recoil: new VectorSpring(1, 50, 200),
+		Recoil: new VectorSpring(1, 28, 200),
 	};
 
 	private idle: AnimationTrack | undefined;
+	private idleChar: AnimationTrack | undefined;
 	private run: AnimationTrack | undefined;
 	private equipanim: AnimationTrack | undefined;
 	private renderPipeline: RenderPipeline;
 	private cameraModifier: Modifier;
-	private isRunning = false;
 	private targetXAxisFactor = 1;
 	private currentXAxisFactor = this.targetXAxisFactor;
 	public character: Model | undefined;
@@ -91,13 +91,7 @@ export class BaseItem {
 	};
 
 	private shoot = () => {
-		this.springs.Recoil.impulse(
-			new Vector3(
-				math.max(0, 10 - (this.equippedItem.configuration.properties.weight as number) * 2),
-				math.random(-1, 1),
-				10 * (this.equippedItem.configuration.properties.weight as number),
-			),
-		);
+		this.springs.Recoil.impulse(new Vector3(6, math.random(-3, 3), 0));
 
 		if (this.equippedItem.item.Grip.Slide) {
 			const direction = this.equippedItem.configuration.properties.slideDirection as Vector3;
@@ -200,7 +194,10 @@ export class BaseItem {
 		task.spawn(() => {
 			this.equippedItem.state.activateState("equip");
 
+			const character = Players.LocalPlayer.Character as Model;
+
 			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
+			const characterAnimator = character.WaitForChild("Humanoid")!.WaitForChild("Animator") as Animator;
 
 			const idle = new Instance("Animation");
 			idle.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.idle.id}`;
@@ -215,6 +212,7 @@ export class BaseItem {
 			run.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.run.id}`;
 
 			this.idle = animator.LoadAnimation(idle);
+			this.idleChar = characterAnimator.LoadAnimation(idle);
 			this.equipanim = animator.LoadAnimation(equip);
 			this.run = animator.LoadAnimation(run);
 			this.run.Priority = Enum.AnimationPriority.Action2;
@@ -226,12 +224,14 @@ export class BaseItem {
 				ischambered = true;
 				animationctr.Play(0, 10, 1);
 				this.idle.Play(0);
+				this.idleChar.Play(0);
 				animationctr.Stopped.Wait();
 
 				this.equippedItem.state.disableState("equip");
 			} else {
 				this.equipanim.Play(0, undefined, 1);
 				this.idle.Play(0);
+				this.idleChar.Play(0);
 				this.equipanim.Stopped.Wait();
 
 				this.equippedItem.state.disableState("equip");
@@ -243,6 +243,7 @@ export class BaseItem {
 		this.equippedItem.state.activateState("unequip");
 
 		this.idle!.Stop(0);
+		this.idleChar!.Stop(0);
 		this.equipanim!.Play(0, undefined, -1);
 		this.equipanim!.Stopped.Wait();
 		this.unbindActions();
@@ -254,13 +255,12 @@ export class BaseItem {
 
 	onJump(): void {
 		print("jumped");
-		this.springs.Jump.impulse(new Vector3(-3, -5, 0));
+		this.springs.Jump.impulse(new Vector3(-1, -2, 1));
 	}
 
 	onRunningChanged(runningState: boolean): void {
 		if (!this.run) return;
 
-		this.isRunning = runningState;
 		runningState ? this.run.Play(0.2) : this.run.Stop(0.2);
 
 		if (runningState) {
@@ -276,15 +276,16 @@ export class BaseItem {
 		const lookVector = BaseItem.camera!.CFrame.LookVector;
 		this.currentXAxisFactor = lerp(this.currentXAxisFactor, this.targetXAxisFactor, 0.08);
 		const baseCFrame = CFrame.lookAt(
-			BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0)).Position,
-			BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0)).Position.add(
+			BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0.43)).Position,
+			BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0.43)).Position.add(
 				lookVector.mul(new Vector3(1, this.currentXAxisFactor, 1)),
 			),
 		);
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
-		this.renderPipeline.preUpdate(dt, this.character, this.equippedItem);
 
+		this.renderPipeline.preUpdate(dt, this.character, this.equippedItem);
 		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, this.character, this.equippedItem));
+		this.renderPipeline.postUpdate(dt, this.character, this.equippedItem);
 	};
 }
