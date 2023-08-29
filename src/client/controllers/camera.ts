@@ -2,10 +2,10 @@ import { Controller } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
 import { Players, Workspace } from "@rbxts/services";
-import { UserInputService } from "@rbxts/services";
-import { offsetFromPivot } from "shared/utilities/cframe_utility";
+import { lerp } from "shared/utilities/number_utility";
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
+type FOVModifiers = { [modifierName in string]: FOVModifier | undefined };
 
 export class Modifier {
 	static modifiers: Modifiers = {};
@@ -64,11 +64,54 @@ export class Modifier {
 	};
 }
 
+export class FOVModifier {
+	static modifiers: FOVModifiers = {};
+
+	static create = (name: string): FOVModifier => {
+		if (!FOVModifier.modifiers[name]) FOVModifier.modifiers[name] = new FOVModifier(name);
+		return FOVModifier.modifiers[name] as FOVModifier;
+	};
+
+	static getSummedDifferences = (): number => {
+		let finalDifference = 0;
+
+		for (const [_, modifierObject] of pairs(FOVModifier.modifiers)) {
+			finalDifference = finalDifference + modifierObject.getDifference();
+		}
+
+		return finalDifference;
+	};
+
+	private difference = 0;
+	private destroyed = false;
+
+	private constructor(private name: string) {}
+
+	public getDifference = (): number => {
+		if (this.destroyed) throw `Attempt to get difference of modifier after it was destroyed`;
+
+		return this.difference;
+	};
+
+	public setDifference = (newDifference: number) => {
+		if (this.destroyed) throw `Attempt to set difference of modifier after it was destroyed`;
+
+		this.difference = newDifference;
+	};
+
+	public destroy = (): void => {
+		this.setDifference(0);
+		FOVModifier.modifiers[this.name] = undefined;
+		this.destroyed = true;
+	};
+}
+
 @Controller({})
 export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
 	static camera = Workspace.CurrentCamera;
 	static player = Players.LocalPlayer;
 	static baseOffset = new Vector3(0, -0.5, -1.5);
+	static baseFOV = 75;
 	static baseLV = Vector3.zAxis;
 	private head: BasePart | undefined;
 	private rootPart: BasePart | undefined;
@@ -102,6 +145,10 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		this.lastCameraCFrame = Camera.camera!.CFrame;
 	}
 
+	private applyFOV(instant = false, fovDifference = 0) {
+		Camera.camera!.FieldOfView = lerp(Camera.camera!.FieldOfView, Camera.baseFOV + fovDifference, instant ? 1 : 0.075);
+	}
+
 	getRotationDelta(): Vector2 {
 		return this.rotationDelta;
 	}
@@ -112,6 +159,7 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		this.humanoid = character.WaitForChild("Humanoid", 5) as Humanoid;
 
 		Camera.player.CameraMode = Enum.CameraMode.LockFirstPerson;
+		this.applyFOV(true);
 	}
 
 	onPreCameraRender(): void {
@@ -124,9 +172,11 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 		Modifier.updateOffsets(deltaTime);
 		const summedOffset = Modifier.getSummedOffsets();
+		const fovDifference = FOVModifier.getSummedDifferences();
 
 		this.applyRotation(summedOffset);
 		if (this.humanoid) this.applyPosition(summedOffset);
+		this.applyFOV(false, fovDifference);
 
 		this.updateRotationDelta();
 
