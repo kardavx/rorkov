@@ -12,7 +12,11 @@ export interface Initialize {
 	initialize(...args: unknown[]): void;
 }
 
-export class RenderPipeline implements PreUpdate, Update {
+export interface PostUpdate {
+	postUpdate(deltaTime: number, ...args: unknown[]): void;
+}
+
+export class RenderPipeline implements PreUpdate, Update, Initialize, PostUpdate {
 	private nodes: Node[] = [];
 	constructor(nodes: typeof Node[]) {
 		nodes.forEach((node: typeof Node) => {
@@ -40,5 +44,11 @@ export class RenderPipeline implements PreUpdate, Update {
 		});
 
 		return finalCFrame;
+	}
+
+	postUpdate(deltaTime: number, ...args: unknown[]): void {
+		this.nodes.forEach((node: Node) => {
+			node.postUpdate(deltaTime, ...args);
+		});
 	}
 }
