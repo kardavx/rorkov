@@ -1,3 +1,5 @@
+// TODO! ADD THE ONLAND LIFECYCLE EVENT ON lifecycle-events-camera-improvements MERGE
+
 import { Controller, Dependency, OnTick } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
 import { SoundService } from "@rbxts/services";
