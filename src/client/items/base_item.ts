@@ -13,6 +13,8 @@ import { Jump } from "client/render_pipelines/nodes/jump";
 import { lerp } from "shared/utilities/number_utility";
 import { Aim } from "client/render_pipelines/nodes/aim";
 import { Recoil } from "client/render_pipelines/nodes/recoil";
+import { Land } from "client/render_pipelines/nodes/land";
+import { Fall } from "client/render_pipelines/nodes/fall";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
@@ -192,7 +194,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction, Slide, Recoil, Projectors]);
+		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Land, Fall, Obstruction, Slide, Recoil, Projectors]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
