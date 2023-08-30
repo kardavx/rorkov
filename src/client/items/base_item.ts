@@ -24,6 +24,8 @@ import { Slide } from "client/render_pipelines/nodes/slide";
 import { Projectors } from "client/render_pipelines/nodes/projectors";
 import { OnJump, OnLand, OnRunningChanged } from "client/controllers/movement";
 import Tween from "shared/variableTween";
+import { RunWithJump } from "client/render_pipelines/nodes/run_with_jump";
+import { Breathing } from "client/render_pipelines/nodes/breathing";
 
 let ischambered = false;
 
@@ -142,6 +144,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		const state = new State(this.states);
 		const blockingStates = this.blockingStates;
 		const configuration = configs.get(itemName) as ItemConfig;
+		const runWithJumpOffset = false;
 		const slide = {
 			targetSlideOffset: Vector3.zero,
 			currentSlideOffset: Vector3.zero,
@@ -156,6 +159,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 			state,
 			configuration,
 			slide,
+			runWithJumpOffset,
 			blockingStates,
 		};
 	};
@@ -200,7 +204,21 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Land, Fall, Obstruction, Slide, Recoil, Projectors]);
+		this.renderPipeline = new RenderPipeline([
+			Aim,
+			Bobbing,
+			MoveSway,
+			Sway,
+			Jump,
+			Land,
+			Fall,
+			Obstruction,
+			Slide,
+			Recoil,
+			Projectors,
+			RunWithJump,
+			Breathing,
+		]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
@@ -271,12 +289,13 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		this.equippedItem.state.disableState("unequip");
 	};
 
-	onJump(): void {
-		print("jumped");
+	onJump(wasRunning: boolean): void {
+		if (wasRunning) this.equippedItem.runWithJumpOffset = true;
 		this.springs.Jump.impulse(new Vector3(-2, 0, 0));
 	}
 
 	onLand(fallTime: number): void {
+		this.equippedItem.runWithJumpOffset = false;
 		this.springs.Land.impulse(new Vector3(-2, 0, 0).mul(math.clamp(fallTime, 0.2, 3)));
 	}
 

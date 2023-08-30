@@ -111,9 +111,9 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		}
 	}
 
-	onJump(): void {
+	onJump(wasRunning: boolean): void {
 		if (!this.currentItemObject) return;
-		this.currentItemObject.onJump();
+		this.currentItemObject.onJump(wasRunning);
 	}
 
 	onLand(fallTime: number): void {

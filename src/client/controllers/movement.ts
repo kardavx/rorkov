@@ -12,7 +12,7 @@ interface ControlModule {
 export type MovementState = "walk" | "run";
 
 export interface OnJump {
-	onJump(): void;
+	onJump(wasRunning: boolean): void;
 }
 
 export interface OnLand {
@@ -248,7 +248,7 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 			if (!state) return;
 
 			for (const listener of this.jumpListeners) {
-				task.spawn(() => listener.onJump());
+				task.spawn(() => listener.onJump(this.state.isStateActive("Running")));
 			}
 
 			this.humanoid!.ChangeState(Enum.HumanoidStateType.Jumping);
