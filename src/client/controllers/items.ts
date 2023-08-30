@@ -2,7 +2,7 @@ import { ItemTypes, OnCharacterAdded } from "./core";
 import { Controller, OnRender, OnStart, OnInit, Modding } from "@flamework/core";
 import { BaseItem } from "client/items/base_item";
 import { Input } from "./input";
-import { OnJump, OnRunningChanged } from "./movement";
+import { OnJump, OnLand, OnRunningChanged } from "./movement";
 
 export interface OnItemEquipped {
 	onItemEquipped(itemName: string): void;
@@ -13,7 +13,7 @@ export interface OnItemUnequipped {
 }
 
 @Controller({})
-export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRunningChanged, OnJump {
+export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRunningChanged, OnJump, OnLand {
 	static inventoryBinds: Enum.KeyCode[] = [
 		Enum.KeyCode.One,
 		Enum.KeyCode.Two,
@@ -103,10 +103,6 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		Modding.onListenerRemoved<OnItemUnequipped>((object) => Items.unequippedlisteners.delete(object));
 	}
 
-	getItemConfiguration() {}
-
-	getItemAnimations() {}
-
 	onCharacterAdded(character: Model): void {
 		this.character = character;
 		if (this.currentItemObject) this.currentItemObject.character = character;
@@ -118,6 +114,11 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 	onJump(): void {
 		if (!this.currentItemObject) return;
 		this.currentItemObject.onJump();
+	}
+
+	onLand(fallTime: number): void {
+		if (!this.currentItemObject) return;
+		this.currentItemObject.onLand(fallTime);
 	}
 
 	onRunningChanged(runningState: boolean): void {
