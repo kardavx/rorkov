@@ -68,5 +68,6 @@ export interface EquippedItem {
 		targetSlideOffset: Vector3;
 		currentSlideOffset: Vector3;
 	};
+	runWithJumpOffset: boolean;
 	blockingStates: string[];
 }
