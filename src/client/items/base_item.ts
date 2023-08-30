@@ -36,8 +36,8 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 			x: new NumberRange(-Sway.maxSway, Sway.maxSway),
 			y: new NumberRange(-Sway.maxSway, Sway.maxSway),
 		}),
-		Jump: new VectorSpring(3, 20, 60),
-		Land: new VectorSpring(3, 20, 60),
+		Jump: new VectorSpring(9.4, 34.6, 100),
+		Land: new VectorSpring(9.4, 34.6, 100),
 		Recoil: new VectorSpring(1, 50, 200),
 	};
 
@@ -258,11 +258,12 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	};
 
 	onJump(): void {
-		this.springs.Jump.impulse(new Vector3(-3, -5, 0));
+		print("jumped");
+		this.springs.Jump.impulse(new Vector3(-2, 0, 0));
 	}
 
 	onLand(fallTime: number): void {
-		this.springs.Land.impulse(new Vector3(-3, -5, 0).mul(math.clamp(fallTime, 0.2, 3)));
+		this.springs.Land.impulse(new Vector3(-2, 0, 0).mul(math.clamp(fallTime, 0.2, 3)));
 	}
 
 	onRunningChanged(runningState: boolean): void {
