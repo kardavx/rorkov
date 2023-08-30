@@ -34,10 +34,13 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		"RGD-5": ItemTypes.Grenade,
 		Salewa: ItemTypes.Useable,
 		Mayonnaise: ItemTypes.Useable,
+		ak_47: ItemTypes.Weapon,
+		tokarev_tt_33: ItemTypes.Weapon,
 	};
 
-	private inventory = ["SR-16", "M19"];
+	private inventory = ["SR-16", "M19", "ak_47", "tokarev_tt_33"];
 	private currentItemObject: BaseItem | undefined;
+	private currentItemSlot: number | undefined;
 	private character: Model | undefined;
 
 	constructor(private input: Input) {}
@@ -50,6 +53,7 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 			task.spawn(() => listener.onItemEquipped(itemName));
 		}
 
+		this.currentItemSlot = slot;
 		this.currentItemObject = new Items.itemNameToType[itemName](itemName);
 		this.currentItemObject.character = this.character;
 	}
@@ -59,6 +63,7 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 
 		this.currentItemObject!.destroy();
 		this.currentItemObject = undefined;
+		this.currentItemSlot = undefined;
 
 		for (const listener of Items.unequippedlisteners) {
 			task.spawn(() => listener.onItemUnequipped(itemName));
@@ -69,8 +74,10 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		if (!this.currentItemObject) {
 			this.equip(slot);
 		} else {
+			if (this.currentItemSlot === slot) return;
 			if (!this.currentItemObject.isAnyBlockingStateActive()) {
 				this.unequip();
+				this.equip(slot);
 			}
 		}
 	}
@@ -98,11 +105,15 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 
 	onCharacterAdded(character: Model): void {
 		this.character = character;
+		if (this.currentItemObject) this.currentItemObject.character = character;
+		if (this.inventory.size() > 0) {
+			this.selectSlot(0);
+		}
 	}
 
-	onJump(): void {
+	onJump(wasRunning: boolean): void {
 		if (!this.currentItemObject) return;
-		this.currentItemObject.onJump();
+		this.currentItemObject.onJump(wasRunning);
 	}
 
 	onLand(fallTime: number): void {

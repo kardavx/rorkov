@@ -109,6 +109,10 @@ export default class State {
 		this.states.remove(this.states.indexOf(stateName));
 	};
 
+	getRegisteredStates = (): string[] | undefined => {
+		return this.statesAllowed;
+	};
+
 	bindToStateChanged = (stateName: StateName, callback: ChangedCallback): UUID => {
 		const changedSignal = this.getOrCreateChangedSignal(stateName);
 		const callbackUUID = generateUUID();

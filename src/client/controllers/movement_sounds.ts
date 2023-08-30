@@ -1,11 +1,9 @@
-// TODO! ADD THE ONLAND LIFECYCLE EVENT ON lifecycle-events-camera-improvements MERGE
-
 import { Controller, Dependency, OnTick } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
 import { SoundService } from "@rbxts/services";
 import waitForSound from "shared/wait_for_sound";
 import { lerp } from "shared/utilities/number_utility";
-import { OnJump, OnRunningChanged } from "./movement";
+import { OnJump, OnLand, OnRunningChanged } from "./movement";
 import { Camera } from "./camera";
 
 type MaterialSounds = {
@@ -15,7 +13,7 @@ type MaterialSounds = {
 };
 
 @Controller({})
-export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnRunningChanged {
+export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand, OnRunningChanged {
 	static maxTurnVolume = 2;
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
@@ -73,22 +71,19 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnRunni
 	onCharacterAdded(character: Model): void {
 		this.humanoid = character.WaitForChild("Humanoid") as Humanoid;
 		this.humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
-
-		this.humanoid.StateChanged.Connect((oldValue: Enum.HumanoidStateType, newValue: Enum.HumanoidStateType) => {
-			const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
-			const currentTick = os.clock();
-
-			if (this.humanoid!.GetState() === Enum.HumanoidStateType.Landed) {
-				this.playSound("Land", this.humanoid!.FloorMaterial.Name, math.clamp(velocity / 10, 0.1, 10));
-				this.lastStep = currentTick;
-			}
-		});
 	}
 
 	onJump(): void {
 		const currentTick = os.clock();
 
 		this.playSound("Jump", this.humanoid!.FloorMaterial.Name);
+		this.lastStep = currentTick;
+	}
+
+	onLand(fallTime: number): void {
+		const currentTick = os.clock();
+
+		this.playSound("Land", this.humanoid!.FloorMaterial.Name, math.clamp(fallTime, 0, 1.4));
 		this.lastStep = currentTick;
 	}
 
