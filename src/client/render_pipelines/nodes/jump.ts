@@ -8,7 +8,7 @@ export class Jump extends Node {
 		return offsetFromPivot(
 			currentCFrame,
 			equippedItem.item.Grip.CFrame,
-			new CFrame(offset.Y, offset.X * 3, offset.Z).mul(CFrame.Angles(offset.X * 2, -offset.Y, offset.Z)),
+			new CFrame(0, offset.X * 3, 0).mul(CFrame.Angles(offset.X * 1.5, offset.Y, offset.Z)),
 		);
 	}
 }

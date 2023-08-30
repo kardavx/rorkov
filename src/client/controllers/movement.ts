@@ -214,7 +214,7 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 
 	isFalling(): boolean {
 		if (!this.humanoid) return false;
-		return this.humanoid.GetStateEnabled("FallingDown");
+		return this.humanoid.GetState() === Enum.HumanoidStateType.FallingDown;
 	}
 
 	onStart(): void {

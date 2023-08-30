@@ -6,14 +6,14 @@ import { Movement } from "client/controllers/movement";
 import { lerp } from "shared/utilities/number_utility";
 
 export class Fall extends Node {
-	static maxPullUpAmount = 3;
+	static maxPullUpAmount = 0.3;
 
 	private movement = Dependency<Movement>();
 	private pullUpAmount = 0;
 
 	update(deltaTime: number, currentCFrame: CFrame, character: Model, equippedItem: EquippedItem): CFrame {
 		if (this.movement.isFalling()) {
-			this.pullUpAmount = lerp(this.pullUpAmount, Fall.maxPullUpAmount, 0.05);
+			this.pullUpAmount = lerp(this.pullUpAmount, Fall.maxPullUpAmount, 0.01);
 		} else {
 			this.pullUpAmount = lerp(this.pullUpAmount, 0, 0.2);
 		}
