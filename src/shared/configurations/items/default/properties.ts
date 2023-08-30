@@ -48,6 +48,8 @@ export const weaponDefaultProperties: Readonly<WeaponProperties> = {
 		weight: 3,
 		slideMoveBack: 0.35,
 		slideDirection: new Vector3(-1, 0, 0),
+		aimOffset: 1.3,
+		aimFOVDifference: -10,
 		recoil: {
 			multiplier: 1,
 		},

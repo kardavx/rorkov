@@ -32,7 +32,7 @@ export class Sway extends Node {
 		const x = this.getSmoothenedSway(offset.X);
 		const y = this.getSmoothenedSway(offset.Y);
 
-		const swayAmount = new CFrame(y * 2, x * 2, 0).mul(CFrame.Angles(0, -y / 2, y));
+		const swayAmount = new CFrame(y * 3, x * 2, 0).mul(CFrame.Angles(0, (-y / 2) * (3 * equippedItem.alphas.aiming), y * (1 - equippedItem.alphas.aiming)));
 
 		this.lastSwayAmount = this.lastSwayAmount.Lerp(swayAmount, 5 * deltaTime);
 
