@@ -15,6 +15,14 @@ export interface OnJump {
 	onJump(): void;
 }
 
+export interface OnLand {
+	onLand(fallTime: number): void;
+}
+
+export interface OnFallChanged {
+	onFallChanged(state: boolean): void;
+}
+
 export interface OnRunningChanged {
 	onRunningChanged(runningState: boolean): void;
 }
@@ -53,6 +61,10 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 	private state: State = new State(Movement.states);
 	private slowDown = false;
 	private clearSlowDown: (() => void) | undefined;
+	private landListeners = new Set<OnLand>();
+	private jumpListeners = new Set<OnJump>();
+	private fallChangedListeners = new Set<OnFallChanged>();
+	private lastFreefallStartTick: number | undefined;
 
 	static speedConstant = {
 		crouch: 6,
@@ -83,6 +95,29 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 
 			this.humanoid.GetPropertyChangedSignal("JumpPower").Connect(() => {
 				this.humanoid!.JumpPower = 0;
+			});
+
+			this.humanoid.StateChanged.Connect((oldValue: Enum.HumanoidStateType, newValue: Enum.HumanoidStateType) => {
+				if (newValue === Enum.HumanoidStateType.FallingDown) {
+					this.lastFreefallStartTick = os.clock();
+					for (const listener of this.fallChangedListeners) {
+						task.spawn(() => listener.onFallChanged(true));
+					}
+				}
+
+				if (newValue === Enum.HumanoidStateType.Landed) {
+					const fallTime = this.lastFreefallStartTick !== undefined ? os.clock() - this.lastFreefallStartTick : 0;
+					for (const listener of this.landListeners) {
+						task.spawn(() => listener.onLand(fallTime));
+					}
+				}
+
+				if (oldValue === Enum.HumanoidStateType.FallingDown) {
+					this.lastFreefallStartTick = undefined;
+					for (const listener of this.fallChangedListeners) {
+						task.spawn(() => listener.onFallChanged(false));
+					}
+				}
 			});
 		}
 	}
@@ -177,17 +212,25 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		return this.state.isStateActive("Walking");
 	}
 
+	isFalling(): boolean {
+		if (!this.humanoid) return false;
+		return this.humanoid.GetStateEnabled("FallingDown");
+	}
+
 	onStart(): void {
-		const jumpListeners = new Set<OnJump>();
 		const runningChangedListeners = new Set<OnRunningChanged>();
 		const walkingChangedListeners = new Set<OnWalkingChanged>();
 
-		Modding.onListenerAdded<OnJump>((object) => jumpListeners.add(object));
-		Modding.onListenerRemoved<OnJump>((object) => jumpListeners.delete(object));
+		Modding.onListenerAdded<OnJump>((object) => this.jumpListeners.add(object));
+		Modding.onListenerRemoved<OnJump>((object) => this.jumpListeners.delete(object));
 		Modding.onListenerAdded<OnRunningChanged>((object) => runningChangedListeners.add(object));
 		Modding.onListenerRemoved<OnRunningChanged>((object) => runningChangedListeners.delete(object));
 		Modding.onListenerAdded<OnWalkingChanged>((object) => walkingChangedListeners.add(object));
 		Modding.onListenerRemoved<OnWalkingChanged>((object) => walkingChangedListeners.delete(object));
+		Modding.onListenerAdded<OnLand>((object) => this.landListeners.add(object));
+		Modding.onListenerRemoved<OnLand>((object) => this.landListeners.delete(object));
+		Modding.onListenerAdded<OnFallChanged>((object) => this.fallChangedListeners.add(object));
+		Modding.onListenerRemoved<OnFallChanged>((object) => this.fallChangedListeners.delete(object));
 
 		Movement.inputMap.forEach((keyCodeVector: Vector3, keyCode: Enum.KeyCode) => {
 			this.input.bindAction(`movement${keyCode.Name}`, keyCode, 2, (inputState: boolean) => {
@@ -204,7 +247,7 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		this.state.bindToStateChanged("Jumping", (state: boolean) => {
 			if (!state) return;
 
-			for (const listener of jumpListeners) {
+			for (const listener of this.jumpListeners) {
 				task.spawn(() => listener.onJump());
 			}
 

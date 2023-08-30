@@ -5,7 +5,7 @@ import State from "shared/state";
 import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
-import { Modifier } from "client/controllers/camera";
+import { Camera, Modifier } from "client/controllers/camera";
 import { Dependency } from "@flamework/core";
 import { Sway } from "client/render_pipelines/nodes/sway";
 import { MoveSway } from "client/render_pipelines/nodes/move_sway";
@@ -13,6 +13,8 @@ import { Jump } from "client/render_pipelines/nodes/jump";
 import { lerp } from "shared/utilities/number_utility";
 import { Aim } from "client/render_pipelines/nodes/aim";
 import { Recoil } from "client/render_pipelines/nodes/recoil";
+import { Land } from "client/render_pipelines/nodes/land";
+import { Fall } from "client/render_pipelines/nodes/fall";
 
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
@@ -20,10 +22,11 @@ import { Obstruction } from "client/render_pipelines/nodes/obstruction";
 import { configs, ItemConfig } from "shared/configurations/items";
 import { Slide } from "client/render_pipelines/nodes/slide";
 import { Projectors } from "client/render_pipelines/nodes/projectors";
+import { OnJump, OnLand, OnRunningChanged } from "client/controllers/movement";
 
 let ischambered = false;
 
-export class BaseItem {
+export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	static camera = Workspace.CurrentCamera;
 
 	private states: string[] = ["equip", "unequip", "magCheck", "reload", "aiming"];
@@ -34,6 +37,7 @@ export class BaseItem {
 			y: new NumberRange(-Sway.maxSway, Sway.maxSway),
 		}),
 		Jump: new VectorSpring(9.4, 34.6, 100),
+		Land: new VectorSpring(9.4, 34.6, 100),
 		Recoil: new VectorSpring(1, 50, 200),
 	};
 
@@ -50,6 +54,7 @@ export class BaseItem {
 	protected equippedItem: EquippedItem;
 
 	private input = Dependency<Input>();
+	private camera = Dependency<Camera>();
 
 	//Inputs
 	private magCheck = (inputState: boolean) => {
@@ -189,7 +194,7 @@ export class BaseItem {
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
 		this.actions = new Map([...this.actions]);
-		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Obstruction, Slide, Recoil, Projectors]);
+		this.renderPipeline = new RenderPipeline([Aim, Bobbing, MoveSway, Sway, Jump, Land, Fall, Obstruction, Slide, Recoil, Projectors]);
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
@@ -257,6 +262,10 @@ export class BaseItem {
 		this.springs.Jump.impulse(new Vector3(-2, 0, 0));
 	}
 
+	onLand(fallTime: number): void {
+		this.springs.Land.impulse(new Vector3(-2, 0, 0).mul(math.clamp(fallTime, 0.2, 3)));
+	}
+
 	onRunningChanged(runningState: boolean): void {
 		if (!this.run) return;
 
@@ -273,13 +282,15 @@ export class BaseItem {
 	onRender = (dt: number): void => {
 		if (!this.character) return;
 
-		const lookVector = BaseItem.camera!.CFrame.LookVector;
+		const rawCameraCFrame = this.camera.getRawCFrame();
+
+		const lookVector = rawCameraCFrame.LookVector;
 		this.currentXAxisFactor = lerp(this.currentXAxisFactor, this.targetXAxisFactor, 0.08);
 		const baseCFrame = CFrame.lookAt(
-			BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0)).Position,
-			BaseItem.camera!.CFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0)).Position.add(
-				lookVector.mul(new Vector3(1, this.currentXAxisFactor, 1)),
-			),
+			rawCameraCFrame.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0)).Position,
+			rawCameraCFrame
+				.mul(new CFrame(0, this.equippedItem.offsets.HumanoidRootPartToCameraBoneDistance as number, 0))
+				.Position.add(lookVector.mul(new Vector3(1, this.currentXAxisFactor, 1))),
 		);
 
 		this.equippedItem.viewmodel.PivotTo(baseCFrame);
