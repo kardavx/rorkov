@@ -77,6 +77,7 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	private lastOffsets: CFrame = new CFrame();
 	private rotationDelta: Vector2 = new Vector2();
 	private lastCameraCFrame: CFrame | undefined;
+	private rawCameraCFrame = Camera.camera!.CFrame;
 
 	private applyPosition(summedOffset: CFrame) {
 		const headCF = this.head!.CFrame;
@@ -106,6 +107,10 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		return this.rotationDelta;
 	}
 
+	getRawCFrame(): CFrame {
+		return this.rawCameraCFrame;
+	}
+
 	onCharacterAdded(character: Model): void {
 		this.head = character.WaitForChild("Head", 5) as BasePart;
 		this.rootPart = character.WaitForChild("HumanoidRootPart", 5) as BasePart;
@@ -116,11 +121,13 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 
 	onPreCameraRender(): void {
 		if (!Camera.camera) return;
-		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
+		this.rawCameraCFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
 	}
 
 	onPostCameraRender(deltaTime: number): void {
 		if (!Camera.camera) return;
+
+		Camera.camera!.CFrame = this.rawCameraCFrame;
 
 		Modifier.updateOffsets(deltaTime);
 		const summedOffset = Modifier.getSummedOffsets();
