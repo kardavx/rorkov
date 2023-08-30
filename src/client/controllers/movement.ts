@@ -5,6 +5,7 @@ import { Input } from "./input";
 import { isCharacterGrounded } from "shared/utilities/character_utility";
 import State from "shared/state";
 import { setTimeout } from "@rbxts/set-timeout";
+import { Modifier } from "./sensitivity";
 
 interface ControlModule {
 	Enable: (ControlModule: ControlModule, Enabled: boolean) => void;
@@ -32,7 +33,7 @@ export interface OnWalkingChanged {
 }
 
 @Controller({})
-export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
+export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick, OnFallChanged, OnRunningChanged {
 	static localPlayer = Players.LocalPlayer;
 	static playerScripts = Movement.localPlayer.WaitForChild("PlayerScripts");
 	static playerModule = Movement.playerScripts.WaitForChild("PlayerModule");
@@ -65,6 +66,9 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 	private jumpListeners = new Set<OnJump>();
 	private fallChangedListeners = new Set<OnFallChanged>();
 	private lastFreefallStartTick: number | undefined;
+
+	private inAirSensitivityModifier = Modifier.create("InAir");
+	private runSensitivityModifier = Modifier.create("Run");
 
 	static speedConstant = {
 		crouch: 6,
@@ -136,6 +140,18 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		} else {
 			if (this.state.isStateActive("Running")) this.state.disableState("Running");
 		}
+	}
+
+	onFallChanged(state: boolean): void {
+		if (state) {
+			this.inAirSensitivityModifier.setOffset(3);
+		} else this.inAirSensitivityModifier.reset();
+	}
+
+	onRunningChanged(runningState: boolean): void {
+		if (runningState) {
+			this.runSensitivityModifier.setOffset(1.5);
+		} else this.runSensitivityModifier.reset();
 	}
 
 	onRender(dt: number): void {
