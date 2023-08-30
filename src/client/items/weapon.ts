@@ -1,3 +1,4 @@
+import { ItemConfig } from "shared/configurations/items";
 import { BaseItem } from "./base_item";
 import { Actions } from "client/types/items";
 
@@ -7,7 +8,7 @@ export class Weapon extends BaseItem {
 	static blockingStates = ["reload"];
 	static springs = {};
 
-	constructor(itemName: string) {
-		super(itemName, Weapon.states, Weapon.blockingStates, Weapon.springs, Weapon.actions);
+	constructor(itemName: string, itemConfiguration: ItemConfig) {
+		super(itemName, itemConfiguration, Weapon.states, Weapon.blockingStates, Weapon.springs, Weapon.actions);
 	}
 }

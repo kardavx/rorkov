@@ -1,6 +1,6 @@
 import { Actions } from "client/types/items";
 import { BaseItem } from "./base_item";
-import { Input } from "client/controllers/input";
+import { ItemConfig } from "shared/configurations/items";
 
 export class Grenade extends BaseItem {
 	static actions: Actions = new Map<Enum.KeyCode, (inputState: boolean) => void>([]);
@@ -8,7 +8,7 @@ export class Grenade extends BaseItem {
 	static blockingStates = ["reload"];
 	static springs = {};
 
-	constructor(itemName: string) {
-		super(itemName, Grenade.states, Grenade.blockingStates, Grenade.springs, Grenade.actions);
+	constructor(itemName: string, itemConfiguration: ItemConfig) {
+		super(itemName, itemConfiguration, Grenade.states, Grenade.blockingStates, Grenade.springs, Grenade.actions);
 	}
 }

@@ -1,8 +1,15 @@
-import { ItemTypes, OnCharacterAdded } from "./core";
+import { OnCharacterAdded } from "./core";
 import { Controller, OnRender, OnStart, OnInit, Modding } from "@flamework/core";
 import { BaseItem } from "client/items/base_item";
 import { Input } from "./input";
 import { OnJump, OnLand, OnRunningChanged } from "./movement";
+
+import { Weapon } from "client/items/weapon";
+import { Grenade } from "client/items/grenade";
+import { Useable } from "client/items/useable";
+
+import { ItemConfig, configs } from "shared/configurations/items";
+import { log } from "shared/log_message";
 
 export interface OnItemEquipped {
 	onItemEquipped(itemName: string): void;
@@ -28,14 +35,10 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 	static equippedlisteners = new Set<OnItemEquipped>();
 	static unequippedlisteners = new Set<OnItemUnequipped>();
 
-	static itemNameToType: { [itemName: string]: typeof ItemTypes[keyof typeof ItemTypes] } = {
-		"SR-16": ItemTypes.Weapon,
-		M19: ItemTypes.Weapon,
-		"RGD-5": ItemTypes.Grenade,
-		Salewa: ItemTypes.Useable,
-		Mayonnaise: ItemTypes.Useable,
-		ak_47: ItemTypes.Weapon,
-		tokarev_tt_33: ItemTypes.Weapon,
+	static itemTypes: { [itemType in string]: typeof Weapon | typeof Grenade | typeof Useable } = {
+		weapon: Weapon,
+		grenade: Grenade,
+		useable: Useable,
 	};
 
 	private inventory = ["SR-16", "M19", "ak_47", "tokarev_tt_33"];
@@ -49,12 +52,18 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		const itemName = this.inventory[slot];
 		if (itemName === undefined) return;
 
+		const itemConfiguration = configs.get(itemName) as ItemConfig;
+		if (!itemConfiguration) {
+			log("warning", `Item of name ${itemName} doesn't have a configuration defined.`);
+			return;
+		}
+
 		for (const listener of Items.equippedlisteners) {
 			task.spawn(() => listener.onItemEquipped(itemName));
 		}
 
 		this.currentItemSlot = slot;
-		this.currentItemObject = new Items.itemNameToType[itemName](itemName);
+		this.currentItemObject = new Items.itemTypes[itemConfiguration.itemType](itemName, itemConfiguration);
 		this.currentItemObject.character = this.character;
 	}
 
@@ -122,7 +131,6 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 	}
 
 	onRunningChanged(runningState: boolean): void {
-		print("asd");
 		if (!this.currentItemObject) return;
 		this.currentItemObject?.onRunningChanged(runningState);
 	}
