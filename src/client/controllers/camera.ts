@@ -9,21 +9,25 @@ type FOVModifiers = { [modifierName in string]: FOVModifier | undefined };
 
 export class Modifier {
 	static modifiers: Modifiers = {};
-	static dampenAmount = 5;
 
-	static create = (name: string, isAutomaticallyDampened = false): Modifier => {
-		if (!Modifier.modifiers[name]) Modifier.modifiers[name] = new Modifier(name, isAutomaticallyDampened);
+	static create = (name: string, isAutomaticallyDampened = false, dampenAmount = 5): Modifier => {
+		if (!Modifier.modifiers[name]) Modifier.modifiers[name] = new Modifier(name, isAutomaticallyDampened, dampenAmount);
 		return Modifier.modifiers[name] as Modifier;
 	};
 
 	static getSummedOffsets = (): CFrame => {
-		let finalOffset = new CFrame();
+		let finalOffset: CFrame | undefined;
 
 		for (const [_, modifierObject] of pairs(Modifier.modifiers)) {
+			if (!finalOffset) {
+				finalOffset = modifierObject.getOffset();
+				continue;
+			}
+
 			finalOffset = finalOffset.mul(modifierObject.getOffset());
 		}
 
-		return finalOffset;
+		return finalOffset || new CFrame();
 	};
 
 	static updateOffsets = (deltaTime: number): void => {
@@ -35,7 +39,7 @@ export class Modifier {
 	private offset: CFrame = new CFrame();
 	private destroyed = false;
 
-	private constructor(private name: string, private isAutomaticallyDampened: boolean) {}
+	private constructor(private name: string, private isAutomaticallyDampened: boolean, private dampenAmount: number) {}
 
 	public getOffset = (): CFrame => {
 		if (this.destroyed) throw `Attempt to get offset of modifier after it was destroyed`;
@@ -53,7 +57,7 @@ export class Modifier {
 		if (this.destroyed) throw `Attempt to update modifier after it was destroyed`;
 
 		if (this.isAutomaticallyDampened) {
-			this.setOffset(this.getOffset().Lerp(new CFrame(), Modifier.dampenAmount * deltaTime));
+			this.setOffset(this.getOffset().Lerp(new CFrame(), this.dampenAmount * deltaTime));
 		}
 	};
 
@@ -120,7 +124,6 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	private lastOffsets: CFrame = new CFrame();
 	private rotationDelta: Vector2 = new Vector2();
 	private lastCameraCFrame: CFrame | undefined;
-	private rawCamera = new CFrame();
 
 	private applyPosition(summedOffset: CFrame) {
 		const headCF = this.head!.CFrame;
@@ -155,7 +158,7 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	}
 
 	getRawCFrame(): CFrame {
-		return this.rawCamera;
+		return Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
 	}
 
 	onCharacterAdded(character: Model): void {
@@ -178,8 +181,6 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		Modifier.updateOffsets(deltaTime);
 		const summedOffset = Modifier.getSummedOffsets();
 		const fovDifference = FOVModifier.getSummedDifferences();
-
-		this.rawCamera = Camera.camera!.CFrame.mul(summedOffset.Inverse());
 
 		this.applyRotation(summedOffset);
 		if (this.humanoid) this.applyPosition(summedOffset);
