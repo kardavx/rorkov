@@ -1,5 +1,5 @@
-import { Controller } from "@flamework/core";
-import { OnPreCameraRender, OnPostCameraRender } from "./core";
+import { Controller, OnStart } from "@flamework/core";
+import { OnPreCameraRender, OnPostCameraRender, OnCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
 import { Players, Workspace } from "@rbxts/services";
 import { lerp } from "shared/utilities/number_utility";
@@ -107,7 +107,7 @@ export class FOVModifier {
 }
 
 @Controller({})
-export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacterAdded {
+export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCameraRender, OnCharacterAdded, OnStart {
 	static camera = Workspace.CurrentCamera;
 	static player = Players.LocalPlayer;
 	static baseOffset = new Vector3(0, -0.5, -1.5);
@@ -121,19 +121,6 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 	private rotationDelta: Vector2 = new Vector2();
 	private lastCameraCFrame: CFrame | undefined;
 	private rawCameraCFrame = Camera.camera!.CFrame;
-
-	private applyPosition(summedOffset: CFrame) {
-		const headCF = this.head!.CFrame;
-		const hrpCF = this.rootPart!.CFrame;
-		const offset = hrpCF.PointToObjectSpace(headCF.Position.add(new Vector3(0, -1.5, 0)));
-
-		this.humanoid!.CameraOffset = offset.add(Camera.baseOffset.add(summedOffset.Position));
-	}
-
-	private applyRotation(summedOffset: CFrame) {
-		const [x, y, z] = summedOffset.ToOrientation();
-		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(CFrame.Angles(x, y, z));
-	}
 
 	private updateRotationDelta() {
 		if (this.lastCameraCFrame) {
@@ -172,21 +159,29 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCharacte
 		this.rawCameraCFrame = Camera.camera!.CFrame.mul(this.lastOffsets.Inverse());
 	}
 
+	onCameraRender(deltaTime: number): void {
+		Camera.camera!.CFrame = this.rawCameraCFrame;
+	}
+
 	onPostCameraRender(deltaTime: number): void {
 		if (!Camera.camera) return;
-
-		Camera.camera!.CFrame = this.rawCameraCFrame;
 
 		Modifier.updateOffsets(deltaTime);
 		const summedOffset = Modifier.getSummedOffsets();
 		const fovDifference = FOVModifier.getSummedDifferences();
 
-		this.applyRotation(summedOffset);
-		if (this.humanoid) this.applyPosition(summedOffset);
+		Camera.camera!.CFrame = Camera.camera!.CFrame.mul(summedOffset);
 		this.applyFOV(false, fovDifference);
 
 		this.updateRotationDelta();
 
 		this.lastOffsets = summedOffset;
+	}
+
+	onStart(): void {
+		Camera.camera!.CameraType = Enum.CameraType.Scriptable;
+		Camera.camera!.GetPropertyChangedSignal("CameraType").Connect(() => {
+			if (Camera.camera!.CameraType !== Enum.CameraType.Scriptable) Camera.camera!.CameraType = Enum.CameraType.Scriptable;
+		});
 	}
 }
