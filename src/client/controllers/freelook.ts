@@ -35,7 +35,6 @@ export class Freelook implements OnStart, OnTick, OnCharacterAdded {
 		if (this.isFreeloking) {
 			const mouseDelta = UserInputService.GetMouseDelta().div(1000);
 			this.freelookOffset = this.freelookOffset.add(mouseDelta.mul(-1));
-			print(this.freelookOffset);
 		} else {
 			this.freelookOffset = this.freelookOffset.Lerp(Vector2.zero, 0.1);
 		}
@@ -44,6 +43,8 @@ export class Freelook implements OnStart, OnTick, OnCharacterAdded {
 			math.clamp(this.freelookOffset.X, -Freelook.xAxisMax, Freelook.xAxisMax),
 			math.clamp(this.freelookOffset.Y, -Freelook.yAxisMax, Freelook.yAxisMax),
 		);
+
+		print(this.freelookOffset);
 
 		this.freelookModifier.setOffset(
 			new CFrame(0, this.freelookOffset.X / 2, this.freelookOffset.X / 4).mul(CFrame.Angles(this.freelookOffset.Y, this.freelookOffset.X, 0)),
