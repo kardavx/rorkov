@@ -41,7 +41,7 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		useable: Useable,
 	};
 
-	private inventory = ["SR-16", "M19", "ak_47", "tokarev_tt_33"];
+	private inventory = ["ak_47", "tokarev_tt_33", "SR-16"];
 	private currentItemObject: BaseItem | undefined;
 	private currentItemSlot: number | undefined;
 	private character: Model | undefined;
