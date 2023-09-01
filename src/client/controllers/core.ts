@@ -1,9 +1,6 @@
 import { Controller, Modding, OnInit } from "@flamework/core";
 import { Players, UserInputService } from "@rbxts/services";
 import { RunService } from "@rbxts/services";
-import { Weapon } from "client/items/weapon";
-import { Grenade } from "client/items/grenade";
-import { Useable } from "client/items/useable";
 
 export interface OnCharacterAdded {
 	onCharacterAdded(character: Model): void;
@@ -133,5 +130,3 @@ export class InputEnd implements OnInit {
 		});
 	}
 }
-
-export const ItemTypes = { Weapon, Grenade, Useable };

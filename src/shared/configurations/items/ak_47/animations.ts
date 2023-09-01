@@ -3,7 +3,7 @@ import { WeaponAnimations } from "../default/animations";
 const animations: Partial<WeaponAnimations> = {
 	reload: {
 		type: "Animation",
-		id: 14461014204,
+		id: 14643007671,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -11,7 +11,7 @@ const animations: Partial<WeaponAnimations> = {
 	},
 	equip: {
 		type: "Animation",
-		id: 14447419427,
+		id: 14642999480,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -19,7 +19,7 @@ const animations: Partial<WeaponAnimations> = {
 	},
 	chamberToReady: {
 		type: "Animation",
-		id: 14447411436,
+		id: 14642991821,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -27,7 +27,7 @@ const animations: Partial<WeaponAnimations> = {
 	},
 	magCheck: {
 		type: "Animation",
-		id: 14447427935,
+		id: 14643016064,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -35,8 +35,16 @@ const animations: Partial<WeaponAnimations> = {
 	},
 	idle: {
 		type: "Animation",
-		id: 14588823277,
+		id: 14643032549,
 		looped: true,
+		weights: [
+			[2, 2, 2],
+			[1, 1, 1],
+		],
+	},
+	chamberCheck: {
+		type: "Animation",
+		id: 14643029100,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
