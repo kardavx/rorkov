@@ -10,10 +10,12 @@ export class Recoil extends Node {
 		const offset = equippedItem.springs.Recoil.getOffset();
 
 		const rotation = CFrame.Angles(offset.X * 2, offset.Y, 0);
+
 		const reducedRotation = new CFrame().Lerp(rotation, 0.05);
 		const actualReducedRotation = this.cameraModifier.getOffset().mul(reducedRotation);
 		const [x, y, z] = actualReducedRotation.ToOrientation();
-		const position = new CFrame(0, offset.X - x, offset.Z);
+
+		const position = new CFrame(0, offset.X - x, offset.Z * 2);
 
 		this.cameraModifier.setOffset(CFrame.Angles(x, 0, z));
 		return offsetFromPivot(currentCFrame, equippedItem.item.Grip.CFrame, position.mul(actualReducedRotation.Inverse()).mul(rotation));

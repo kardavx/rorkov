@@ -106,9 +106,15 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 	}
 
 	onInit(): void {
-		Modding.onListenerAdded<OnItemEquipped>((object) => Items.equippedlisteners.add(object));
+		Modding.onListenerAdded<OnItemEquipped>((object) => {
+			Items.equippedlisteners.add(object);
+			if (this.currentItemObject) object.onItemEquipped(this.currentItemObject.itemName);
+		});
 		Modding.onListenerRemoved<OnItemEquipped>((object) => Items.equippedlisteners.delete(object));
-		Modding.onListenerAdded<OnItemUnequipped>((object) => Items.unequippedlisteners.add(object));
+		Modding.onListenerAdded<OnItemUnequipped>((object) => {
+			Items.unequippedlisteners.add(object);
+			if (this.currentItemObject) object.onItemUnequipped(this.currentItemObject.itemName);
+		});
 		Modding.onListenerRemoved<OnItemUnequipped>((object) => Items.unequippedlisteners.delete(object));
 	}
 
@@ -129,6 +135,8 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 		if (!this.currentItemObject) return;
 		this.currentItemObject.onLand(fallTime);
 	}
+
+	isEquipped = (): boolean => this.currentItemObject !== undefined;
 
 	onRunningChanged(runningState: boolean): void {
 		if (!this.currentItemObject) return;

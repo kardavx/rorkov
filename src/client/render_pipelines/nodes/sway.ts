@@ -4,11 +4,13 @@ import { offsetFromPivot } from "shared/utilities/cframe_utility";
 import { lerp, smoothStep } from "shared/utilities/number_utility";
 import { Dependency } from "@flamework/core";
 import { Camera } from "client/controllers/camera";
+import { Freelook } from "client/controllers/freelook";
 
 export class Sway extends Node {
 	static maxSway = 0.2;
 
 	private camera = Dependency<Camera>();
+	private freelook = Dependency<Freelook>();
 
 	private lastSwayAmount = new CFrame();
 	private isNegative = (number: number): boolean => number < 0;
@@ -16,6 +18,8 @@ export class Sway extends Node {
 		this.isNegative(number) ? lerp(-Sway.maxSway, 0, smoothStep(-Sway.maxSway, 0, number)) : lerp(0, Sway.maxSway, smoothStep(0, Sway.maxSway, number));
 
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {
+		if (this.freelook.isFreelooking()) return;
+
 		const cameraDelta = this.camera.getRotationDelta();
 		const y = cameraDelta.Y;
 		const x = cameraDelta.X;

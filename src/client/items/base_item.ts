@@ -32,8 +32,8 @@ let ischambered = false;
 export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	static camera = Workspace.CurrentCamera;
 
-	private states: string[] = ["equip", "unequip", "magCheck", "reload", "aiming"];
-	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload"];
+	private states: string[] = ["equip", "unequip", "magCheck", "reload", "aiming", "chamberCheck"];
+	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck", "aiming"];
 	private springs: Springs = {
 		Sway: new VectorSpring(1, 20, 60, undefined, undefined, undefined, {
 			x: new NumberRange(-Sway.maxSway, Sway.maxSway),
@@ -77,6 +77,23 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		this.equippedItem.state.disableState("magCheck");
 	};
 
+	private chamberCheck = (inputState: boolean) => {
+		if (!inputState || this.isAnyBlockingStateActive()) return;
+
+		this.equippedItem.state.activateState("chamberCheck");
+
+		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
+
+		const magcheck = new Instance("Animation");
+		magcheck.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.chamberCheck.id}`;
+
+		const animationmc = animator.LoadAnimation(magcheck);
+		animationmc.Play();
+		animationmc.Stopped.Wait();
+
+		this.equippedItem.state.disableState("chamberCheck");
+	};
+
 	private reload = (inputState: boolean) => {
 		if (!inputState || this.isAnyBlockingStateActive()) return;
 
@@ -118,7 +135,8 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 			modifierKeys?: Enum.ModifierKey[];
 		}
 	>([
-		["magCheck", { keyCode: Enum.KeyCode.R, action: this.magCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Alt] }],
+		["magCheck", { keyCode: Enum.KeyCode.T, action: this.magCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Alt] }],
+		["chamberCheck", { keyCode: Enum.KeyCode.T, action: this.chamberCheck, inputType: "Click", modifierKeys: [Enum.ModifierKey.Shift] }],
 		["reload", { keyCode: Enum.KeyCode.R, action: this.reload, inputType: "Click" }],
 		[
 			"aim",
