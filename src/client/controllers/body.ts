@@ -1,4 +1,4 @@
-import { Controller, OnRender } from "@flamework/core";
+import { Controller, OnRender, OnStart } from "@flamework/core";
 import { Players } from "@rbxts/services";
 import { OnItemEquipped, OnItemUnequipped } from "./items";
 
@@ -56,4 +56,6 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped {
 		this.currentBodyPartsShowState = Body.bodyPartsToShow;
 		this.resetTransparency();
 	}
+
+	
 }
