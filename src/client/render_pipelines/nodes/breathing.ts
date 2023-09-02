@@ -11,8 +11,8 @@ export class Breathing extends Node {
 	private offset = new CFrame();
 
 	private sines: Sines = {
-		pitch: new Sine(1, 3),
-		yaw: new Sine(1, 1),
+		pitch: new Sine(0.2, 1),
+		yaw: new Sine(0.1, 2),
 	};
 
 	preUpdate(deltaTime: number, character: Model, equippedItem: EquippedItem): void {

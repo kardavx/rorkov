@@ -19,7 +19,7 @@ import { Fall } from "client/render_pipelines/nodes/fall";
 import { Alphas, Springs, EquippedItem, ViewmodelWithItem, Item, Offsets, Actions } from "client/types/items";
 import { InputType } from "client/types/input";
 import { Obstruction } from "client/render_pipelines/nodes/obstruction";
-import { configs, ItemConfig } from "shared/configurations/items";
+import { ItemConfig } from "shared/configurations/items";
 import { Slide } from "client/render_pipelines/nodes/slide";
 import { Projectors } from "client/render_pipelines/nodes/projectors";
 import { OnJump, OnLand, OnRunningChanged } from "client/controllers/movement";
@@ -39,8 +39,8 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 			x: new NumberRange(-Sway.maxSway, Sway.maxSway),
 			y: new NumberRange(-Sway.maxSway, Sway.maxSway),
 		}),
-		Jump: new VectorSpring(9.4, 34.6, 100),
-		Land: new VectorSpring(9.4, 34.6, 100),
+		Jump: new VectorSpring(9.4, 100, 300),
+		Land: new VectorSpring(9.4, 100, 400),
 		Recoil: new VectorSpring(1, 28, 200),
 	};
 
@@ -135,7 +135,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		...(viewmodel.item.Muzzle && { GripToMuzzleDistance: math.abs(viewmodel.item.Muzzle.Position.Y - viewmodel.item.Grip.Position.Y) }),
 	});
 
-	private createEquippedItem = (itemName: string): EquippedItem => {
+	private createEquippedItem = (itemName: string, itemConfiguration: ItemConfig): EquippedItem => {
 		const viewmodel: ViewmodelWithItem = createViewmodel(itemName);
 		const item: Item = viewmodel.item;
 		const alphas: Alphas = {};
@@ -143,7 +143,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		const springs = this.springs;
 		const state = new State(this.states);
 		const blockingStates = this.blockingStates;
-		const configuration = configs.get(itemName) as ItemConfig;
+		const configuration = itemConfiguration;
 		const runWithJumpOffset = false;
 		const slide = {
 			targetSlideOffset: Vector3.zero,
@@ -199,7 +199,14 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		return this.equippedItem.state.isAnyActive(this.blockingStates);
 	};
 
-	constructor(public itemName: string, states: string[] = [], blockingStates: string[] = [], springs: Springs = {}, actions: Actions = new Map()) {
+	constructor(
+		public itemName: string,
+		itemConfiguration: ItemConfig,
+		states: string[] = [],
+		blockingStates: string[] = [],
+		springs: Springs = {},
+		actions: Actions = new Map(),
+	) {
 		this.states = [...this.states, ...states];
 		this.blockingStates = [...this.blockingStates, ...blockingStates];
 		this.springs = { ...this.springs, ...springs };
@@ -222,7 +229,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
-		this.equippedItem = this.createEquippedItem(this.itemName);
+		this.equippedItem = this.createEquippedItem(this.itemName, itemConfiguration);
 		this.bindStateToAlpha();
 
 		this.renderPipeline.initialize(this.character, this.equippedItem);
@@ -291,12 +298,12 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 	onJump(wasRunning: boolean): void {
 		if (wasRunning) this.equippedItem.runWithJumpOffset = true;
-		this.springs.Jump.impulse(new Vector3(-2, 0, 0));
+		this.springs.Jump.impulse(new Vector3(-2, -1, 2));
 	}
 
 	onLand(fallTime: number): void {
 		this.equippedItem.runWithJumpOffset = false;
-		this.springs.Land.impulse(new Vector3(-2, 0, 0).mul(math.clamp(fallTime, 0.2, 3)));
+		this.springs.Land.impulse(new Vector3(-2, -1, 2).mul(math.clamp(fallTime, 0.7, 3)));
 	}
 
 	onRunningChanged(runningState: boolean): void {
