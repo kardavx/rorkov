@@ -14,7 +14,7 @@ type MaterialSounds = {
 
 @Controller({})
 export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand, OnRunningChanged {
-	static maxTurnVolume = 2;
+	static maxTurnVolume = 1.4;
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
 	private lastSoundId = 0;
@@ -25,11 +25,11 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 	private isRunning = false;
 	private materialSounds: MaterialSounds = {
 		Plastic: {
-			Walk: [5682504255, 4817498373],
-			Run: [0, 0],
-			Jump: [14380892475],
-			Land: [14380890500],
-			Turn: [14380891843],
+			Walk: [14645467477, 14645467634, 14645467806, 14645468759, 14645468432],
+			Run: [14645468940, 14645469109, 14645469252, 14645469591, 14645469807],
+			Jump: [14645470347, 14645470514],
+			Land: [14645469401, 14645470070, 14645470230],
+			Turn: [14645468029, 14645468244, 14645468608],
 		},
 	};
 
@@ -45,9 +45,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 		return sound;
 	}
 
-	playSound(name: string, materialName?: string, volume?: number): Sound {
-		volume = volume !== undefined ? volume : 10;
-		materialName = materialName !== undefined ? materialName : "PLastic";
+	playSound(name: string, materialName = "Plastic", volume = 10): Sound {
 		const sounds = this.materialSounds[materialName] !== undefined ? this.materialSounds[materialName][name] : this.materialSounds.Plastic[name];
 		const soundsArraySize = sounds.size();
 		let soundId = sounds[math.random(soundsArraySize) - 1];
@@ -83,7 +81,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 	onLand(fallTime: number): void {
 		const currentTick = os.clock();
 
-		this.playSound("Land", this.humanoid!.FloorMaterial.Name, math.clamp(fallTime, 0, 1.4));
+		this.playSound("Land", this.humanoid!.FloorMaterial.Name, math.clamp(fallTime, 1, 3));
 		this.lastStep = currentTick;
 	}
 
@@ -92,16 +90,19 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 		const floorMaterial = this.humanoid.FloorMaterial;
 		if (floorMaterial === Enum.Material.Air) return;
 
-		const deltaX = math.abs(this.camera.getRotationDelta().X);
+		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 
-		if (deltaX >= 5 && !this.turnSoundCooldown) {
-			this.turnSoundCooldown = true;
-			this.turnSound = this.playSound("Turn");
+		if (velocity < 1) {
+			const deltaX = math.abs(this.camera.getRotationDelta().X);
+
+			if (deltaX >= 20 && !this.turnSoundCooldown) {
+				this.turnSoundCooldown = true;
+				this.turnSound = this.playSound("Turn");
+			}
+
+			if (this.turnSound) this.turnSound.Volume = lerp(this.turnSound.Volume, math.clamp(deltaX * 5, 0, MovementSounds.maxTurnVolume), 10 * dt);
 		}
 
-		if (this.turnSound) this.turnSound.Volume = lerp(this.turnSound.Volume, math.clamp(deltaX * 5, 0, MovementSounds.maxTurnVolume), 10 * dt);
-
-		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
 		if (velocity < 0.3) return;
 
 		const currentTick = os.clock();

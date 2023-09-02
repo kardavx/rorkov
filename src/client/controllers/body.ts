@@ -1,9 +1,9 @@
-import { Controller, OnRender } from "@flamework/core";
+import { Controller, OnRender, OnStart } from "@flamework/core";
 import { Players } from "@rbxts/services";
-import { OnItemEquipped, OnItemUnequipped } from "./items";
+import { Items, OnItemEquipped, OnItemUnequipped } from "./items";
 
 @Controller({})
-export class Body implements OnRender, OnItemEquipped, OnItemUnequipped {
+export class Body implements OnRender, OnItemEquipped, OnItemUnequipped, OnStart {
 	static allBodyParts = ["Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"];
 	static bodyPartsToShow = ["Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"];
 	static bodyPartsToShowWithItemEquipped = ["Head", "Torso", "Left Leg", "Right Leg"];
@@ -11,6 +11,8 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped {
 	static player = Players.LocalPlayer;
 
 	private currentBodyPartsShowState = Body.bodyPartsToShow;
+
+	constructor(private items: Items) {}
 
 	private resetTransparency = () => {
 		const character = Body.player.Character;
@@ -55,5 +57,12 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped {
 	onItemUnequipped(): void {
 		this.currentBodyPartsShowState = Body.bodyPartsToShow;
 		this.resetTransparency();
+	}
+
+	onStart(): void {
+		if (this.items.isEquipped()) {
+			this.currentBodyPartsShowState = Body.bodyPartsToShowWithItemEquipped;
+			this.resetTransparency();
+		}
 	}
 }
