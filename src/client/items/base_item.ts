@@ -2,7 +2,7 @@ import { Players, Workspace } from "@rbxts/services";
 import { VectorSpring } from "shared/Spring/spring";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
-import createViewmodel from "client/functions/items/create_viewmodel";
+import { createViewmodel, destroyViewmodel } from "client/functions/items/viewmodel_functions";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Camera, Modifier } from "client/controllers/camera";
@@ -27,7 +27,10 @@ import Tween from "shared/variableTween";
 import { RunWithJump } from "client/render_pipelines/nodes/run_with_jump";
 import { Breathing } from "client/render_pipelines/nodes/breathing";
 
-let ischambered = false;
+import { Viewmodel } from "client/controllers/viewmodel";
+import { CanimTrack } from "@rbxts/canim";
+
+const ischambered = false;
 
 export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	static camera = Workspace.CurrentCamera;
@@ -44,10 +47,6 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		Recoil: new VectorSpring(1, 28, 200),
 	};
 
-	private idle: AnimationTrack | undefined;
-	private idleChar: AnimationTrack | undefined;
-	private run: AnimationTrack | undefined;
-	private equipanim: AnimationTrack | undefined;
 	private renderPipeline: RenderPipeline;
 	private cameraModifier: Modifier;
 	private targetXAxisFactor = 1;
@@ -58,6 +57,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 	private input = Dependency<Input>();
 	private camera = Dependency<Camera>();
+	private viewmodel = Dependency<Viewmodel>();
 
 	//Inputs
 	private magCheck = (inputState: boolean) => {
@@ -154,7 +154,11 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	});
 
 	private createEquippedItem = (itemName: string, itemConfiguration: ItemConfig): EquippedItem => {
-		const viewmodel: ViewmodelWithItem = createViewmodel(itemName);
+		const viewmodel = createViewmodel(itemName) as ViewmodelWithItem;
+		if (!viewmodel) {
+			throw `Viewmodel didn't get returned on equip`;
+		}
+
 		const item: Item = viewmodel.item;
 		const alphas: Alphas = {};
 		const offsets: Offsets = this.createOffsets(viewmodel);
@@ -183,7 +187,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	};
 
 	private destroyEquippedItem = () => {
-		this.equippedItem!.viewmodel.Destroy();
+		destroyViewmodel();
 	};
 
 	private bindStateToAlpha = () => {
@@ -272,28 +276,26 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 			const run = new Instance("Animation");
 			run.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.run.id}`;
 
-			this.idle = animator.LoadAnimation(idle);
-			this.idleChar = characterAnimator.LoadAnimation(idle);
-			this.equipanim = animator.LoadAnimation(equip);
-			this.run = animator.LoadAnimation(run);
-			this.run.Priority = Enum.AnimationPriority.Action2;
-			this.run.AdjustWeight(5, 0);
+			// this.idle = animator.LoadAnimation(idle);
+			// this.equipanim = animator.LoadAnimation(equip);
+			// this.run = animator.LoadAnimation(run);
+			// this.run.Priority = Enum.AnimationPriority.Action2;
+			// this.run.AdjustWeight(5, 0);
 
 			const animationctr = animator.LoadAnimation(chambertoready);
 
 			if (!ischambered) {
-				ischambered = true;
-				animationctr.Play(0, 10, 1);
-				this.idle.Play(0);
-				this.idleChar.Play(0);
-				animationctr.Stopped.Wait();
+				const chamberToReady = this.viewmodel.playAnimation(`${itemName}/chamberToReady`) as CanimTrack;
+				this.viewmodel.playAnimation(`${itemName}/idle`);
+				chamberToReady.finished.Wait();
 
 				this.equippedItem.state.disableState("equip");
 			} else {
-				this.equipanim.Play(0, undefined, 1);
-				this.idle.Play(0);
-				this.idleChar.Play(0);
-				this.equipanim.Stopped.Wait();
+				const equip = this.viewmodel.playAnimation(`${itemName}/equip`) as CanimTrack;
+				// this.equipanim.Play(0, undefined, 1);
+				this.viewmodel.playAnimation(`${itemName}/idle`);
+				equip.finished.Wait();
+				// this.equipanim.Stopped.Wait();
 
 				this.equippedItem.state.disableState("equip");
 			}
@@ -303,10 +305,10 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	public destroy = (): void => {
 		this.equippedItem.state.activateState("unequip");
 
-		this.idle!.Stop(0);
-		this.idleChar!.Stop(0);
-		this.equipanim!.Play(0, undefined, -1);
-		this.equipanim!.Stopped.Wait();
+		// this.idle!.Stop(0);
+		// this.equipanim!.Play(0, undefined, -1);
+		// this.equipanim!.Stopped.Wait();
+		this.viewmodel.stopAnimation(`${this.itemName}/idle`);
 		this.unbindActions();
 		this.cameraModifier.destroy();
 		this.destroyEquippedItem();
@@ -325,9 +327,9 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	}
 
 	onRunningChanged(runningState: boolean): void {
-		if (!this.run) return;
+		// if (!this.run) return;
 
-		runningState ? this.run.Play(0.2) : this.run.Stop(0.2);
+		// runningState ? this.run.Play(0.2) : this.run.Stop(0.2);
 
 		if (runningState) {
 			this.targetXAxisFactor = 0;

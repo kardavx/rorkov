@@ -4,6 +4,7 @@ const animations: Partial<WeaponAnimations> = {
 	reload: {
 		type: "Animation",
 		id: 14534432370,
+		priority: 2,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -12,6 +13,7 @@ const animations: Partial<WeaponAnimations> = {
 	equip: {
 		type: "Animation",
 		id: 14534473899,
+		priority: 2,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -20,6 +22,7 @@ const animations: Partial<WeaponAnimations> = {
 	chamberToReady: {
 		type: "Animation",
 		id: 14534465960,
+		priority: 2,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
@@ -28,14 +31,16 @@ const animations: Partial<WeaponAnimations> = {
 	magCheck: {
 		type: "Animation",
 		id: 14534481094,
+		priority: 2,
 		weights: [
 			[2, 2, 2],
 			[1, 1, 1],
 		],
 	},
 	idle: {
-		type: "Animation",
+		type: "Pose",
 		id: 14590142914,
+		priority: 1,
 		looped: true,
 		weights: [
 			[2, 2, 2],
@@ -45,6 +50,7 @@ const animations: Partial<WeaponAnimations> = {
 	run: {
 		type: "Animation",
 		id: 14534444618,
+		priority: 2,
 		looped: true,
 		weights: [
 			[1, 1, 1],

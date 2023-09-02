@@ -46,6 +46,8 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 	private currentItemSlot: number | undefined;
 	private character: Model | undefined;
 
+	private started = false;
+
 	constructor(private input: Input) {}
 
 	private equip(slot: number) {
@@ -97,6 +99,14 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 				this.selectSlot(slot);
 			});
 		});
+
+		if (this.character) {
+			if (this.inventory.size() > 0) {
+				this.selectSlot(0);
+			}
+		}
+
+		this.started = true;
 	}
 
 	onRender(dt: number): void {
@@ -121,8 +131,11 @@ export class Items implements OnInit, OnStart, OnRender, OnCharacterAdded, OnRun
 	onCharacterAdded(character: Model): void {
 		this.character = character;
 		if (this.currentItemObject) this.currentItemObject.character = character;
-		if (this.inventory.size() > 0) {
-			this.selectSlot(0);
+
+		if (this.started) {
+			if (this.inventory.size() > 0) {
+				this.selectSlot(0);
+			}
 		}
 	}
 

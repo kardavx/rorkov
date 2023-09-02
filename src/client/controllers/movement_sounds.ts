@@ -86,11 +86,11 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 	}
 
 	onTick(dt: number): void {
-		if (!this.humanoid || this.humanoid.Health === 0) return;
+		if (!this.humanoid || this.humanoid.Health === 0 || !this.humanoidRootPart) return;
 		const floorMaterial = this.humanoid.FloorMaterial;
 		if (floorMaterial === Enum.Material.Air) return;
 
-		const velocity = this.humanoidRootPart!.AssemblyLinearVelocity.Magnitude;
+		const velocity = this.humanoidRootPart.AssemblyLinearVelocity.Magnitude;
 
 		if (velocity < 1) {
 			const deltaX = math.abs(this.camera.getRotationDelta().X);

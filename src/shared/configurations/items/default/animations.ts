@@ -2,7 +2,8 @@ export type AnimationContents = {
 	type: "Pose" | "Animation";
 	id: number;
 	looped?: boolean;
-	weights?: [position: [x: number, y: number, z: number], rotation: [x: number, y: number, z: number]];
+	priority: number;
+	weights?: [[x: number, y: number, z: number], [x: number, y: number, z: number]];
 };
 
 export interface Animations {
@@ -11,7 +12,8 @@ export interface Animations {
 
 export interface DefaultAnimations extends Animations {
 	interact: {
-		type: "Animation";
+		type: "Pose";
+		priority: 3;
 		id: 14461014204;
 	};
 }
@@ -21,6 +23,7 @@ export interface WeaponAnimations extends DefaultAnimations {}
 export interface GrenadeAnimations extends DefaultAnimations {
 	throw: {
 		type: "Animation";
+		priority: 2;
 		id: 14461014204;
 	};
 }
@@ -28,17 +31,20 @@ export interface GrenadeAnimations extends DefaultAnimations {
 export interface UseableAnimations extends DefaultAnimations {
 	use: {
 		type: "Animation";
+		priority: 2;
 		id: 14461014204;
 	};
 }
 
 const globalDefaultAnimations: DefaultAnimations = {
 	interact: {
-		type: "Animation",
+		type: "Pose",
+		priority: 3,
 		id: 14461014204,
 	},
 	checkWatch: {
-		type: "Animation",
+		type: "Pose",
+		priority: 3,
 		id: 14461014204,
 	},
 };
@@ -49,6 +55,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		reload: {
 			type: "Animation",
 			id: 14643007671,
+			priority: 2,
 			weights: [
 				[2, 2, 2],
 				[1, 1, 1],
@@ -57,6 +64,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		equip: {
 			type: "Animation",
 			id: 14642999480,
+			priority: 2,
 			weights: [
 				[2, 2, 2],
 				[1, 1, 1],
@@ -65,6 +73,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		chamberToReady: {
 			type: "Animation",
 			id: 14642991821,
+			priority: 2,
 			weights: [
 				[2, 2, 2],
 				[1, 1, 1],
@@ -73,6 +82,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		magCheck: {
 			type: "Animation",
 			id: 14643016064,
+			priority: 2,
 			weights: [
 				[2, 2, 2],
 				[1, 1, 1],
@@ -81,6 +91,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		idle: {
 			type: "Animation",
 			id: 14643032549,
+			priority: 1,
 			looped: true,
 			weights: [
 				[2, 2, 2],
@@ -90,6 +101,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		chamberCheck: {
 			type: "Animation",
 			id: 14643029100,
+			priority: 2,
 			weights: [
 				[2, 2, 2],
 				[1, 1, 1],
@@ -98,6 +110,7 @@ export const weaponDefaultAnimations: WeaponAnimations = {
 		run: {
 			type: "Animation",
 			id: 14449811036,
+			priority: 2,
 			looped: true,
 			weights: [
 				[1, 1, 1],
@@ -112,6 +125,7 @@ export const grenadeDefaultAnimations: GrenadeAnimations = {
 	...{
 		throw: {
 			type: "Animation",
+			priority: 2,
 			id: 14461014204,
 		},
 	},
@@ -122,6 +136,7 @@ export const useableDefaultAnimations: UseableAnimations = {
 	...{
 		use: {
 			type: "Animation",
+			priority: 2,
 			id: 14461014204,
 		},
 	},
