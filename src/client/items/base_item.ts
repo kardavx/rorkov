@@ -2,7 +2,7 @@ import { Players, Workspace } from "@rbxts/services";
 import { VectorSpring } from "shared/Spring/spring";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
-import { createViewmodel, destroyViewmodel } from "client/functions/items/viewmodel_functions";
+import createViewmodel from "client/functions/items/create_viewmodel";
 import { Bobbing } from "client/render_pipelines/nodes/bobbing";
 import { RenderPipeline } from "client/render_pipelines/render_pipeline";
 import { Camera, Modifier } from "client/controllers/camera";
@@ -27,16 +27,16 @@ import Tween from "shared/variableTween";
 import { RunWithJump } from "client/render_pipelines/nodes/run_with_jump";
 import { Breathing } from "client/render_pipelines/nodes/breathing";
 
-import { Viewmodel } from "client/controllers/viewmodel";
 import { CanimTrack } from "@rbxts/canim";
+import { Animation } from "client/controllers/animation";
 
 const ischambered = false;
 
 export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	static camera = Workspace.CurrentCamera;
 
-	private states: string[] = ["equip", "unequip", "magCheck", "reload", "aiming", "chamberCheck"];
-	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck", "aiming"];
+	private states: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck"];
+	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck"];
 	private springs: Springs = {
 		Sway: new VectorSpring(1, 20, 60, undefined, undefined, undefined, {
 			x: new NumberRange(-Sway.maxSway, Sway.maxSway),
@@ -57,7 +57,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 	private input = Dependency<Input>();
 	private camera = Dependency<Camera>();
-	private viewmodel = Dependency<Viewmodel>();
+	private animation = Dependency<Animation>();
 
 	//Inputs
 	private magCheck = (inputState: boolean) => {
@@ -65,14 +65,8 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 		this.equippedItem.state.activateState("magCheck");
 
-		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
-
-		const magcheck = new Instance("Animation");
-		magcheck.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.magCheck.id}`;
-
-		const animationmc = animator.LoadAnimation(magcheck);
-		animationmc.Play();
-		animationmc.Stopped.Wait();
+		const magCheck = this.animation.playAnimation(`${this.itemName}/magCheck`);
+		if (magCheck) magCheck.finished.Wait();
 
 		this.equippedItem.state.disableState("magCheck");
 	};
@@ -82,14 +76,8 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 		this.equippedItem.state.activateState("chamberCheck");
 
-		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
-
-		const magcheck = new Instance("Animation");
-		magcheck.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.chamberCheck.id}`;
-
-		const animationmc = animator.LoadAnimation(magcheck);
-		animationmc.Play();
-		animationmc.Stopped.Wait();
+		const chamberCheck = this.animation.playAnimation(`${this.itemName}/chamberCheck`);
+		if (chamberCheck) chamberCheck.finished.Wait();
 
 		this.equippedItem.state.disableState("chamberCheck");
 	};
@@ -99,14 +87,8 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 		this.equippedItem.state.activateState("reload");
 
-		const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
-
-		const reload = new Instance("Animation");
-		reload.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.reload.id}`;
-
-		const animationmc = animator.LoadAnimation(reload);
-		animationmc.Play();
-		animationmc.Stopped.Wait();
+		const reload = this.animation.playAnimation(`${this.itemName}/reload`);
+		if (reload) reload.finished.Wait();
 
 		this.equippedItem.state.disableState("reload");
 	};
@@ -154,11 +136,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	});
 
 	private createEquippedItem = (itemName: string, itemConfiguration: ItemConfig): EquippedItem => {
-		const viewmodel = createViewmodel(itemName) as ViewmodelWithItem;
-		if (!viewmodel) {
-			throw `Viewmodel didn't get returned on equip`;
-		}
-
+		const viewmodel: ViewmodelWithItem = createViewmodel(itemName);
 		const item: Item = viewmodel.item;
 		const alphas: Alphas = {};
 		const offsets: Offsets = this.createOffsets(viewmodel);
@@ -187,7 +165,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	};
 
 	private destroyEquippedItem = () => {
-		destroyViewmodel();
+		this.equippedItem!.viewmodel.Destroy();
 	};
 
 	private bindStateToAlpha = () => {
@@ -259,43 +237,16 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		task.spawn(() => {
 			this.equippedItem.state.activateState("equip");
 
-			const character = Players.LocalPlayer.Character as Model;
-
-			const animator: Animator = this.equippedItem.viewmodel.AnimationController!.Animator;
-			const characterAnimator = character.WaitForChild("Humanoid")!.WaitForChild("Animator") as Animator;
-
-			const idle = new Instance("Animation");
-			idle.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.idle.id}`;
-
-			const equip = new Instance("Animation");
-			equip.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.equip.id}`;
-
-			const chambertoready = new Instance("Animation");
-			chambertoready.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.chamberToReady.id}`;
-
-			const run = new Instance("Animation");
-			run.AnimationId = `rbxassetid://${this.equippedItem.configuration.animations.run.id}`;
-
-			// this.idle = animator.LoadAnimation(idle);
-			// this.equipanim = animator.LoadAnimation(equip);
-			// this.run = animator.LoadAnimation(run);
-			// this.run.Priority = Enum.AnimationPriority.Action2;
-			// this.run.AdjustWeight(5, 0);
-
-			const animationctr = animator.LoadAnimation(chambertoready);
-
 			if (!ischambered) {
-				const chamberToReady = this.viewmodel.playAnimation(`${itemName}/chamberToReady`) as CanimTrack;
-				this.viewmodel.playAnimation(`${itemName}/idle`);
-				chamberToReady.finished.Wait();
+				const chamberToReady = this.animation.playAnimation(`${itemName}/chamberToReady`);
+				this.animation.playAnimation(`${itemName}/idle`);
+				if (chamberToReady) chamberToReady.finished.Wait();
 
 				this.equippedItem.state.disableState("equip");
 			} else {
-				const equip = this.viewmodel.playAnimation(`${itemName}/equip`) as CanimTrack;
-				// this.equipanim.Play(0, undefined, 1);
-				this.viewmodel.playAnimation(`${itemName}/idle`);
-				equip.finished.Wait();
-				// this.equipanim.Stopped.Wait();
+				const equip = this.animation.playAnimation(`${itemName}/equip`);
+				this.animation.playAnimation(`${itemName}/idle`);
+				if (equip) equip.finished.Wait();
 
 				this.equippedItem.state.disableState("equip");
 			}
@@ -305,10 +256,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	public destroy = (): void => {
 		this.equippedItem.state.activateState("unequip");
 
-		// this.idle!.Stop(0);
-		// this.equipanim!.Play(0, undefined, -1);
-		// this.equipanim!.Stopped.Wait();
-		this.viewmodel.stopAnimation(`${this.itemName}/idle`);
+		this.animation.stopAnimation(`${this.itemName}/idle`);
 		this.unbindActions();
 		this.cameraModifier.destroy();
 		this.destroyEquippedItem();
@@ -327,14 +275,12 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	}
 
 	onRunningChanged(runningState: boolean): void {
-		// if (!this.run) return;
-
-		// runningState ? this.run.Play(0.2) : this.run.Stop(0.2);
-
 		if (runningState) {
 			this.targetXAxisFactor = 0;
+			this.animation.playAnimation(`${this.itemName}/run`);
 		} else {
 			this.targetXAxisFactor = 1;
+			this.animation.stopAnimation(`${this.itemName}/run`);
 		}
 	}
 

@@ -3,7 +3,7 @@ import { Canim, CanimPose, CanimTrack } from "@rbxts/canim";
 import { OnCharacterAdded } from "./core";
 import { Viewmodel } from "client/types/items";
 import { configs, ItemConfig } from "shared/configurations/items";
-import { RunService } from "@rbxts/services";
+import { HttpService, Players, RunService } from "@rbxts/services";
 import getObjectSize from "shared/getObjectSize";
 import { log } from "shared/log_message";
 
@@ -24,21 +24,21 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 		character: {},
 	};
 
-	playAnimation = (animationKey: string): { viewmodelTrack: CanimTrack | CanimPose | undefined; characterTrack: CanimTrack | CanimPose | undefined } => {
+	playAnimation = (animationKey: string): CanimTracks | undefined => {
 		const animationType = this.typeLookup[animationKey];
 		if (!animationType) {
 			throw `Couldn't find type for given animationKey (animationKey: ${animationKey})`;
 		}
+
+		print(this.viewmodelAnimator.identified_bones);
+		print(this.characterAnimator.identified_bones);
 
 		const viewmodelTrack =
 			(animationType === "Animation" ? this.viewmodelAnimator.play_animation(animationKey) : this.viewmodelAnimator.play_pose(animationKey)) || undefined;
 		const characterTrack =
 			(animationType === "Animation" ? this.characterAnimator.play_animation(animationKey) : this.characterAnimator.play_pose(animationKey)) || undefined;
 
-		return {
-			viewmodelTrack,
-			characterTrack,
-		};
+		return viewmodelTrack;
 	};
 
 	stopAnimation = (animationKey: string): void => {
@@ -82,13 +82,14 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 				for (const [animationName, animationProperties] of pairs(itemConfig.animations)) {
 					const key = `${itemName}/${animationName}`;
 					const id = `rbxassetid://${animationProperties.id}`;
-					const type = animationProperties.type;
-					const priority = animationProperties.id;
+					const animationType = animationProperties.type;
+					const priority = animationProperties.priority;
 					const looped = animationProperties.looped || false;
+					const weights = animationProperties.weights;
 
 					let animation: CanimTrack | CanimPose;
 
-					if (type === "Animation") {
+					if (animationType === "Animation") {
 						animation = this.viewmodelAnimator.load_animation(key, priority, id);
 						this.characterAnimator.load_animation(key, priority, id);
 					} else {
@@ -101,7 +102,15 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 
 					//TODO: WEIGHTS
 					animation.looped = looped;
-					this.typeLookup[animationName] = type;
+
+					if (weights) {
+						for (const [bone, weight] of pairs(weights)) {
+							animation.bone_weights[bone] = weight;
+						}
+					}
+
+					loadedTracks[animationName] = { track: animation, trackType: animationType };
+					this.typeLookup[key] = animationType;
 
 					log("verbose", `(${globalChecksum.current}/${globalChecksum.target}) animation ${animationName} for item ${itemName} sucesfully loaded`);
 				}
@@ -110,8 +119,7 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 				if (idle) {
 					const idleTrack = idle.track as CanimPose;
 					for (const [animationName, { track, trackType }] of pairs(loadedTracks)) {
-						if (trackType !== "Animation") return;
-
+						if (trackType !== "Animation") continue;
 						// eslint-disable-next-line camelcase
 						(track as CanimTrack).rebase_target = idleTrack;
 					}
@@ -125,5 +133,8 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 	onRender(dt: number): void {
 		this.viewmodelAnimator.update(dt);
 		this.characterAnimator.update(dt);
+
+		const debugLabel = Players.LocalPlayer.FindFirstChild("PlayerGui")!.FindFirstChild("canim_debug")!.FindFirstChild("TextLabel") as TextLabel;
+		debugLabel.Text = HttpService.JSONEncode(this.viewmodelAnimator.debug);
 	}
 }
