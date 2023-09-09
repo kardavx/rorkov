@@ -96,9 +96,10 @@ export default (itemName: string) => {
 
 	const properties = { Anchored: false, CanCollide: false, CanQuery: false, CanTouch: false, CastShadow: true };
 	setDescendantBasePartsProperties(viewmodelClone, properties, ["HumanoidRootPart"]);
+	viewmodelClone["Left Arm"].Anchored = true;
+	viewmodelClone["Right Arm"].Anchored = true;
 	welder(itemClone, itemClone.PrimaryPart, properties);
 
-	viewmodelClone.Parent = camera;
 	itemClone.Parent = viewmodelClone;
 
 	viewmodelClone.PrimaryPart.Anchored = true;
@@ -108,7 +109,26 @@ export default (itemName: string) => {
 	motor.Part1 = itemClone.PrimaryPart;
 	motor.Parent = viewmodelClone.Torso;
 
+	const mag = itemClone.FindFirstChild("Mag") as BasePart;
+	const leftArmPart0 = mag ? mag : itemClone.PrimaryPart;
+
+	const leftArmJoint = new Instance("Motor6D");
+	leftArmJoint.Part0 = leftArmPart0;
+	leftArmJoint.Part1 = viewmodelClone["Left Arm"];
+	leftArmJoint.C0 = leftArmJoint.Part0!.CFrame.Inverse().mul(leftArmJoint.Part1!.CFrame);
+	leftArmJoint.Parent = leftArmPart0;
+	leftArmJoint.Name = leftArmJoint.Part1!.Name;
+
+	const rightArmJoint = new Instance("Motor6D");
+	rightArmJoint.Part0 = itemClone.PrimaryPart;
+	rightArmJoint.Part1 = viewmodelClone["Right Arm"];
+	rightArmJoint.C0 = rightArmJoint.Part0!.CFrame.Inverse().mul(rightArmJoint.Part1!.CFrame);
+	rightArmJoint.Parent = itemClone.PrimaryPart;
+	rightArmJoint.Name = rightArmJoint.Part1!.Name;
+
 	animationController.assignViewmodel(viewmodelClone);
+
+	viewmodelClone.Parent = camera;
 
 	return viewmodelClone as ViewmodelWithItem;
 };

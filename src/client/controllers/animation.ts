@@ -3,9 +3,12 @@ import { Canim, CanimPose, CanimTrack } from "@rbxts/canim";
 import { OnCharacterAdded } from "./core";
 import { Viewmodel } from "client/types/items";
 import { configs, ItemConfig } from "shared/configurations/items";
-import { HttpService, Players, RunService } from "@rbxts/services";
+import { RunService } from "@rbxts/services";
 import getObjectSize from "shared/getObjectSize";
 import { log } from "shared/log_message";
+import { Shobnode } from "client/shobnode";
+
+Shobnode.setup();
 
 export type CanimTracks = CanimPose | CanimTrack;
 interface Tracks {
@@ -103,7 +106,7 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 					//TODO: WEIGHTS
 					animation.looped = looped;
 
-					if (weights) {
+					if (weights !== undefined) {
 						for (const [bone, weight] of pairs(weights)) {
 							animation.bone_weights[bone] = weight;
 						}
@@ -134,7 +137,6 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 		this.viewmodelAnimator.update(dt);
 		this.characterAnimator.update(dt);
 
-		const debugLabel = Players.LocalPlayer.FindFirstChild("PlayerGui")!.FindFirstChild("canim_debug")!.FindFirstChild("TextLabel") as TextLabel;
-		debugLabel.Text = HttpService.JSONEncode(this.viewmodelAnimator.debug);
+		Shobnode.display_node(1231251241, new UDim2(0, 0, 0.8, 0), this.viewmodelAnimator.debug);
 	}
 }

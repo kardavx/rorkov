@@ -26,8 +26,6 @@ import { OnJump, OnLand, OnRunningChanged } from "client/controllers/movement";
 import Tween from "shared/variableTween";
 import { RunWithJump } from "client/render_pipelines/nodes/run_with_jump";
 import { Breathing } from "client/render_pipelines/nodes/breathing";
-
-import { CanimTrack } from "@rbxts/canim";
 import { Animation } from "client/controllers/animation";
 
 const ischambered = false;
@@ -35,7 +33,7 @@ const ischambered = false;
 export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	static camera = Workspace.CurrentCamera;
 
-	private states: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck"];
+	private states: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck", "aiming"];
 	private blockingStates: string[] = ["equip", "unequip", "magCheck", "reload", "chamberCheck"];
 	private springs: Springs = {
 		Sway: new VectorSpring(1, 20, 60, undefined, undefined, undefined, {
@@ -48,7 +46,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	};
 
 	private renderPipeline: RenderPipeline;
-	private cameraModifier: Modifier;
+	private cameraAnimationModifier = Modifier.create("cameraAnimation", false);
 	private targetXAxisFactor = 1;
 	private currentXAxisFactor = this.targetXAxisFactor;
 	public character: Model | undefined;
@@ -226,7 +224,6 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 			RunWithJump,
 			Breathing,
 		]);
-		this.cameraModifier = Modifier.create("test", true);
 
 		this.bindActions();
 		this.equippedItem = this.createEquippedItem(this.itemName, itemConfiguration);
@@ -258,7 +255,6 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 		this.animation.stopAnimation(`${this.itemName}/idle`);
 		this.unbindActions();
-		this.cameraModifier.destroy();
 		this.destroyEquippedItem();
 
 		this.equippedItem.state.disableState("unequip");
@@ -303,5 +299,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		this.renderPipeline.preUpdate(dt, this.character, this.equippedItem);
 		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, this.character, this.equippedItem));
 		this.renderPipeline.postUpdate(dt, this.character, this.equippedItem);
+
+		this.cameraAnimationModifier.setOffset(this.equippedItem.viewmodel.Torso.CameraBone.Transform);
 	};
 }

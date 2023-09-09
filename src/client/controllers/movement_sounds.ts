@@ -1,10 +1,13 @@
-import { Controller, Dependency, OnTick } from "@flamework/core";
+import { Controller, Dependency, OnRender, OnTick } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
 import { SoundService } from "@rbxts/services";
 import waitForSound from "shared/wait_for_sound";
 import { lerp } from "shared/utilities/number_utility";
 import { OnJump, OnLand, OnRunningChanged } from "./movement";
 import { Camera } from "./camera";
+import { Shobnode } from "client/shobnode";
+
+Shobnode.setup();
 
 type MaterialSounds = {
 	[materialName: string]: {
@@ -13,7 +16,7 @@ type MaterialSounds = {
 };
 
 @Controller({})
-export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand, OnRunningChanged {
+export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand, OnRunningChanged, OnRender {
 	static maxTurnVolume = 1.4;
 	private humanoid: Humanoid | undefined = undefined;
 	private humanoidRootPart: BasePart | undefined = undefined;
@@ -23,6 +26,7 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 	private turnSound: Sound | undefined = undefined;
 	private turnSoundCooldown = false;
 	private isRunning = false;
+	private currentlyPlaying: string[] = [];
 	private materialSounds: MaterialSounds = {
 		Plastic: {
 			Walk: [14645467477, 14645467634, 14645467806, 14645468759, 14645468432],
@@ -48,14 +52,17 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 	playSound(name: string, materialName = "Plastic", volume = 10): Sound {
 		const sounds = this.materialSounds[materialName] !== undefined ? this.materialSounds[materialName][name] : this.materialSounds.Plastic[name];
 		const soundsArraySize = sounds.size();
-		let soundId = sounds[math.random(soundsArraySize) - 1];
+		let soundIndex = math.random(soundsArraySize) - 1;
+		let soundId = sounds[soundIndex];
 
 		while (soundsArraySize > 1 && soundId === this.lastSoundId) {
 			task.wait();
-			soundId = sounds[math.random(soundsArraySize) - 1];
+			soundIndex = math.random(soundsArraySize) - 1;
+			soundId = sounds[soundIndex];
 		}
 		this.lastSoundId = soundId;
 
+		this.currentlyPlaying.push(`${materialName}/${name}${soundIndex} ${volume}`);
 		const sound = this.createSound(soundId, volume);
 		sound.Play();
 		task.delay(sound.TimeLength, () => {
@@ -110,6 +117,10 @@ export class MovementSounds implements OnTick, OnCharacterAdded, OnJump, OnLand,
 		this.lastStep = currentTick;
 
 		this.playSound(this.isRunning ? "Run" : "Walk", floorMaterial.Name);
+	}
+
+	onRender(dt: number): void {
+		Shobnode.display_node(93412, new UDim2(0, 0, 0, 0), this.currentlyPlaying);
 	}
 
 	onRunningChanged(runningState: boolean): void {

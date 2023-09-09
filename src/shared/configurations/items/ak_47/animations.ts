@@ -37,12 +37,12 @@ const animations = {
 		id: 14449811036,
 		priority: 3,
 		looped: true,
-		// weights: {
-		// 	"Left Arm": [
-		// 		[0, 0, 0],
-		// 		[0, 0, 0],
-		// 	],
-		// },
+		weights: {
+			"Left Arm": [
+				[0, 0, 0],
+				[0, 0, 0],
+			],
+		},
 	},
 };
 

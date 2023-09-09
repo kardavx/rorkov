@@ -7,7 +7,10 @@ export type Actions = Map<Enum.KeyCode, (inputState: boolean) => void>;
 export interface Viewmodel extends Model {
 	Torso: BasePart & {
 		GunJoint: Motor6D;
+		CameraBone: Motor6D;
 	};
+	"Left Arm": BasePart;
+	"Right Arm": BasePart;
 	CameraBone: BasePart;
 	AnimationController: AnimationController & {
 		Animator: Animator;
