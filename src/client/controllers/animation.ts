@@ -80,7 +80,7 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 			globalChecksum.target += amountOfAnimations;
 
 			task.spawn(() => {
-				const loadedTracks: { [animationName in string]: { track: CanimTracks; trackType: "Animation" | "Pose" } } = {};
+				const loadedTracks: { [animationName in string]: { track: CanimTracks; trackType: "Animation" | "Pose"; rebased: boolean } } = {};
 
 				for (const [animationName, animationProperties] of pairs(itemConfig.animations)) {
 					const key = `${itemName}/${animationName}`;
@@ -88,6 +88,7 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 					const animationType = animationProperties.type;
 					const priority = animationProperties.priority;
 					const looped = animationProperties.looped || false;
+					const rebased = animationProperties.rebased;
 					const weights = animationProperties.weights;
 
 					let animation: CanimTrack | CanimPose;
@@ -112,21 +113,22 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 						}
 					}
 
-					loadedTracks[animationName] = { track: animation, trackType: animationType };
+					loadedTracks[animationName] = { track: animation, trackType: animationType, rebased: rebased !== undefined ? rebased : true };
 					this.typeLookup[key] = animationType;
 
 					log("verbose", `(${globalChecksum.current}/${globalChecksum.target}) animation ${animationName} for item ${itemName} sucesfully loaded`);
 				}
 
-				const idle = loadedTracks.idle;
-				if (idle) {
-					const idleTrack = idle.track as CanimPose;
-					for (const [animationName, { track, trackType }] of pairs(loadedTracks)) {
-						if (trackType !== "Animation") continue;
-						// eslint-disable-next-line camelcase
-						(track as CanimTrack).rebase_target = idleTrack;
-					}
-				}
+				// const idle = loadedTracks.idle;
+				// if (idle) {
+				// 	const idleTrack = idle.track as CanimPose;
+				// 	for (const [animationName, { track, trackType, rebased }] of pairs(loadedTracks)) {
+				// 		print(`${animationName} rebased: ${rebased}`);
+				// 		if (trackType !== "Animation" || !rebased) continue;
+				// 		// eslint-disable-next-line camelcase
+				// 		(track as CanimTrack).rebase_target = idleTrack;
+				// 	}
+				// }
 			});
 		});
 

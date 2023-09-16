@@ -4,22 +4,22 @@ const animations = {
 	reload: {
 		type: "Animation",
 		id: 14643007671,
-		priority: 2,
+		priority: 4,
 	},
 	equip: {
 		type: "Animation",
 		id: 14642999480,
-		priority: 2,
+		priority: 3,
 	},
 	chamberToReady: {
 		type: "Animation",
 		id: 14642991821,
-		priority: 2,
+		priority: 3,
 	},
 	magCheck: {
 		type: "Animation",
 		id: 14643016064,
-		priority: 2,
+		priority: 3,
 	},
 	idle: {
 		type: "Pose",
@@ -30,19 +30,14 @@ const animations = {
 	chamberCheck: {
 		type: "Animation",
 		id: 14643029100,
-		priority: 2,
+		priority: 3,
 	},
 	run: {
 		type: "Animation",
 		id: 14449811036,
-		priority: 3,
+		priority: 2,
+		rebased: false,
 		looped: true,
-		weights: {
-			"Left Arm": [
-				[0, 0, 0],
-				[0, 0, 0],
-			],
-		},
 	},
 };
 

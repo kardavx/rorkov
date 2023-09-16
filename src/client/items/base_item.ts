@@ -1,4 +1,4 @@
-import { Players, Workspace } from "@rbxts/services";
+import { Workspace } from "@rbxts/services";
 import { VectorSpring } from "shared/Spring/spring";
 import { Input } from "client/controllers/input";
 import State from "shared/state";
@@ -285,6 +285,17 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 
 		const rawCameraCFrame = this.camera.getRawCFrame();
 
+		const humanoidRootPart = this.character.PrimaryPart as BasePart;
+		if (!humanoidRootPart) return;
+
+		const rootJoint = humanoidRootPart.FindFirstChild("RootJoint") as Motor6D;
+		if (!rootJoint) return;
+
+		const torsoTransform = rootJoint.Transform;
+		const [x, y, z] = torsoTransform.ToOrientation();
+
+		const reconstructedTorsoTransform = CFrame.Angles(-x, z, -y);
+
 		const lookVector = rawCameraCFrame.LookVector;
 		this.currentXAxisFactor = lerp(this.currentXAxisFactor, this.targetXAxisFactor, 0.08);
 		const baseCFrame = CFrame.lookAt(
@@ -294,10 +305,10 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 				.Position.add(lookVector.mul(new Vector3(1, this.currentXAxisFactor, 1))),
 		);
 
-		this.equippedItem.viewmodel.PivotTo(baseCFrame);
+		this.equippedItem.viewmodel.PivotTo(baseCFrame.mul(reconstructedTorsoTransform));
 
 		this.renderPipeline.preUpdate(dt, this.character, this.equippedItem);
-		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame, this.character, this.equippedItem));
+		this.equippedItem.viewmodel.PivotTo(this.renderPipeline.update(dt, baseCFrame.mul(reconstructedTorsoTransform), this.character, this.equippedItem));
 		this.renderPipeline.postUpdate(dt, this.character, this.equippedItem);
 
 		this.cameraAnimationModifier.setOffset(this.equippedItem.viewmodel.Torso.CameraBone.Transform);

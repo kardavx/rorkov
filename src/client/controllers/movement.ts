@@ -1,10 +1,11 @@
 import { Controller, OnStart, OnRender, OnTick, Modding } from "@flamework/core";
 import { OnCharacterAdded } from "./core";
-import { Players, Workspace } from "@rbxts/services";
+import { Players } from "@rbxts/services";
 import { Input } from "./input";
 import { isCharacterGrounded } from "shared/utilities/character_utility";
 import State from "shared/state";
 import { setTimeout } from "@rbxts/set-timeout";
+import { Camera } from "./camera";
 
 interface ControlModule {
 	Enable: (ControlModule: ControlModule, Enabled: boolean) => void;
@@ -51,7 +52,6 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		[Enum.KeyCode.LeftShift, "sprint"],
 	]);
 
-	private camera: Camera = Workspace.CurrentCamera as Camera;
 	private moveVector: Vector3 = Vector3.zero;
 	private lastMoveVector: Vector3 = this.moveVector;
 	private lastVelocity = 0;
@@ -82,7 +82,7 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		run: 50,
 	};
 
-	constructor(private input: Input) {}
+	constructor(private input: Input, private cameraController: Camera) {}
 
 	onCharacterAdded(character: Model) {
 		this.character = character;
@@ -164,7 +164,10 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		this.lastMoveVector = this.moveVector;
 
 		if (input.Magnitude <= 0) return;
-		const y = this.camera.CFrame.ToOrientation()[1];
+
+		const rawCameraCFrame = this.cameraController.getRawCFrame();
+
+		const y = rawCameraCFrame.ToOrientation()[1];
 		const cameraOrientation = CFrame.Angles(0, y, 0);
 		const forwardPoint = cameraOrientation.mul(new CFrame(input));
 		const orientation = new CFrame(Vector3.zero, forwardPoint.Position);
