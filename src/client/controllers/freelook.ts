@@ -3,11 +3,12 @@ import { Camera, Modifier } from "./camera";
 import { Input } from "./input";
 import { UserInputService } from "@rbxts/services";
 import { OnCharacterAdded } from "./core";
+import { smoothClamp } from "shared/utilities/number_utility";
 
 @Controller({})
 export class Freelook implements OnStart, OnTick, OnCharacterAdded {
 	static xAxisMax = 1;
-	static yAxisMax = 1;
+	static yAxisMax = 0.4;
 
 	private freelookModifier = Modifier.create("freelook", false, 2.5);
 	private freelookActive = false;
@@ -30,7 +31,7 @@ export class Freelook implements OnStart, OnTick, OnCharacterAdded {
 
 	onTick(dt: number): void {
 		if (this.freelookActive) {
-			const mouseDelta = UserInputService.GetMouseDelta().div(300);
+			const mouseDelta = UserInputService.GetMouseDelta().div(270);
 			this.freelookOffset = this.freelookOffset.add(mouseDelta.mul(-1));
 		} else {
 			this.freelookOffset = this.freelookOffset.Lerp(Vector2.zero, 0.1);

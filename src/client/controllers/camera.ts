@@ -2,13 +2,14 @@ import { Controller, OnStart } from "@flamework/core";
 import { OnPreCameraRender, OnPostCameraRender, OnCameraRender } from "./core";
 import { OnCharacterAdded } from "./core";
 import { Players, UserInputService, Workspace } from "@rbxts/services";
-import { lerp } from "shared/utilities/number_utility";
+import { inverseLerp, lerp } from "shared/utilities/number_utility";
 import { log } from "shared/log_message";
 
 const userGameSettings = UserSettings().GetService("UserGameSettings");
 
 type Modifiers = { [modifierName in string]: Modifier | undefined };
 type FOVModifiers = { [modifierName in string]: FOVModifier | undefined };
+type SensitivityModifiers = { [modifierName in string]: SensitivityModifier | undefined };
 
 export class Modifier {
 	static modifiers: Modifiers = {};
@@ -67,6 +68,56 @@ export class Modifier {
 	public destroy = (): void => {
 		this.setOffset(new CFrame());
 		Modifier.modifiers[this.name] = undefined;
+		this.destroyed = true;
+	};
+}
+
+export class SensitivityModifier {
+	static modifiers: SensitivityModifiers = {};
+
+	static create = (name: string): SensitivityModifier => {
+		if (!SensitivityModifier.modifiers[name]) SensitivityModifier.modifiers[name] = new SensitivityModifier(name);
+		return SensitivityModifier.modifiers[name] as SensitivityModifier;
+	};
+
+	static getMultiplier = (): number => {
+		let lowestPercentage = 100;
+
+		for (const [_, modifierObject] of pairs(SensitivityModifier.modifiers)) {
+			const modifierPercent = modifierObject.getPercent();
+			if (modifierPercent < lowestPercentage) lowestPercentage = modifierPercent;
+		}
+
+		if (lowestPercentage > 100 || lowestPercentage < 0) throw `Incorrect percentage value!`;
+
+		return lowestPercentage / 100;
+	};
+
+	private percent = 100;
+	private destroyed = false;
+
+	private constructor(private name: string) {}
+
+	public getPercent = (): number => {
+		if (this.destroyed) throw `Attempt to get percent of modifier after it was destroyed`;
+
+		return this.percent;
+	};
+
+	public setPercent = (newPercent: number) => {
+		if (this.destroyed) throw `Attempt to set percent of modifier after it was destroyed`;
+
+		if (newPercent > 100 || newPercent < 0) {
+			log("warning", `Attempt to set an incorrect percentage for modifier ${this.name}`);
+			return;
+		}
+
+		this.percent = newPercent;
+	};
+
+	public destroy = (): void => {
+		this.setPercent(0);
+		SensitivityModifier.modifiers[this.name] = undefined;
 		this.destroyed = true;
 	};
 }
@@ -198,8 +249,8 @@ export class Camera implements OnPreCameraRender, OnPostCameraRender, OnCameraRe
 			const mouseSensitivity = userGameSettings.MouseSensitivity;
 			userGameSettings.RotationType = Enum.RotationType.CameraRelative;
 
-			this.rotationAngles.x += math.rad(correctedMouseDelta.X * mouseSensitivity * -1);
-			this.rotationAngles.y += math.rad(correctedMouseDelta.Y * mouseSensitivity * -1);
+			this.rotationAngles.x += math.rad(correctedMouseDelta.X * SensitivityModifier.getMultiplier() * mouseSensitivity * -1);
+			this.rotationAngles.y += math.rad(correctedMouseDelta.Y * SensitivityModifier.getMultiplier() * mouseSensitivity * -1);
 			this.rotationAngles.y = math.clamp(this.rotationAngles.y, math.rad(-75), math.rad(75));
 		}
 

@@ -5,7 +5,7 @@ import { Input } from "./input";
 import { isCharacterGrounded } from "shared/utilities/character_utility";
 import State from "shared/state";
 import { setTimeout } from "@rbxts/set-timeout";
-import { Camera } from "./camera";
+import { Camera, SensitivityModifier } from "./camera";
 
 interface ControlModule {
 	Enable: (ControlModule: ControlModule, Enabled: boolean) => void;
@@ -33,7 +33,7 @@ export interface OnWalkingChanged {
 }
 
 @Controller({})
-export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
+export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick, OnFallChanged, OnRunningChanged {
 	static localPlayer = Players.LocalPlayer;
 	static playerScripts = Movement.localPlayer.WaitForChild("PlayerScripts");
 	static playerModule = Movement.playerScripts.WaitForChild("PlayerModule");
@@ -65,6 +65,9 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 	private jumpListeners = new Set<OnJump>();
 	private fallChangedListeners = new Set<OnFallChanged>();
 	private lastFreefallStartTick: number | undefined;
+
+	private airSensitivityModifier = SensitivityModifier.create("jump");
+	private runSensitivityModifier = SensitivityModifier.create("run");
 
 	static speedConstant = {
 		crouch: 6,
@@ -220,9 +223,18 @@ export class Movement implements OnCharacterAdded, OnStart, OnRender, OnTick {
 		return this.humanoid.GetState() === Enum.HumanoidStateType.FallingDown;
 	}
 
+	onFallChanged(state: boolean): void {
+		this.airSensitivityModifier.setPercent(state ? 20 : 100);
+	}
+
+	onRunningChanged(runningState: boolean): void {
+		this.runSensitivityModifier.setPercent(runningState ? 35 : 100);
+	}
+
 	onStart(): void {
 		const runningChangedListeners = new Set<OnRunningChanged>();
 		const walkingChangedListeners = new Set<OnWalkingChanged>();
+		this.fallChangedListeners = new Set<OnFallChanged>();
 
 		Modding.onListenerAdded<OnJump>((object) => this.jumpListeners.add(object));
 		Modding.onListenerRemoved<OnJump>((object) => this.jumpListeners.delete(object));

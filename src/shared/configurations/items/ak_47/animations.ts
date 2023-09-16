@@ -36,6 +36,7 @@ const animations = {
 		type: "Animation",
 		id: 14449811036,
 		priority: 2,
+		fadeTime: 2,
 		rebased: false,
 		looped: true,
 	},

@@ -3,6 +3,7 @@ export type AnimationContents = {
 	id: number;
 	looped?: boolean;
 	priority: number;
+	fadeTime?: number;
 	rebased?: boolean;
 	weights?: { [bone in string]: [[number, number, number], [number, number, number]] };
 };

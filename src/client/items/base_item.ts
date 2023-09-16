@@ -283,8 +283,6 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 	onRender = (dt: number): void => {
 		if (!this.character) return;
 
-		const rawCameraCFrame = this.camera.getRawCFrame();
-
 		const humanoidRootPart = this.character.PrimaryPart as BasePart;
 		if (!humanoidRootPart) return;
 
@@ -295,6 +293,7 @@ export class BaseItem implements OnJump, OnRunningChanged, OnLand {
 		const [x, y, z] = torsoTransform.ToOrientation();
 
 		const reconstructedTorsoTransform = CFrame.Angles(-x, z, -y);
+		const rawCameraCFrame = this.camera.getRawCFrame();
 
 		const lookVector = rawCameraCFrame.LookVector;
 		this.currentXAxisFactor = lerp(this.currentXAxisFactor, this.targetXAxisFactor, 0.08);

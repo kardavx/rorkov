@@ -88,7 +88,8 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 					const animationType = animationProperties.type;
 					const priority = animationProperties.priority;
 					const looped = animationProperties.looped || false;
-					const rebased = animationProperties.rebased;
+					const rebased = animationProperties.rebased ? animationProperties.rebased : true;
+					const fadeTime = animationProperties.fadeTime !== undefined ? animationProperties.fadeTime : 0;
 					const weights = animationProperties.weights;
 
 					let animation: CanimTrack | CanimPose;
@@ -104,8 +105,9 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 					animation.finished_loading.Wait();
 					globalChecksum.current += 1;
 
-					//TODO: WEIGHTS
 					animation.looped = looped;
+					// eslint-disable-next-line camelcase
+					animation.fade_time = fadeTime;
 
 					if (weights !== undefined) {
 						for (const [bone, weight] of pairs(weights)) {
@@ -113,7 +115,7 @@ export class Animation implements OnRender, OnCharacterAdded, OnInit {
 						}
 					}
 
-					loadedTracks[animationName] = { track: animation, trackType: animationType, rebased: rebased !== undefined ? rebased : true };
+					loadedTracks[animationName] = { track: animation, trackType: animationType, rebased };
 					this.typeLookup[key] = animationType;
 
 					log("verbose", `(${globalChecksum.current}/${globalChecksum.target}) animation ${animationName} for item ${itemName} sucesfully loaded`);
