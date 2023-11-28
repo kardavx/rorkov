@@ -31,8 +31,5 @@ jobs:
     - name: Setup aftman
       uses: ok-nick/setup-aftman@v0.3.0
 
-    - name: Upload game to roblox
-      run: rojo upload --api_key 0VvLwUwoLUO7IoyFx9o3u9091Z44ThZN2Pbt7UD0t8xerWyc --asset_id 14353822519 --universe_id 4961904283 build.project.json
-
     
 
