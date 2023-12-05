@@ -9,7 +9,6 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped, OnStart
 	static bodyPartsToShowWithItemEquipped = ["Head", "Torso", "Left Leg", "Right Leg"];
 	static modelsToShow = ["top", "bottom"];
 	static player = Players.LocalPlayer;
-	static test = "test"
 
 	private currentBodyPartsShowState = Body.bodyPartsToShow;
 
