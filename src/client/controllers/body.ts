@@ -17,6 +17,7 @@ export class Body implements OnRender, OnItemEquipped, OnItemUnequipped, OnStart
 	private resetTransparency = () => {
 		const character = Body.player.Character;
 		if (!character) return;
+		//asd
 		Body.allBodyParts.forEach((bodyPart: string) => {
 			const bodyPartObject = character.FindFirstChild(bodyPart) as BasePart;
 			if (!bodyPartObject) return;
